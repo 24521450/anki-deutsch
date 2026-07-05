@@ -1,0 +1,47 @@
+# Deutsch Resources
+
+This repository is a German Anki resource project split out from the IELTS deck repo.
+
+## Scope
+
+- `sources/goethe/` contains source Goethe word lists and reference PDFs.
+- `tools/` contains German A1 audio generation and Duden lookup tools.
+- `audio/` is generated output. MP3s, logs, checkpoints, staging directories, and generated manifests are ignored by default.
+- `review/duden_overrides.json` is the hand-reviewed Duden policy file.
+- `docs/PLAN_A1_WORD_AUDIO.md` documents the current A1 word-audio plan.
+- `tests/` contains German-resource tests. They are outside the default pytest suite because `pyproject.toml` limits default collection to root `tests/`.
+
+## Current Workflows
+
+Word audio:
+
+```powershell
+python tools/a1_preflight.py
+python tools/a1_generate.py --pilot-only
+python tools/a1_generate.py
+```
+
+Example sentence audio:
+
+```powershell
+python tools/a1_example_audio.py preflight
+python tools/a1_example_audio.py pilot
+python tools/a1_example_audio.py full
+python tools/a1_example_audio.py resume
+```
+
+Duden dictionary audio:
+
+```powershell
+python tools/download_duden_a1_audio.py --help
+```
+
+Run German-resource tests explicitly:
+
+```powershell
+python -m pytest
+```
+
+## Notes
+
+The Matrix TTS scripts currently depend on a local `mavis mcp call matrix matrix_synthesize_speech` setup. Treat them as local resource tooling.

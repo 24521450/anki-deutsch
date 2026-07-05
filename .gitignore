@@ -1,0 +1,31 @@
+# Generated German audio artifacts
+audio/**/*.mp3
+audio/**/*.log
+audio/a1/examples/
+audio/a1/examples_staging/
+audio/a1/test/
+audio/a1/words/
+audio/a1/words_duden_staging/
+audio/a1/matrix_backup/
+audio/a1/duden_checkpoints/
+
+# Generated manifests and audits
+audio/a1/*manifest*.jsonl
+audio/a1/*manifest*.json
+audio/a1/examples_unique.jsonl
+audio/a1/duden_live_snapshot*.json
+audio/a1/duden_missing_audit.jsonl
+audio/a2/*manifest*.jsonl
+audio/a2/*manifest*.json
+audio/a2/duden_live_snapshot*.json
+audio/a2/duden_missing_audit.jsonl
+audio/a2/words/
+audio/a2/words_duden_staging/
+audio/a2/pre_migration_backup/
+audio/a2/duden_checkpoints/
+
+# Local experiments
+tools/.*
+tools/__pycache__/
+tests/__pycache__/
+*.pyc
