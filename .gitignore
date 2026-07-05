@@ -23,6 +23,14 @@ audio/a2/words/
 audio/a2/words_duden_staging/
 audio/a2/pre_migration_backup/
 audio/a2/duden_checkpoints/
+audio/b1/*manifest*.jsonl
+audio/b1/*manifest*.json
+audio/b1/duden_live_snapshot*.json
+audio/b1/duden_missing_audit.jsonl
+audio/b1/words/
+audio/b1/words_duden_staging/
+audio/b1/pre_migration_backup/
+audio/b1/duden_checkpoints/
 
 # Local experiments
 tools/.*

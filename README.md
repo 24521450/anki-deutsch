@@ -5,9 +5,9 @@ This repository is a German Anki resource project split out from the IELTS deck 
 ## Scope
 
 - `sources/goethe/` contains source Goethe word lists and reference PDFs.
-- `tools/` contains German A1 audio generation and Duden lookup tools.
+- `tools/` contains German audio generation and Duden lookup tools.
 - `audio/` is generated output. MP3s, logs, checkpoints, staging directories, and generated manifests are ignored by default.
-- `review/duden_overrides.json` is the hand-reviewed Duden policy file.
+- `review/duden_overrides.json` and level-specific override files are the hand-reviewed Duden policy files.
 - `docs/PLAN_A1_WORD_AUDIO.md` documents the current A1 word-audio plan.
 - `tests/` contains German-resource tests. They are outside the default pytest suite because `pyproject.toml` limits default collection to root `tests/`.
 
@@ -34,6 +34,8 @@ Duden dictionary audio:
 
 ```powershell
 python tools/download_duden_a1_audio.py --help
+python tools/download_duden_a2_audio.py --help
+python tools/download_duden_b1_audio.py --help
 ```
 
 Run German-resource tests explicitly:

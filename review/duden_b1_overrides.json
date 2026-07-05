@@ -1,0 +1,2076 @@
+{
+  "rows": {
+    "12": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/abhaengen_abgehaengt",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4113367_535148615.mp3",
+      "file_id": "ID4113367_535148615"
+    },
+    "61": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/allerdings_Adverb",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4129324_324143933.mp3",
+      "file_id": "ID4129324_324143933"
+    },
+    "62": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/allgemein",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4109349_172076143.mp3",
+      "file_id": "ID4109349_172076143"
+    },
+    "65": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Alphabet_Abc",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4116017_389012918.mp3",
+      "file_id": "ID4116017_389012918"
+    },
+    "72": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/alternativ",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4117222_493690648.mp3",
+      "file_id": "ID4117222_493690648"
+    },
+    "73": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Alternative_Moeglichkeit",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4107199_309085704.mp3",
+      "file_id": "ID4107199_309085704"
+    },
+    "83": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/andererseits",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4108809_66661648.mp3",
+      "file_id": "ID4108809_66661648"
+    },
+    "88": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/anfangs_Adverb",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4129328_263551241.mp3",
+      "file_id": "ID4129328_263551241"
+    },
+    "92": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Angehoerige_feminine_Form",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4106134_367722104.mp3",
+      "file_id": "ID4106134_367722104"
+    },
+    "93": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/angenehm",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4108520_243420497.mp3",
+      "file_id": "ID4108520_243420497"
+    },
+    "94": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Angestellte",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4114053_446478059.mp3",
+      "file_id": "ID4114053_446478059"
+    },
+    "191": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Ausdruck_Bezeichnung",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4131980_294438182.mp3",
+      "file_id": "ID4131980_294438182"
+    },
+    "203": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/ausgezeichnet",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4113627_312009919.mp3",
+      "file_id": "ID4113627_312009919"
+    },
+    "217": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/ausschlieszlich_Adjektiv",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4131989_530567892.mp3",
+      "file_id": "ID4131989_530567892"
+    },
+    "220": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/auszer_Praeposition",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4127833_427890437.mp3",
+      "file_id": "ID4127833_427890437"
+    },
+    "257": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Bar_Lokal",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4110488_152372207.mp3",
+      "file_id": "ID4110488_152372207"
+    },
+    "267": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Bauer_Erbauer",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4114353_367815992.mp3",
+      "file_id": "ID4114353_367815992"
+    },
+    "311": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/bekannt_geben",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4134690_464450727.mp3",
+      "file_id": "ID4134690_464450727"
+    },
+    "328": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/bereit",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4116636_444235776.mp3",
+      "file_id": "ID4116636_444235776"
+    },
+    "345": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got schwaches Verb",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/beschraenken",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4135028_125228054.mp3",
+      "file_id": "ID4135028_125228054"
+    },
+    "376": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/betrunken",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4135126_453575033.mp3",
+      "file_id": "ID4135126_453575033"
+    },
+    "380": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/bewegen_bewegt",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4109715_42296347.mp3",
+      "file_id": "ID4109715_42296347"
+    },
+    "409": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/blass",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4112043_48358845.mp3",
+      "file_id": "ID4112043_48358845"
+    },
+    "414": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/blind",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4116699_271091793.mp3",
+      "file_id": "ID4116699_271091793"
+    },
+    "418": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/blosz_Adverb",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4128448_483181881.mp3",
+      "file_id": "ID4128448_483181881"
+    },
+    "428": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Boot_Wasserfahrzeug",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4111333_141574281.mp3",
+      "file_id": "ID4111333_141574281"
+    },
+    "436": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Bremse_Hemmvorrichtung",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4107735_381955200.mp3",
+      "file_id": "ID4107735_381955200"
+    },
+    "453": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Brust_Koerperteil",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4117065_452549290.mp3",
+      "file_id": "ID4117065_452549290"
+    },
+    "476": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/chic",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4107441_121784186.mp3",
+      "file_id": "ID4107441_121784186"
+    },
+    "494": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/damit_dass",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4119645_326272014.mp3",
+      "file_id": "ID4119645_326272014"
+    },
+    "510": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/dauernd",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4109844_205419217.mp3",
+      "file_id": "ID4109844_205419217"
+    },
+    "516": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected v., got Pronomen",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/derselbe",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4113025_411252476.mp3",
+      "file_id": "ID4113025_411252476"
+    },
+    "525": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/dicht",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4109669_513348964.mp3",
+      "file_id": "ID4109669_513348964"
+    },
+    "532": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/digital",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4114270_10662071.mp3",
+      "file_id": "ID4114270_10662071"
+    },
+    "535": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/direkt_Adjektiv",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4136492_465671735.mp3",
+      "file_id": "ID4136492_465671735"
+    },
+    "550": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/doppelt",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4115931_264248786.mp3",
+      "file_id": "ID4115931_264248786"
+    },
+    "562": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Druck_Gedrucktes",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4110125_85927266.mp3",
+      "file_id": "ID4110125_85927266"
+    },
+    "582": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/eben_genau",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4112615_364243080.mp3",
+      "file_id": "ID4112615_364243080"
+    },
+    "591": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/egal_gleich_einerlei",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4137257_417571779.mp3",
+      "file_id": "ID4137257_417571779"
+    },
+    "639": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adj., got Adverb",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/einschlieszlich_auszerdem_ferner",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4127874_389953801.mp3",
+      "file_id": "ID4127874_389953801"
+    },
+    "654": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/einzeln",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4113619_378088425.mp3",
+      "file_id": "ID4113619_378088425"
+    },
+    "675": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Enkel_Knoechel",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4111688_351289005.mp3",
+      "file_id": "ID4111688_351289005"
+    },
+    "682": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/entlang_seitlich_zuseiten",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4139408_169047863.mp3",
+      "file_id": "ID4139408_169047863"
+    },
+    "688": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/entschlossen_zu_entschlieszen",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4126618_81555602.mp3",
+      "file_id": "ID4126618_81555602"
+    },
+    "704": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/erfahren_einfahren",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4106479_493519275.mp3",
+      "file_id": "ID4106479_493519275"
+    },
+    "709": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/erfolgreich",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4141830_64978639.mp3",
+      "file_id": "ID4141830_64978639"
+    },
+    "724": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/erkaeltet",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4519814_524758876.mp3",
+      "file_id": "ID4519814_524758876"
+    },
+    "739": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/ernst",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4116640_17063330.mp3",
+      "file_id": "ID4116640_17063330"
+    },
+    "746": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/erschoepft",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4519816_488346694.mp3",
+      "file_id": "ID4519816_488346694"
+    },
+    "747": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/erschrecken_einschuechtern_bedrohen",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4106618_529779875.mp3",
+      "file_id": "ID4106618_529779875"
+    },
+    "749": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/erst_zuvor_anfangs",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4127867_241998447.mp3",
+      "file_id": "ID4127867_241998447"
+    },
+    "752": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/erwachsen_ausgewachsen_grosz",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4142093_419985567.mp3",
+      "file_id": "ID4142093_419985567"
+    },
+    "764": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/etwa_circa",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4128521_54265972.mp3",
+      "file_id": "ID4128521_54265972"
+    },
+    "767": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/eventuell_moeglicherweise",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4137520_7863471.mp3",
+      "file_id": "ID4137520_7863471"
+    },
+    "770": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Export_Ausfuhr",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4107070_236309454.mp3",
+      "file_id": "ID4107070_236309454"
+    },
+    "771": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/extra_zusaetzlich",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4128519_476887958.mp3",
+      "file_id": "ID4128519_476887958"
+    },
+    "788": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/fair",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4106525_164279886.mp3",
+      "file_id": "ID4106525_164279886"
+    },
+    "790": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Fall_Sache",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4116016_45111713.mp3",
+      "file_id": "ID4116016_45111713"
+    },
+    "798": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Fantasie_Einbildung_Traum",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4113188_166312431.mp3",
+      "file_id": "ID4113188_166312431"
+    },
+    "826": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/fest",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4115735_434966906.mp3",
+      "file_id": "ID4115735_434966906"
+    },
+    "836": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/feucht",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4114881_352065830.mp3",
+      "file_id": "ID4114881_352065830"
+    },
+    "843": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/finanziell",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4108456_122745713.mp3",
+      "file_id": "ID4108456_122745713"
+    },
+    "848": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/flach",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4110267_404509917.mp3",
+      "file_id": "ID4110267_404509917"
+    },
+    "851": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Fleck",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4115870_64280557.mp3",
+      "file_id": "ID4115870_64280557"
+    },
+    "856": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/flexibel",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4106745_322736851.mp3",
+      "file_id": "ID4106745_322736851"
+    },
+    "863": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Flucht_Ausbruch",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4106487_491050018.mp3",
+      "file_id": "ID4106487_491050018"
+    },
+    "868": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Flur_Raum",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4113866_519322255.mp3",
+      "file_id": "ID4113866_519322255"
+    },
+    "888": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Fotografie",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4216102_74551888.mp3",
+      "file_id": "ID4216102_74551888"
+    },
+    "893": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/frech",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4110034_445543460.mp3",
+      "file_id": "ID4110034_445543460"
+    },
+    "906": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Friede",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4112223_332159583.mp3",
+      "file_id": "ID4112223_332159583"
+    },
+    "909": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Friseur",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4118835_115996591.mp3",
+      "file_id": "ID4118835_115996591"
+    },
+    "910": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Friseurin",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4109372_307795630.mp3",
+      "file_id": "ID4109372_307795630"
+    },
+    "917": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/frueh_juengst",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4129972_489827499.mp3",
+      "file_id": "ID4129972_489827499"
+    },
+    "928": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/fuettern_auskleiden",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4115212_124427809.mp3",
+      "file_id": "ID4115212_124427809"
+    },
+    "939": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Gang_Bewegung",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4132069_444249375.mp3",
+      "file_id": "ID4132069_444249375"
+    },
+    "941": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/gar_besonders",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4107519_421676298.mp3",
+      "file_id": "ID4107519_421676298"
+    },
+    "962": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Gedanke",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4117183_152830179.mp3",
+      "file_id": "ID4117183_152830179"
+    },
+    "966": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/geeignet",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4109661_113519482.mp3",
+      "file_id": "ID4109661_113519482"
+    },
+    "980": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/geheim",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4109288_391939171.mp3",
+      "file_id": "ID4109288_391939171"
+    },
+    "1001": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/genug_zureichend_hinlaenglich",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4111600_233821106.mp3",
+      "file_id": "ID4111600_233821106"
+    },
+    "1006": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/gerecht",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4111115_161488263.mp3",
+      "file_id": "ID4111115_161488263"
+    },
+    "1008": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/gering",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4110422_518890489.mp3",
+      "file_id": "ID4110422_518890489"
+    },
+    "1042": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/gewohnt",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4519907_242016540.mp3",
+      "file_id": "ID4519907_242016540"
+    },
+    "1045": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Gift_Toxikum",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4114707_201428353.mp3",
+      "file_id": "ID4114707_201428353"
+    },
+    "1049": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: gender mismatch: expected f./n., got f",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Glace_Glasur",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4126742_341986384.mp3",
+      "file_id": "ID4126742_341986384"
+    },
+    "1050": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: gender mismatch: expected f./n., got m",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Glace_Gewebe",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4194427_218261594.mp3",
+      "file_id": "ID4194427_218261594"
+    },
+    "1052": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/glatt",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4111381_59558418.mp3",
+      "file_id": "ID4111381_59558418"
+    },
+    "1054": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/gleich_konvergent_einfoermig",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4106599_162973834.mp3",
+      "file_id": "ID4106599_162973834"
+    },
+    "1055": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/gleichberechtigt",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4116306_2295489.mp3",
+      "file_id": "ID4116306_2295489"
+    },
+    "1063": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Golf_Spiel",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4109009_205498524.mp3",
+      "file_id": "ID4109009_205498524"
+    },
+    "1065": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Grafik",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4121674_437213832.mp3",
+      "file_id": "ID4121674_437213832"
+    },
+    "1072": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Grill_Bratrost",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4110739_145410693.mp3",
+      "file_id": "ID4110739_145410693"
+    },
+    "1101": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Hafen_Anlegestelle",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4113040_465488112.mp3",
+      "file_id": "ID4113040_465488112"
+    },
+    "1103": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/halb_zur_Haelfte_teilweise",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4114126_163644851.mp3",
+      "file_id": "ID4114126_163644851"
+    },
+    "1110": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected part., got Substantiv, maskulin",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Halt",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4113341_253711648.mp3",
+      "file_id": "ID4113341_253711648"
+    },
+    "1111": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/halt_nun_eben_nun_einmal",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4113341_253711648.mp3",
+      "file_id": "ID4113341_253711648"
+    },
+    "1117": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Handel_Markt",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4519986_105680489.mp3",
+      "file_id": "ID4519986_105680489"
+    },
+    "1118": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/handeln_handhaben",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4115135_158114208.mp3",
+      "file_id": "ID4115135_158114208"
+    },
+    "1175": {
+      "status": "ok",
+      "reason": "multiple exact pages with different first audio",
+      "match_method": "audit-sitemap-ambiguous-first-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/hinterlassen_erlauben",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4114081_262453957.mp3",
+      "file_id": "ID4114081_262453957"
+    },
+    "1199": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/huebsch",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4111100_283324349.mp3",
+      "file_id": "ID4111100_283324349"
+    },
+    "1203": {
+      "status": "ok",
+      "reason": "multiple exact pages with different first audio",
+      "match_method": "audit-sitemap-ambiguous-first-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Humor_Koerperfluessigkeit",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4127029_374317593.mp3",
+      "file_id": "ID4127029_374317593"
+    },
+    "1209": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Hut_Kopfbedeckung",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4112405_276309583.mp3",
+      "file_id": "ID4112405_276309583"
+    },
+    "1220": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/indem_waehrenddessen_derweil",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4129201_261340358.mp3",
+      "file_id": "ID4129201_261340358"
+    },
+    "1221": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/individuell",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4112111_362781107.mp3",
+      "file_id": "ID4112111_362781107"
+    },
+    "1228": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/inklusive_inbegriffen_mit",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4424764_96921011.mp3",
+      "file_id": "ID4424764_96921011"
+    },
+    "1231": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/innerhalb_innerhalb_einer_Sache",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4112194_284292333.mp3",
+      "file_id": "ID4112194_284292333"
+    },
+    "1242": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/intensiv",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4113967_195563149.mp3",
+      "file_id": "ID4113967_195563149"
+    },
+    "1247": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/interessiert",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4128288_49142173.mp3",
+      "file_id": "ID4128288_49142173"
+    },
+    "1258": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/je_jemals_abhaengig_von",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4113644_96906396.mp3",
+      "file_id": "ID4113644_96906396"
+    },
+    "1261": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/jeder",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4111323_305927071.mp3",
+      "file_id": "ID4111323_305927071"
+    },
+    "1263": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/jedes_Mal",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID5684123_300454270.mp3",
+      "file_id": "ID5684123_300454270"
+    },
+    "1264": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/jedoch_aber_doch",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4115418_126569642.mp3",
+      "file_id": "ID4115418_126569642"
+    },
+    "1276": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Kabel_Leitung",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4107445_276257498.mp3",
+      "file_id": "ID4107445_276257498"
+    },
+    "1332": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/klar_erkennbar_anschaulich",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4121961_41193754.mp3",
+      "file_id": "ID4121961_41193754"
+    },
+    "1334": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/klasse",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4115521_109717599.mp3",
+      "file_id": "ID4115521_109717599"
+    },
+    "1353": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/knapp",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4109071_185839787.mp3",
+      "file_id": "ID4109071_185839787"
+    },
+    "1359": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Koch_Kuechenchef",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4520331_445893271.mp3",
+      "file_id": "ID4520331_445893271"
+    },
+    "1372": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/komplett",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4113737_7435940.mp3",
+      "file_id": "ID4113737_7435940"
+    },
+    "1373": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/kompliziert",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4117003_145127358.mp3",
+      "file_id": "ID4117003_145127358"
+    },
+    "1380": {
+      "status": "ok",
+      "reason": "multiple exact pages with different first audio",
+      "match_method": "audit-sitemap-ambiguous-first-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Konsum_Geschaeft",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4131475_352893656.mp3",
+      "file_id": "ID4131475_352893656"
+    },
+    "1392": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/korrekt",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4107173_470837289.mp3",
+      "file_id": "ID4107173_470837289"
+    },
+    "1400": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Kraft_Energie",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4107608_496749903.mp3",
+      "file_id": "ID4107608_496749903"
+    },
+    "1404": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Kranke",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID6286428_422513882.mp3",
+      "file_id": "ID6286428_422513882"
+    },
+    "1411": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/kreativ",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4520416_428018402.mp3",
+      "file_id": "ID4520416_428018402"
+    },
+    "1436": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adj., got Adverb",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/kuerzlich",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4116126_196032992.mp3",
+      "file_id": "ID4116126_196032992"
+    },
+    "1440": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Kuli_Stift",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4520432_306054231.mp3",
+      "file_id": "ID4520432_306054231"
+    },
+    "1474": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Laster_LKW",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4520484_76881833.mp3",
+      "file_id": "ID4520484_76881833"
+    },
+    "1484": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/lecker",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4114030_418051666.mp3",
+      "file_id": "ID4114030_418051666"
+    },
+    "1489": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Lehre_Unterricht",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4113194_164501621.mp3",
+      "file_id": "ID4113194_164501621"
+    },
+    "1503": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Leiter_Anfuehrer",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4114714_55916862.mp3",
+      "file_id": "ID4114714_55916862"
+    },
+    "1511": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Leserin_Textleserin",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4520553_512670972.mp3",
+      "file_id": "ID4520553_512670972"
+    },
+    "1516": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/lieb",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4110288_57554042.mp3",
+      "file_id": "ID4110288_57554042"
+    },
+    "1524": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Lift_Hautstraffung",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4109924_32915624.mp3",
+      "file_id": "ID4109924_32915624"
+    },
+    "1529": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Lippe_Fluss",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4295590_480713341.mp3",
+      "file_id": "ID4295590_480713341"
+    },
+    "1533": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Loch_Oeffnung",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4107515_234375880.mp3",
+      "file_id": "ID4107515_234375880"
+    },
+    "1534": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/locker",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4115721_5399089.mp3",
+      "file_id": "ID4115721_5399089"
+    },
+    "1536": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/loeschen_entladen",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4295583_431517978.mp3",
+      "file_id": "ID4295583_431517978"
+    },
+    "1552": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Maerchen_Erzaehlung",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID6286429_348012134.mp3",
+      "file_id": "ID6286429_348012134"
+    },
+    "1555": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/mager",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4116111_503580111.mp3",
+      "file_id": "ID4116111_503580111"
+    },
+    "1558": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected part., got Substantiv, Neutrum",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Mal_Zeichen",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4112345_415408335.mp3",
+      "file_id": "ID4112345_415408335"
+    },
+    "1566": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Mangel_Defizit",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4108998_296628760.mp3",
+      "file_id": "ID4108998_296628760"
+    },
+    "1584": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Medien_Land",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4296238_459324364.mp3",
+      "file_id": "ID4296238_459324364"
+    },
+    "1589": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/mehr_extra_reichlich",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4131520_291192733.mp3",
+      "file_id": "ID4131520_291192733"
+    },
+    "1627": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/minimal",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4107073_265720020.mp3",
+      "file_id": "ID4107073_265720020"
+    },
+    "1647": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/modern_neu_modisch",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4106652_453357903.mp3",
+      "file_id": "ID4106652_453357903"
+    },
+    "1649": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/moebliert",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4520744_274513150.mp3",
+      "file_id": "ID4520744_274513150"
+    },
+    "1684": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Konjunktion",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/nachdem",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4111048_324760288.mp3",
+      "file_id": "ID4111048_324760288"
+    },
+    "1699": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/naemlich_dieser_diese_dieses",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4133817_418830562.mp3",
+      "file_id": "ID4133817_418830562"
+    },
+    "1707": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/natuerlich_zweifellos_allerdings",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4173813_459067020.mp3",
+      "file_id": "ID4173813_459067020"
+    },
+    "1715": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/negativ",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4111128_337166044.mp3",
+      "file_id": "ID4111128_337166044"
+    },
+    "1727": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adj., got Adverb",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/neulich",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4112482_368514039.mp3",
+      "file_id": "ID4112482_368514039"
+    },
+    "1757": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/nun_inzwischen_jetzt_heute",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4173845_405619340.mp3",
+      "file_id": "ID4173845_405619340"
+    },
+    "1760": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/ob_Konjunktion",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4172976_199321302.mp3",
+      "file_id": "ID4172976_199321302"
+    },
+    "1776": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/offenbar_bekannt_klar_offenkundig",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4109446_428240143.mp3",
+      "file_id": "ID4109446_428240143"
+    },
+    "1777": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/offiziell",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4114037_506598386.mp3",
+      "file_id": "ID4114037_506598386"
+    },
+    "1782": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Onkel_Verwandter",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4110135_273834699.mp3",
+      "file_id": "ID4110135_273834699"
+    },
+    "1791": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/ordentlich_richtig_sorgfaeltig_genau",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4129346_402511993.mp3",
+      "file_id": "ID4129346_402511993"
+    },
+    "1799": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/original",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4520896_113256404.mp3",
+      "file_id": "ID4520896_113256404"
+    },
+    "1803": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/paar_einige_wenige",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4107379_344220100.mp3",
+      "file_id": "ID4107379_344220100"
+    },
+    "1806": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Panne_Fehler",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4115864_378359493.mp3",
+      "file_id": "ID4115864_378359493"
+    },
+    "1809": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/parallel",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4116286_226386799.mp3",
+      "file_id": "ID4116286_226386799"
+    },
+    "1822": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/passiv",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4127627_51556265.mp3",
+      "file_id": "ID4127627_51556265"
+    },
+    "1825": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/pauschal",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4110190_196424610.mp3",
+      "file_id": "ID4110190_196424610"
+    },
+    "1833": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Präposition",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/per",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4116243_179627663.mp3",
+      "file_id": "ID4116243_179627663"
+    },
+    "1846": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Pflaume_Bemerkung",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4106470_97374447.mp3",
+      "file_id": "ID4106470_97374447"
+    },
+    "1860": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Plastik_Material",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4520988_157330771.mp3",
+      "file_id": "ID4520988_157330771"
+    },
+    "1873": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/populaer",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4119331_457418564.mp3",
+      "file_id": "ID4119331_457418564"
+    },
+    "1874": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Portemonnaie",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4118043_186322458.mp3",
+      "file_id": "ID4118043_186322458"
+    },
+    "1877": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/positiv",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4127192_417243618.mp3",
+      "file_id": "ID4127192_417243618"
+    },
+    "1882": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got schwaches Verb",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/praesentieren",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4114603_16585372.mp3",
+      "file_id": "ID4114603_16585372"
+    },
+    "1891": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/prima",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4113704_133592530.mp3",
+      "file_id": "ID4113704_133592530"
+    },
+    "1893": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/pro_je_zu_jeweils_fuer",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4131089_456381206.mp3",
+      "file_id": "ID4131089_456381206"
+    },
+    "1907": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected interj., got Substantiv, Neutrum",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Prost",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4117204_418415392.mp3",
+      "file_id": "ID4117204_418415392"
+    },
+    "1922": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/quer_rechtwinklig_schraeg_Adverb",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4129396_415477274.mp3",
+      "file_id": "ID4129396_415477274"
+    },
+    "1926": {
+      "status": "ok",
+      "reason": "multiple exact pages with different first audio",
+      "match_method": "audit-sitemap-ambiguous-first-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Rad_Fahrrad",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4107896_78884927.mp3",
+      "file_id": "ID4107896_78884927"
+    },
+    "1932": {
+      "status": "ok",
+      "reason": "multiple exact pages with different first audio",
+      "match_method": "audit-sitemap-ambiguous-first-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Rand_Einfassung",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4107940_51929817.mp3",
+      "file_id": "ID4107940_51929817"
+    },
+    "1956": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/recht",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4113308_376054559.mp3",
+      "file_id": "ID4113308_376054559"
+    },
+    "1966": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Regal_Gestell",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4107675_258740764.mp3",
+      "file_id": "ID4107675_258740764"
+    },
+    "1972": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/regional",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4521135_264884812.mp3",
+      "file_id": "ID4521135_264884812"
+    },
+    "1976": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/reif",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4107871_193535564.mp3",
+      "file_id": "ID4107871_193535564"
+    },
+    "1980": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/rein_absolut",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4173277_163704726.mp3",
+      "file_id": "ID4173277_163704726"
+    },
+    "2019": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/roh",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4109990_182155666.mp3",
+      "file_id": "ID4109990_182155666"
+    },
+    "2057": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/satt",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4115805_409923661.mp3",
+      "file_id": "ID4115805_409923661"
+    },
+    "2087": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/schief",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4112038_119481958.mp3",
+      "file_id": "ID4112038_119481958"
+    },
+    "2101": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adj., got Adverb",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/schlieszlich",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4113573_356457906.mp3",
+      "file_id": "ID4113573_356457906"
+    },
+    "2106": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/schmal",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4107341_6130207.mp3",
+      "file_id": "ID4107341_6130207"
+    },
+    "2138": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/schuetzen_hueten",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4113930_172996661.mp3",
+      "file_id": "ID4113930_172996661"
+    },
+    "2160": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/See_Binnengewaesser",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4118768_90970794.mp3",
+      "file_id": "ID4118768_90970794"
+    },
+    "2166": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/seitdem_seither_von_da_an",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4107845_69031901.mp3",
+      "file_id": "ID4107845_69031901"
+    },
+    "2171": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/selber_selbst_Pronomen",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4113730_429785122.mp3",
+      "file_id": "ID4113730_429785122"
+    },
+    "2174": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/selbstverstaendlich_klar_nachvollziehbar_eindeutig",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4118634_109862250.mp3",
+      "file_id": "ID4118634_109862250"
+    },
+    "2175": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/selten",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4106531_207528893.mp3",
+      "file_id": "ID4106531_207528893"
+    },
+    "2184": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/senkrecht",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4117558_476892835.mp3",
+      "file_id": "ID4117558_476892835"
+    },
+    "2190": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/sicher_gefahrlos_tadellos_garantiert",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4106120_332147404.mp3",
+      "file_id": "ID4106120_332147404"
+    },
+    "2194": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Sieg_Gewinn",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4116193_436566467.mp3",
+      "file_id": "ID4116193_436566467"
+    },
+    "2222": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got schwaches Verb",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/sondern_isolieren_entfernen",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4116497_256553688.mp3",
+      "file_id": "ID4116497_256553688"
+    },
+    "2228": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Sosze",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4121821_464037621.mp3",
+      "file_id": "ID4121821_464037621"
+    },
+    "2230": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Konjunktion",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/soviel",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4114170_239031479.mp3",
+      "file_id": "ID4114170_239031479"
+    },
+    "2233": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/sozial",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4113430_247548247.mp3",
+      "file_id": "ID4113430_247548247"
+    },
+    "2251": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/speziell_eigens_insbesondere",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4176624_152156544.mp3",
+      "file_id": "ID4176624_152156544"
+    },
+    "2259": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/spitz",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4112757_440424302.mp3",
+      "file_id": "ID4112757_440424302"
+    },
+    "2287": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/statt_anstelle_nachgestellt",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4107010_70679654.mp3",
+      "file_id": "ID4107010_70679654"
+    },
+    "2300": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/steil",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4115496_483500688.mp3",
+      "file_id": "ID4115496_483500688"
+    },
+    "2306": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Stern_Gestirn",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4120458_504333790.mp3",
+      "file_id": "ID4120458_504333790"
+    },
+    "2307": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Steuer_Abgabe",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4112596_26469528.mp3",
+      "file_id": "ID4112596_26469528"
+    },
+    "2311": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Stiege_Treppe",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4108292_435825698.mp3",
+      "file_id": "ID4108292_435825698"
+    },
+    "2316": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/still",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4111384_527389463.mp3",
+      "file_id": "ID4111384_527389463"
+    },
+    "2326": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/stolz",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4115810_290574413.mp3",
+      "file_id": "ID4115810_290574413"
+    },
+    "2349": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Studierende",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4521560_529255097.mp3",
+      "file_id": "ID4521560_529255097"
+    },
+    "2356": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/stumm",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4115376_186861023.mp3",
+      "file_id": "ID4115376_186861023"
+    },
+    "2358": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Sturm_Getraenk",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4115206_403826241.mp3",
+      "file_id": "ID4115206_403826241"
+    },
+    "2394": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/tatsaechlich_faktisch_wahrhaftig_real",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4120336_533812450.mp3",
+      "file_id": "ID4120336_533812450"
+    },
+    "2395": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/taub",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4114306_24365237.mp3",
+      "file_id": "ID4114306_24365237"
+    },
+    "2414": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Tempo_Geschwindigkeit",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4107770_190738388.mp3",
+      "file_id": "ID4107770_190738388"
+    },
+    "2434": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/tippen_beruehren",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4173144_148527897.mp3",
+      "file_id": "ID4173144_148527897"
+    },
+    "2441": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/tolerant",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4113047_227879595.mp3",
+      "file_id": "ID4113047_227879595"
+    },
+    "2445": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Tor_Treffer",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4173654_433044196.mp3",
+      "file_id": "ID4173654_433044196"
+    },
+    "2454": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/traditionell",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4109171_454332067.mp3",
+      "file_id": "ID4109171_454332067"
+    },
+    "2462": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Tram_Straszenbahn",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4118824_129920501.mp3",
+      "file_id": "ID4118824_129920501"
+    },
+    "2476": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/treu",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4117376_303243015.mp3",
+      "file_id": "ID4117376_303243015"
+    },
+    "2481": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: gender mismatch: expected f., got m",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Tropfen",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4114137_121409121.mp3",
+      "file_id": "ID4114137_121409121"
+    },
+    "2484": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/trotzdem_nichtsdestoweniger_dennoch",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4123513_115947915.mp3",
+      "file_id": "ID4123513_115947915"
+    },
+    "2492": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/U_Bahn",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4106594_366832568.mp3",
+      "file_id": "ID4106594_366832568"
+    },
+    "2493": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/ueben_jenseits_gegenueber",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4106905_111126785.mp3",
+      "file_id": "ID4106905_111126785"
+    },
+    "2496": {
+      "status": "ok",
+      "reason": "multiple exact pages with different first audio",
+      "match_method": "audit-sitemap-ambiguous-first-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/ueberfahren_darueberfahren",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4123515_114474449.mp3",
+      "file_id": "ID4123515_114474449"
+    },
+    "2497": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/ueberhaupt_insgesamt__gar",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4119105_94295141.mp3",
+      "file_id": "ID4119105_94295141"
+    },
+    "2498": {
+      "status": "ok",
+      "reason": "multiple exact pages with different first audio",
+      "match_method": "audit-sitemap-ambiguous-first-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/ueberholen_uebergeholt",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4129564_316850619.mp3",
+      "file_id": "ID4129564_316850619"
+    },
+    "2499": {
+      "status": "ok",
+      "reason": "multiple exact pages with different first audio",
+      "match_method": "audit-sitemap-ambiguous-first-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/ueberlegen_uebergelegt",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4175492_54052266.mp3",
+      "file_id": "ID4175492_54052266"
+    },
+    "2503": {
+      "status": "ok",
+      "reason": "multiple exact pages with different first audio",
+      "match_method": "audit-sitemap-ambiguous-first-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/uebernehmen_uebergenommen",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4129568_16847258.mp3",
+      "file_id": "ID4129568_16847258"
+    },
+    "2510": {
+      "status": "ok",
+      "reason": "multiple exact pages with different first audio",
+      "match_method": "audit-sitemap-ambiguous-first-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/uebersetzen_uebergesetzt",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4127601_11509593.mp3",
+      "file_id": "ID4127601_11509593"
+    },
+    "2532": {
+      "status": "ok",
+      "reason": "multiple exact pages with different first audio",
+      "match_method": "audit-sitemap-ambiguous-first-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/umgehen_umgangen",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4134843_149311146.mp3",
+      "file_id": "ID4134843_149311146"
+    },
+    "2533": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/umgekehrt",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4521778_120793652.mp3",
+      "file_id": "ID4521778_120793652"
+    },
+    "2535": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Konjunktion",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/umso",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4109216_74352144.mp3",
+      "file_id": "ID4109216_74352144"
+    },
+    "2550": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/ungefaehr_schaetzungsweise_rund",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4109153_122862003.mp3",
+      "file_id": "ID4109153_122862003"
+    },
+    "2578": {
+      "status": "ok",
+      "reason": "multiple exact pages with different first audio",
+      "match_method": "audit-sitemap-ambiguous-first-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/unterstuetzen_untergestuetzt",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4134526_532000890.mp3",
+      "file_id": "ID4134526_532000890"
+    },
+    "2623": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/vergnuegt",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4521973_54156116.mp3",
+      "file_id": "ID4521973_54156116"
+    },
+    "2628": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/verhalten_handeln_sein_reagieren",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4108624_53655694.mp3",
+      "file_id": "ID4108624_53655694"
+    },
+    "2640": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/verlassen_vertrauen_weggehen_trennen",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4112751_217814076.mp3",
+      "file_id": "ID4112751_217814076"
+    },
+    "2658": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/vermutlich_mutmaszlich_anzunehmend",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4176159_130877187.mp3",
+      "file_id": "ID4176159_130877187"
+    },
+    "2667": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/verrueckt",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4119798_309808737.mp3",
+      "file_id": "ID4119798_309808737"
+    },
+    "2671": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/verschieden_unterschiedlich",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4109635_366406573.mp3",
+      "file_id": "ID4109635_366406573"
+    },
+    "2697": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/verwandt_nahestehend_aehnlich",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4114860_227981532.mp3",
+      "file_id": "ID4114860_227981532"
+    },
+    "2707": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Viertel_Stadtteil",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4128558_159949879.mp3",
+      "file_id": "ID4128558_159949879"
+    },
+    "2753": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/waagerecht",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4119367_53892558.mp3",
+      "file_id": "ID4119367_53892558"
+    },
+    "2755": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/wachsen_gewachsen",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4131952_477429690.mp3",
+      "file_id": "ID4131952_477429690"
+    },
+    "2757": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adj., got Konjunktion",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/waehrend_als_unterdessen_wohingegen",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4118096_111381881.mp3",
+      "file_id": "ID4118096_111381881"
+    },
+    "2765": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/wahrscheinlich_vermutlich_mutmaszlich",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4111044_522386738.mp3",
+      "file_id": "ID4111044_522386738"
+    },
+    "2813": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/wert",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4116134_313381554.mp3",
+      "file_id": "ID4116134_313381554"
+    },
+    "2829": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/wiegen_gewiegt",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4173610_88397124.mp3",
+      "file_id": "ID4173610_88397124"
+    },
+    "2832": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/wild",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4110275_109149576.mp3",
+      "file_id": "ID4110275_109149576"
+    },
+    "2854": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/wohl_gut_besser_durchaus",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4107839_496449274.mp3",
+      "file_id": "ID4107839_496449274"
+    },
+    "2872": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/wunderschoen",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4522258_340821830.mp3",
+      "file_id": "ID4522258_340821830"
+    },
+    "2878": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/zahlreich",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4115807_6525090.mp3",
+      "file_id": "ID4115807_6525090"
+    },
+    "2895": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected adv., got Adjektiv",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/zentral",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4109585_57236925.mp3",
+      "file_id": "ID4109585_57236925"
+    },
+    "2906": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/ziemlich_erheblich_schicklich_halbwegs",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4111028_481734372.mp3",
+      "file_id": "ID4111028_481734372"
+    },
+    "2921": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: gender mismatch: expected f., got m",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Zuender",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4119766_102613345.mp3",
+      "file_id": "ID4119766_102613345"
+    },
+    "2935": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/zukuenftig_spaeter_baldig",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4120936_343695997.mp3",
+      "file_id": "ID4120936_343695997"
+    },
+    "2940": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/zunaechst_vorerst_anfangs",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4120088_61180229.mp3",
+      "file_id": "ID4120088_61180229"
+    },
+    "2961": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: gender mismatch: expected m./n., got der oder das",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Zvieri",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID6725830_405842306.mp3",
+      "file_id": "ID6725830_405842306"
+    }
+  }
+}

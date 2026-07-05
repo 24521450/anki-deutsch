@@ -1,0 +1,1356 @@
+{
+  "rows": {
+    "1": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/ab_Praeposition",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4117761_209997065.mp3",
+      "file_id": "ID4117761_209997065"
+    },
+    "2": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/aber_Konjunktion_Bedeutung_doch",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4117762_336997361.mp3",
+      "file_id": "ID4117762_336997361"
+    },
+    "8": {
+      "status": "ok",
+      "reason": "exact sitemap title metadata override: POS mismatch: expected interj., got Substantiv, feminin",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Achtung",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4109164_330610821.mp3",
+      "file_id": "ID4109164_330610821"
+    },
+    "11": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/allein_Adverb",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4129628_212031202.mp3",
+      "file_id": "ID4129628_212031202"
+    },
+    "12": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/also_Adverb",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4129327_73484174.mp3",
+      "file_id": "ID4129327_73484174"
+    },
+    "14": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Alter_Lebensabschnitt",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4109470_253951036.mp3",
+      "file_id": "ID4109470_253951036"
+    },
+    "15": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/an_Praeposition",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4113615_73481838.mp3",
+      "file_id": "ID4113615_73481838"
+    },
+    "34": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/an_sein",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4110498_440206863.mp3",
+      "file_id": "ID4110498_440206863"
+    },
+    "41": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Appetit",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4112131_134593298.mp3",
+      "file_id": "ID4112131_134593298"
+    },
+    "48": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/auch_Partikel_verstaerkend",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4127838_287372831.mp3",
+      "file_id": "ID4127838_287372831"
+    },
+    "49": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/auf_Praeposition",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4131669_69900760.mp3",
+      "file_id": "ID4131669_69900760"
+    },
+    "52": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/auf_sein",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4117094_416664908.mp3",
+      "file_id": "ID4117094_416664908"
+    },
+    "56": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/aus_Praeposition",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4107412_329720184.mp3",
+      "file_id": "ID4107412_329720184"
+    },
+    "67": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/aus_sein",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4109879_65760446.mp3",
+      "file_id": "ID4109879_65760446"
+    },
+    "71": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Auto_Fahrzeug",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4110583_296333104.mp3",
+      "file_id": "ID4110583_296333104"
+    },
+    "83": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Balkon",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4114823_73635867.mp3",
+      "file_id": "ID4114823_73635867"
+    },
+    "85": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Bank_Geldinstitut",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4110280_297169903.mp3",
+      "file_id": "ID4110280_297169903"
+    },
+    "86": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/bar_Adjektiv",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4110488_152372207.mp3",
+      "file_id": "ID4110488_152372207"
+    },
+    "93": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/beide",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4115634_284403394.mp3",
+      "file_id": "ID4115634_284403394"
+    },
+    "98": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Bekannte",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4106572_380263375.mp3",
+      "file_id": "ID4106572_380263375"
+    },
+    "100": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/benutzen",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4119000_454340968.mp3",
+      "file_id": "ID4119000_454340968"
+    },
+    "104": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/besser_Adjektiv",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4129649_183742976.mp3",
+      "file_id": "ID4129649_183742976"
+    },
+    "114": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/bis_Praeposition",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4107760_82326927.mp3",
+      "file_id": "ID4107760_82326927"
+    },
+    "116": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/bitte",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4113400_317664513.mp3",
+      "file_id": "ID4113400_317664513"
+    },
+    "139": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Cafe",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4117789_41626140.mp3",
+      "file_id": "ID4117789_41626140"
+    },
+    "140": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/CD_Compact_Disc",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4112283_140155835.mp3",
+      "file_id": "ID4112283_140155835"
+    },
+    "144": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/da_Adverb_dort_hier",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4106995_387591992.mp3",
+      "file_id": "ID4106995_387591992"
+    },
+    "145": {
+      "status": "ok",
+      "reason": "multiple exact pages with different first audio",
+      "match_method": "audit-sitemap-ambiguous-first-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Dame_Titel",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4108493_534301100.mp3",
+      "file_id": "ID4108493_534301100"
+    },
+    "146": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/daneben",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4121416_87080436.mp3",
+      "file_id": "ID4121416_87080436"
+    },
+    "149": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/danke",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4136255_526711555.mp3",
+      "file_id": "ID4136255_526711555"
+    },
+    "152": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/dauern_leidtun",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4136391_405425417.mp3",
+      "file_id": "ID4136391_405425417"
+    },
+    "154": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/denn_Konjunktion",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4130253_152817804.mp3",
+      "file_id": "ID4130253_152817804"
+    },
+    "155": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/der__die_das_bestimmte_Artikel",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4130243_9182302.mp3",
+      "file_id": "ID4130243_9182302"
+    },
+    "159": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Disco",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4110582_46498745.mp3",
+      "file_id": "ID4110582_46498745"
+    },
+    "168": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/durch_mittels",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4130231_370579891.mp3",
+      "file_id": "ID4130231_370579891"
+    },
+    "172": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/duschen",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4110469_37886329.mp3",
+      "file_id": "ID4110469_37886329"
+    },
+    "173": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Dusche",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4113475_96078314.mp3",
+      "file_id": "ID4113475_96078314"
+    },
+    "180": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/einfach_einmal_simpel",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4127873_283452836.mp3",
+      "file_id": "ID4127873_283452836"
+    },
+    "183": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/einladen_spendieren",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4120553_203234055.mp3",
+      "file_id": "ID4120553_203234055"
+    },
+    "184": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Einladung_Feier",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4139023_502251806.mp3",
+      "file_id": "ID4139023_502251806"
+    },
+    "185": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/einmal_irgendwann_frueher",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4129668_326955545.mp3",
+      "file_id": "ID4129668_326955545"
+    },
+    "189": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Eltern",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4117465_189711744.mp3",
+      "file_id": "ID4117465_189711744"
+    },
+    "190": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/E_Mail",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4253570_26795087.mp3",
+      "file_id": "ID4253570_26795087"
+    },
+    "201": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Erwachsene",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4110738_477482485.mp3",
+      "file_id": "ID4110738_477482485"
+    },
+    "203": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/es_das_man",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4110181_53153712.mp3",
+      "file_id": "ID4110181_53153712"
+    },
+    "205": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Essen_Nahrung",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4110882_3283053.mp3",
+      "file_id": "ID4110882_3283053"
+    },
+    "206": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/euer_dieser_dieses_euch_ihr",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4106598_294906568.mp3",
+      "file_id": "ID4106598_294906568"
+    },
+    "216": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Fax_Dokument__Geraet",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4111415_181507466.mp3",
+      "file_id": "ID4111415_181507466"
+    },
+    "237": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Foto_Fotografie",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4114455_156434385.mp3",
+      "file_id": "ID4114455_156434385"
+    },
+    "246": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/frueher_damals",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4129973_3800264.mp3",
+      "file_id": "ID4129973_3800264"
+    },
+    "250": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/fuer_statt",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4134738_280497645.mp3",
+      "file_id": "ID4134738_280497645"
+    },
+    "254": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Gast_eingeladene_Person",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4113379_529143877.mp3",
+      "file_id": "ID4113379_529143877"
+    },
+    "256": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/geboren",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4113265_194686458.mp3",
+      "file_id": "ID4113265_194686458"
+    },
+    "258": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Geburtsort",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4112440_101816189.mp3",
+      "file_id": "ID4112440_101816189"
+    },
+    "259": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Geburtstag",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4117121_505723146.mp3",
+      "file_id": "ID4117121_505723146"
+    },
+    "260": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/gefallen_reizen_begeistern",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4107033_178456370.mp3",
+      "file_id": "ID4107033_178456370"
+    },
+    "261": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/gegen_wider",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4131725_306482197.mp3",
+      "file_id": "ID4131725_306482197"
+    },
+    "267": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/gerade_soeben_direkt_knapp",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4109346_100820083.mp3",
+      "file_id": "ID4109346_100820083"
+    },
+    "269": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/gern",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4119209_458305202.mp3",
+      "file_id": "ID4119209_458305202"
+    },
+    "272": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Geschwister",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4111532_451665714.mp3",
+      "file_id": "ID4111532_451665714"
+    },
+    "277": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Gewicht_Druck",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4108723_339192295.mp3",
+      "file_id": "ID4108723_339192295"
+    },
+    "279": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Glas_Material",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4106978_189665862.mp3",
+      "file_id": "ID4106978_189665862"
+    },
+    "281": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/gleich_konvergent_einfoermig",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4106599_162973834.mp3",
+      "file_id": "ID4106599_162973834"
+    },
+    "284": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/gluecklich_selig_guenstig_passend",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4128752_40700173.mp3",
+      "file_id": "ID4128752_40700173"
+    },
+    "291": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Groszeltern",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4519947_421306743.mp3",
+      "file_id": "ID4519947_421306743"
+    },
+    "294": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Gruppe_Graben",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4110057_80179993.mp3",
+      "file_id": "ID4110057_80179993"
+    },
+    "299": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Haar_Kopfhaar",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4116411_200436821.mp3",
+      "file_id": "ID4116411_200436821"
+    },
+    "300": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/haben_Hilfsverb",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4241520_507379790.mp3",
+      "file_id": "ID4241520_507379790"
+    },
+    "304": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/hallo",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4111461_43137687.mp3",
+      "file_id": "ID4111461_43137687"
+    },
+    "315": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/heiszen_hissen",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4111695_403590219.mp3",
+      "file_id": "ID4111695_403590219"
+    },
+    "326": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/hoch_bedeutend_grosz_stattlich",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4111420_498925622.mp3",
+      "file_id": "ID4111420_498925622"
+    },
+    "327": {
+      "status": "ok",
+      "reason": "multiple exact pages with different first audio",
+      "match_method": "audit-sitemap-ambiguous-first-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Hochzeit_Bluetezeit",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4111408_523104078.mp3",
+      "file_id": "ID4111408_523104078"
+    },
+    "334": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/ihr_Anrede_2_Person",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4111002_42025969.mp3",
+      "file_id": "ID4111002_42025969"
+    },
+    "335": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/immer_stets_fortdauernd_je",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4128518_394014332.mp3",
+      "file_id": "ID4128518_394014332"
+    },
+    "336": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/in_innen",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4295542_498308019.mp3",
+      "file_id": "ID4295542_498308019"
+    },
+    "343": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/jetzt_nun_heute_inzwischen",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4131362_116469920.mp3",
+      "file_id": "ID4131362_116469920"
+    },
+    "344": {
+      "status": "ok",
+      "reason": "multiple exact pages with different first audio",
+      "match_method": "audit-sitemap-ambiguous-first-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Job_Arbeit",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4111899_371258100.mp3",
+      "file_id": "ID4111899_371258100"
+    },
+    "345": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Jugendliche",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4111054_4949382.mp3",
+      "file_id": "ID4111054_4949382"
+    },
+    "348": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Kaffee",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4108558_89408559.mp3",
+      "file_id": "ID4108558_89408559"
+    },
+    "355": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/kein",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4114530_24633723.mp3",
+      "file_id": "ID4114530_24633723"
+    },
+    "361": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Kiosk",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4114057_34117215.mp3",
+      "file_id": "ID4114057_34117215"
+    },
+    "362": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/klar_erkennbar_anschaulich",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4121961_41193754.mp3",
+      "file_id": "ID4121961_41193754"
+    },
+    "373": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/kosten_betragen",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4294124_200937982.mp3",
+      "file_id": "ID4294124_200937982"
+    },
+    "375": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/kriegen_bekaempfen",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4121040_310983395.mp3",
+      "file_id": "ID4121040_310983395"
+    },
+    "382": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Kunde_Kaeufer_Kerl",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4111193_497718077.mp3",
+      "file_id": "ID4111193_497718077"
+    },
+    "388": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/lang_Adjektiv_auch_raeumlich",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4115660_3844413.mp3",
+      "file_id": "ID4115660_3844413"
+    },
+    "389": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/lange",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4119820_480362967.mp3",
+      "file_id": "ID4119820_480362967"
+    },
+    "392": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/laut_vernehmbar_droehnend",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4174128_504235124.mp3",
+      "file_id": "ID4174128_504235124"
+    },
+    "395": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Lebensmittel",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4112799_337683602.mp3",
+      "file_id": "ID4112799_337683602"
+    },
+    "403": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/lesen_aufsammeln",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4108298_54496835.mp3",
+      "file_id": "ID4108298_54496835"
+    },
+    "405": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Leute",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4116737_348542139.mp3",
+      "file_id": "ID4116737_348542139"
+    },
+    "409": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/lieber_besser_moeglichst",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4295538_51676041.mp3",
+      "file_id": "ID4295538_51676041"
+    },
+    "412": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/liegen_lehnen_ruhen",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4114692_28439416.mp3",
+      "file_id": "ID4114692_28439416"
+    },
+    "413": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/links_seitwaerts",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4284185_438024498.mp3",
+      "file_id": "ID4284185_438024498"
+    },
+    "414": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Lkw",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4109124_392571671.mp3",
+      "file_id": "ID4109124_392571671"
+    },
+    "420": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/man_jemand",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4107184_167735835.mp3",
+      "file_id": "ID4107184_167735835"
+    },
+    "421": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Mann_Person",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4107184_167735835.mp3",
+      "file_id": "ID4107184_167735835"
+    },
+    "425": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/mehr_ferner_hoeher_besser",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4131520_291192733.mp3",
+      "file_id": "ID4131520_291192733"
+    },
+    "426": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/mein_Genitiv",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4111766_409252783.mp3",
+      "file_id": "ID4111766_409252783"
+    },
+    "428": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Mensch_Individuum",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4120131_306925235.mp3",
+      "file_id": "ID4120131_306925235"
+    },
+    "429": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/mieten_lagern",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4110351_474787350.mp3",
+      "file_id": "ID4110351_474787350"
+    },
+    "430": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Miete_Pacht",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4114864_20480889.mp3",
+      "file_id": "ID4114864_20480889"
+    },
+    "432": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/mit_inklusive_auch_mitsamt",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4131517_132729270.mp3",
+      "file_id": "ID4131517_132729270"
+    },
+    "438": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Moebel",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4110350_149449710.mp3",
+      "file_id": "ID4110350_149449710"
+    },
+    "442": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Moment_Zeitpunkt",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4111108_235792794.mp3",
+      "file_id": "ID4111108_235792794"
+    },
+    "445": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Mund_Lippen",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4107410_19164363.mp3",
+      "file_id": "ID4107410_19164363"
+    },
+    "447": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Mutter_Frau",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4173977_490165233.mp3",
+      "file_id": "ID4173977_490165233"
+    },
+    "448": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/nach_zu_hin_entsprechend",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4133818_148192341.mp3",
+      "file_id": "ID4133818_148192341"
+    },
+    "450": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Name_Ruf_Benennung_Bezeichnung",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4118331_466014235.mp3",
+      "file_id": "ID4118331_466014235"
+    },
+    "454": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/nicht_keineswegs_nein",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4173690_227530459.mp3",
+      "file_id": "ID4173690_227530459"
+    },
+    "457": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/noch_nun_bis_jetzt_viel",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4173736_448677468.mp3",
+      "file_id": "ID4173736_448677468"
+    },
+    "460": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/nur_denn_doch",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4108030_46680056.mp3",
+      "file_id": "ID4108030_46680056"
+    },
+    "467": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/ohne_Praeposition",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4107600_140995778.mp3",
+      "file_id": "ID4107600_140995778"
+    },
+    "472": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Ort_Platz",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4133890_76646376.mp3",
+      "file_id": "ID4133890_76646376"
+    },
+    "478": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Pass_Dokument",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4113587_235931881.mp3",
+      "file_id": "ID4113587_235931881"
+    },
+    "479": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Pause_Kopie",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4520935_398053470.mp3",
+      "file_id": "ID4520935_398053470"
+    },
+    "480": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Plan_Kampfplatz",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4106774_436617762.mp3",
+      "file_id": "ID4106774_436617762"
+    },
+    "483": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Pommes_frites",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4107749_475125425.mp3",
+      "file_id": "ID4107749_475125425"
+    },
+    "484": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Post_Unternehmen",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4127206_221611734.mp3",
+      "file_id": "ID4127206_221611734"
+    },
+    "490": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Prospekt",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4111757_398812270.mp3",
+      "file_id": "ID4111757_398812270"
+    },
+    "493": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Rad_fahren",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4537056_326534781.mp3",
+      "file_id": "ID4537056_326534781"
+    },
+    "497": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/rechts_rechtsseitig_rechterseits",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4129410_254590708.mp3",
+      "file_id": "ID4129410_254590708"
+    },
+    "499": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Regen_Fluss",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4113365_147417024.mp3",
+      "file_id": "ID4113365_147417024"
+    },
+    "500": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Reis_Muenze",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4116007_180661192.mp3",
+      "file_id": "ID4116007_180661192"
+    },
+    "509": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/richtig_fehlerfrei__passend",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4129412_229536983.mp3",
+      "file_id": "ID4129412_229536983"
+    },
+    "511": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/ruhig_starr_leise_beherrscht_still",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4129405_236196268.mp3",
+      "file_id": "ID4129405_236196268"
+    },
+    "514": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Salat_Speise",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4111133_58338424.mp3",
+      "file_id": "ID4111133_58338424"
+    },
+    "517": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/S_Bahn",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4115260_528509927.mp3",
+      "file_id": "ID4115260_528509927"
+    },
+    "520": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/schicken_senden",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4110046_353549697.mp3",
+      "file_id": "ID4110046_353549697"
+    },
+    "521": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Schild_Tafel",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4175583_289514048.mp3",
+      "file_id": "ID4175583_289514048"
+    },
+    "526": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/geschlossen_verschlossen",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4117521_52470868.mp3",
+      "file_id": "ID4117521_52470868"
+    },
+    "531": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/schon_bereits_eh_laengst",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4131371_314830501.mp3",
+      "file_id": "ID4131371_314830501"
+    },
+    "533": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Schrank_Moebel_Abweichung",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4113151_188493231.mp3",
+      "file_id": "ID4113151_188493231"
+    },
+    "542": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/See_Binnengewaesser",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4118768_90970794.mp3",
+      "file_id": "ID4118768_90970794"
+    },
+    "549": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/seit_von_da_an_spaeter_als",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4112364_32794148.mp3",
+      "file_id": "ID4112364_32794148"
+    },
+    "550": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/selbststaendig",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4111125_293173759.mp3",
+      "file_id": "ID4111125_293173759"
+    },
+    "555": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/so_derartig_solch_genauso_etwa",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4110506_277865495.mp3",
+      "file_id": "ID4110506_277865495"
+    },
+    "562": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/spaeter_kuenftig_irgendwann",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4118150_177789526.mp3",
+      "file_id": "ID4118150_177789526"
+    },
+    "572": {
+      "status": "ok",
+      "reason": "multiple exact pages with different first audio",
+      "match_method": "audit-sitemap-ambiguous-first-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Stock_Bestand",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4112148_202331153.mp3",
+      "file_id": "ID4112148_202331153"
+    },
+    "582": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Taxi",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4114384_518599730.mp3",
+      "file_id": "ID4114384_518599730"
+    },
+    "583": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Tee_Getraenk",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4119558_444702809.mp3",
+      "file_id": "ID4119558_444702809"
+    },
+    "584": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Teil",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4106818_230250061.mp3",
+      "file_id": "ID4106818_230250061"
+    },
+    "590": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Text_Schrift",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4111926_279641129.mp3",
+      "file_id": "ID4111926_279641129"
+    },
+    "602": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/tun_handeln",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4110623_70132788.mp3",
+      "file_id": "ID4110623_70132788"
+    },
+    "603": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/ueber_auf_darueber_darauf",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4119852_180460428.mp3",
+      "file_id": "ID4119852_180460428"
+    },
+    "607": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/um_herum_vorbei_fuer",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4106608_418796679.mp3",
+      "file_id": "ID4106608_418796679"
+    },
+    "608": {
+      "status": "ok",
+      "reason": "multiple exact pages with different first audio",
+      "match_method": "audit-sitemap-ambiguous-first-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/umziehen_umgezogen",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4107705_530652969.mp3",
+      "file_id": "ID4107705_530652969"
+    },
+    "612": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/unter_darunter_abwaerts_tiefer",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4107492_353331924.mp3",
+      "file_id": "ID4107492_353331924"
+    },
+    "627": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Verwandte",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4113358_123010214.mp3",
+      "file_id": "ID4113358_123010214"
+    },
+    "628": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/viel_sehr_besonders_wesentlich",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4108191_377905870.mp3",
+      "file_id": "ID4108191_377905870"
+    },
+    "629": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/vielleicht_eventuell_circa",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4109629_523310968.mp3",
+      "file_id": "ID4109629_523310968"
+    },
+    "630": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/von_aus_ab_durch_per_seitens",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4109481_261960661.mp3",
+      "file_id": "ID4109481_261960661"
+    },
+    "631": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/vor_bevor_aus_gegen_heraus",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4115267_427368299.mp3",
+      "file_id": "ID4115267_427368299"
+    },
+    "637": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/wann_dann_wenn",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4115453_516012268.mp3",
+      "file_id": "ID4115453_516012268"
+    },
+    "640": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/was_Indefinitpronomen",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4108087_169239916.mp3",
+      "file_id": "ID4108087_169239916"
+    },
+    "651": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/wenig_kaum_unbedeutend_selten",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4111491_433313826.mp3",
+      "file_id": "ID4111491_433313826"
+    },
+    "652": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/wer_Indefinitpronomen",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4108115_534510387.mp3",
+      "file_id": "ID4108115_534510387"
+    },
+    "653": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/werden_Hilfsverb",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4109851_142794597.mp3",
+      "file_id": "ID4109851_142794597"
+    },
+    "654": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Wetter_Klima",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4114160_83082993.mp3",
+      "file_id": "ID4114160_83082993"
+    },
+    "656": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/wie_Adverb_Frage",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4112247_188871001.mp3",
+      "file_id": "ID4112247_188871001"
+    },
+    "657": {
+      "status": "ok",
+      "reason": "multiple exact pages with different first audio",
+      "match_method": "audit-sitemap-ambiguous-first-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/wiederholen_wiedergeholt",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4128968_521945927.mp3",
+      "file_id": "ID4128968_521945927"
+    },
+    "660": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/wie_viel",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4118907_333704067.mp3",
+      "file_id": "ID4118907_333704067"
+    },
+    "661": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "exact-headword-metadata-override",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/willkommen",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4121412_227805791.mp3",
+      "file_id": "ID4121412_227805791"
+    },
+    "665": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/wo_Fragewort",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4112236_189466343.mp3",
+      "file_id": "ID4112236_189466343"
+    },
+    "670": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/wollen_moechten_wuenschen",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4119015_353368863.mp3",
+      "file_id": "ID4119015_353368863"
+    },
+    "679": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Zoll_Behoerde",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4120722_32489142.mp3",
+      "file_id": "ID4120722_32489142"
+    },
+    "680": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/zu_Praeposition",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4108202_479082583.mp3",
+      "file_id": "ID4108202_479082583"
+    },
+    "682": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/Zug_Kanton",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4121001_164486137.mp3",
+      "file_id": "ID4121001_164486137"
+    },
+    "685": {
+      "status": "ok",
+      "reason": "exact Duden headword with accepted metadata and first pronunciation",
+      "match_method": "audit-sitemap-exact",
+      "duden_page_url": "https://www.duden.de/rechtschreibung/zwischen_innerhalb_inmitten_binnen",
+      "duden_audio_url": "https://cdn.duden.de/_media_/audio/ID4115831_274531969.mp3",
+      "file_id": "ID4115831_274531969"
+    }
+  }
+}
