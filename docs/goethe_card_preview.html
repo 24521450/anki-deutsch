@@ -1,0 +1,491 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Goethe Werkstatt — Anki Card Preview</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --page: #0e1012;
+      --card: #14171a;
+      --section: #1b1f23;
+      --border: #30353b;
+      --border-soft: #252a2f;
+      --ivory: #f3f0e8;
+      --text: #d9dde2;
+      --muted: #9aa3ae;
+      --dim: #69737e;
+      --green: #68c9a8;
+      --a1: #68c9b5;
+      --a2: #e5b85b;
+      --b1: #7fa8ff;
+      --der: #7fa8ff;
+      --die: #f08aa6;
+      --das: #72cda5;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 36px 18px 64px;
+      background:
+        linear-gradient(rgba(255, 255, 255, .018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, .018) 1px, transparent 1px),
+        radial-gradient(circle at 12% 4%, rgba(104, 201, 168, .12), transparent 25rem),
+        var(--page);
+      background-size: 28px 28px, 28px 28px, auto, auto;
+      color: var(--text);
+      font-family: Inter, "Segoe UI", system-ui, sans-serif;
+    }
+
+    button, summary { font: inherit; }
+    button:focus-visible, summary:focus-visible { outline: 2px solid var(--green); outline-offset: 3px; }
+
+    .page { width: min(1180px, 100%); margin: auto; }
+    .masthead { display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: end; margin-bottom: 26px; }
+    .eyebrow { margin: 0 0 8px; color: var(--green); font: 750 11px ui-monospace, "Cascadia Mono", monospace; letter-spacing: .16em; text-transform: uppercase; }
+    h1 { margin: 0; color: var(--ivory); font-size: clamp(31px, 5vw, 54px); letter-spacing: -.045em; line-height: 1; }
+    .intro { max-width: 680px; margin: 12px 0 0; color: var(--muted); line-height: 1.6; }
+    .principle { padding-left: 17px; border-left: 3px solid var(--green); color: var(--muted); font-size: 13px; line-height: 1.55; }
+
+    .sample-picker { display: flex; gap: 7px; overflow-x: auto; padding: 3px 0 16px; scrollbar-width: thin; }
+    .sample-picker button {
+      flex: 0 0 auto;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      background: #15181b;
+      color: var(--muted);
+      cursor: pointer;
+      font: 700 11px ui-monospace, "Cascadia Mono", monospace;
+      letter-spacing: .035em;
+      transition: border-color .15s, color .15s, background .15s;
+    }
+    .sample-picker button:hover, .sample-picker button.active { border-color: var(--green); color: var(--ivory); background: #19221f; }
+
+    .preview-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; align-items: start; }
+    .preview-label { display: flex; justify-content: space-between; margin: 0 2px 8px; color: var(--dim); font: 700 10px ui-monospace, "Cascadia Mono", monospace; letter-spacing: .13em; text-transform: uppercase; }
+    .preview-label span:last-child { color: var(--green); }
+
+    .anki-card {
+      position: relative;
+      overflow: hidden;
+      min-height: 510px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--card);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, .38);
+    }
+    .anki-card::before { content: ""; display: block; height: 4px; background: var(--level-color); }
+
+    .meta-rail { display: flex; justify-content: space-between; align-items: center; gap: 14px; padding: 13px 17px; border-bottom: 1px solid var(--border-soft); }
+    .meta-group { display: flex; align-items: center; gap: 9px; min-width: 0; }
+    .brand { color: var(--ivory); font: 800 10px ui-monospace, "Cascadia Mono", monospace; letter-spacing: .12em; }
+    .meta-separator { width: 1px; height: 13px; background: var(--border); }
+    .pos { overflow: hidden; color: var(--muted); font: 700 10px ui-monospace, "Cascadia Mono", monospace; letter-spacing: .08em; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
+    .level { flex: 0 0 auto; color: var(--level-color); font: 800 11px ui-monospace, "Cascadia Mono", monospace; }
+
+    .front-body { min-height: 447px; display: grid; place-content: center; justify-items: center; padding: 42px 24px; text-align: center; }
+    .headword { max-width: 100%; margin: 0; color: var(--ivory); font-size: clamp(38px, 6vw, 60px); font-weight: 720; letter-spacing: -.04em; line-height: 1.08; overflow-wrap: anywhere; }
+    .recall { margin: 16px 0 25px; color: var(--dim); font-size: 13px; }
+
+    .audio-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      width: fit-content;
+      padding: 7px 11px;
+      border: 1px solid #35443f;
+      border-radius: 6px;
+      background: #17201d;
+      color: #b9d7cc;
+      font: 750 10px ui-monospace, "Cascadia Mono", monospace;
+      letter-spacing: .07em;
+    }
+    .play-icon { width: 0; height: 0; border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left: 8px solid currentColor; }
+    .audio-missing { border-color: var(--border); background: transparent; color: var(--dim); }
+
+    .back-body { display: flex; flex-direction: column; gap: 14px; padding: 23px 18px 20px; }
+    .answer-hero { padding: 5px 2px 7px; }
+    .answer-label, .section-title { margin-bottom: 8px; color: var(--dim); font: 750 9px ui-monospace, "Cascadia Mono", monospace; letter-spacing: .14em; text-transform: uppercase; }
+    .meaning { color: var(--ivory); font-size: clamp(29px, 4.5vw, 43px); font-weight: 690; letter-spacing: -.025em; line-height: 1.12; overflow-wrap: anywhere; }
+    .lemma-anchor { margin-top: 9px; color: var(--muted); font-size: 14px; }
+
+    .grammar-rail { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 13px; padding: 12px 14px; border-left: 3px solid var(--level-color); background: #171b1e; }
+    .article { font-size: 18px; font-weight: 800; }
+    .article-der { color: var(--der); }
+    .article-die { color: var(--die); }
+    .article-das { color: var(--das); }
+    .grammar-value { color: var(--text); font: 650 13px ui-monospace, "Cascadia Mono", monospace; line-height: 1.5; }
+    .grammar-note { color: var(--muted); font-size: 12px; }
+
+    .section { padding: 14px 15px; border: 1px solid var(--border-soft); border-radius: 10px; background: var(--section); }
+    .example + .example { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border-soft); }
+    .example-top { display: flex; justify-content: space-between; gap: 12px; align-items: start; }
+    .example-en { color: var(--text); font-size: 15px; font-weight: 610; line-height: 1.55; }
+    .example-de { margin-top: 5px; color: var(--muted); font-size: 13.5px; line-height: 1.55; }
+    mark { padding: 0; color: var(--ivory); background: transparent; font-weight: 760; text-decoration: underline; text-decoration-color: rgba(104, 201, 168, .6); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+    .mini-audio { flex: 0 0 auto; color: var(--green); font: 800 10px ui-monospace, "Cascadia Mono", monospace; }
+
+    details { margin-top: 13px; padding-top: 11px; border-top: 1px solid var(--border-soft); }
+    summary { width: fit-content; color: var(--green); cursor: pointer; font: 750 11px ui-monospace, "Cascadia Mono", monospace; }
+    details .example { margin-top: 13px; padding-top: 0; border-top: 0; }
+    .region-list { display: flex; flex-wrap: wrap; gap: 7px; }
+    .region-item { padding: 5px 8px; border: 1px solid #3a4148; border-radius: 5px; color: var(--muted); font: 650 11px ui-monospace, "Cascadia Mono", monospace; }
+    .region-code { margin-right: 5px; color: var(--ivory); font-weight: 800; }
+    .usage { color: var(--muted); font-size: 13px; line-height: 1.55; }
+
+    .field-panel { margin-top: 32px; }
+    .panel-heading { display: flex; justify-content: space-between; gap: 20px; align-items: end; margin-bottom: 13px; }
+    .panel-heading h2 { margin: 0; color: var(--ivory); font-size: 24px; letter-spacing: -.025em; }
+    .panel-heading p { max-width: 670px; margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+    .field-table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 11px; background: var(--card); }
+    table { width: 100%; min-width: 760px; border-collapse: collapse; text-align: left; }
+    th, td { padding: 10px 13px; border-bottom: 1px solid var(--border-soft); vertical-align: top; }
+    tr:last-child th, tr:last-child td { border-bottom: 0; }
+    thead th { color: var(--dim); background: #171a1d; font: 750 9px ui-monospace, "Cascadia Mono", monospace; letter-spacing: .12em; text-transform: uppercase; }
+    tbody th { width: 175px; color: var(--green); font: 700 11px ui-monospace, "Cascadia Mono", monospace; }
+    td { color: var(--text); font-size: 12.5px; line-height: 1.5; }
+    .status { font: 750 10px ui-monospace, "Cascadia Mono", monospace; text-transform: uppercase; }
+    .status-rendered { color: var(--green); }
+    .status-hidden { color: var(--a2); }
+    .status-empty { color: var(--dim); }
+    .field-empty { color: var(--dim); font-style: italic; }
+    .provenance-demo { color: var(--a2); }
+
+    .data-note { margin-top: 14px; padding: 12px 14px; border-left: 3px solid var(--a2); background: rgba(229, 184, 91, .06); color: var(--muted); font-size: 12.5px; line-height: 1.55; }
+
+    @media (max-width: 800px) {
+      body { padding: 25px 12px 45px; }
+      .masthead { grid-template-columns: 1fr; }
+      .principle { display: none; }
+      .preview-grid { grid-template-columns: 1fr; }
+      .anki-card { min-height: auto; }
+      .front-body { min-height: 390px; }
+      .panel-heading { display: block; }
+      .panel-heading p { margin-top: 7px; }
+    }
+
+    @media (max-width: 420px) {
+      .meta-rail, .back-body { padding-left: 14px; padding-right: 14px; }
+      .headword { font-size: clamp(35px, 13vw, 50px); }
+      .meaning { font-size: 29px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="masthead">
+      <div>
+        <p class="eyebrow">Anki card design study · German → English</p>
+        <h1>Goethe Werkstatt</h1>
+        <p class="intro">Một note type thống nhất cho Goethe A1–B1: ít trang trí, nhiều tín hiệu học tập, và không đưa thông tin không có nguồn vào card.</p>
+      </div>
+      <div class="principle">FRONT: recall<br>BACK: verify + context<br>FIELDS: trace the source</div>
+    </header>
+
+    <nav class="sample-picker" aria-label="Chọn trường hợp mẫu">
+      <button class="active" data-sample="noun">A1 · noun</button>
+      <button data-sample="verb">A2 · verb</button>
+      <button data-sample="phrase">A1 · phrase</button>
+      <button data-sample="regional">B1 · D/A/CH</button>
+      <button data-sample="compound">B1 · long compound</button>
+    </nav>
+
+    <section class="preview-grid" aria-label="Card preview">
+      <div>
+        <p class="preview-label"><span>Front</span><span>German</span></p>
+        <article class="anki-card" id="front-card"></article>
+      </div>
+      <div>
+        <p class="preview-label"><span>Back</span><span>English</span></p>
+        <article class="anki-card" id="back-card"></article>
+      </div>
+    </section>
+
+    <section class="field-panel">
+      <div class="panel-heading">
+        <h2>Field inspector</h2>
+        <p>Giá trị, nguồn gốc và trạng thái render của unified schema. Field trống không tạo khoảng trắng trên card.</p>
+      </div>
+      <div class="field-table-wrap">
+        <table>
+          <thead><tr><th>Field</th><th>Value</th><th>Provenance</th><th>Card state</th></tr></thead>
+          <tbody id="field-rows"></tbody>
+        </table>
+      </div>
+      <div class="data-note" id="data-note"></div>
+    </section>
+  </main>
+
+  <script>
+    const samples = {
+      noun: {
+        sourceId: "goethe-a1-0033",
+        lemma: "Anschluss",
+        article: "der",
+        cefr: "A1",
+        pos: "noun",
+        gender: "m.",
+        nounForms: "",
+        verbForms: "",
+        formNote: "",
+        meaning: "connection",
+        examples: [
+          { de: "In Mannheim haben Sie <mark>Anschluss</mark> nach Saarbrücken.", en: "In Mannheim you have a connection to Saarbrücken.", audio: true }
+        ],
+        wordAudio: true,
+        usage: "",
+        regions: [],
+        sourceNote: "der Anschluss",
+        legacyGuid: "e1[mFfn0n(",
+        formsProvenance: "Goethe A1 source",
+        englishProvenance: "Anki A1 export",
+        note: "A1 English meaning, translation and sentence audio exist in the current Anki export."
+      },
+      verb: {
+        sourceId: "goethe-a2-0019",
+        lemma: "anbieten",
+        article: "",
+        cefr: "A2",
+        pos: "verb",
+        gender: "",
+        nounForms: "",
+        verbForms: "bietet an · hat angeboten",
+        formNote: "",
+        meaning: "to offer",
+        examples: [
+          { de: "Er hat mir eine Stelle als Verkäuferin <mark>angeboten</mark>.", en: "He offered me a job as a saleswoman.", audio: true },
+          { de: "Darf ich Ihnen ein Stück Kuchen <mark>anbieten</mark>?", en: "May I offer you a piece of cake?", audio: true },
+          { de: "Darf ich dir ein Stück Kuchen <mark>anbieten</mark>?", en: "Can I offer you a piece of cake?", audio: true }
+        ],
+        wordAudio: true,
+        usage: "",
+        regions: [],
+        sourceNote: "anbieten,",
+        legacyGuid: "smJBqsiTg4",
+        formsProvenance: "Current Anki A2 export",
+        englishProvenance: "Anki A2 export",
+        note: "The third example is kept with its translation and audio inside the expandable block."
+      },
+      phrase: {
+        sourceId: "anki-a1-note-0478",
+        lemma: "Das macht nichts.",
+        article: "",
+        cefr: "A1",
+        pos: "fixed phrase",
+        gender: "",
+        nounForms: "",
+        verbForms: "",
+        formNote: "feste Wendung",
+        meaning: "It doesn’t matter. / No problem.",
+        examples: [
+          { de: "Entschuldigung! — <mark>Das macht nichts.</mark>", en: "Sorry! — It doesn’t matter.", audio: true }
+        ],
+        wordAudio: false,
+        usage: "Used as a complete response to an apology or minor problem.",
+        regions: [],
+        sourceNote: "source sentence under machen",
+        legacyGuid: "GA}J)Y`?TD",
+        formsProvenance: "Not applicable",
+        englishProvenance: "Anki A1 export",
+        note: "The phrase exists as a separate A1 note in the current deck; no standalone word audio is assumed."
+      },
+      regional: {
+        sourceId: "goethe-b1-0447",
+        lemma: "Brötchen",
+        article: "das",
+        cefr: "B1",
+        pos: "noun",
+        gender: "n.",
+        nounForms: "-",
+        verbForms: "",
+        formNote: "Germany variant",
+        meaning: "bread roll",
+        examples: [
+          { de: "Ich hole schnell ein paar <mark>Brötchen</mark> zum Frühstück.", en: "I’ll quickly get a few bread rolls for breakfast.", audio: false }
+        ],
+        wordAudio: false,
+        usage: "Regional alternatives are source metadata, not separate English senses.",
+        regions: [
+          { code: "D", value: "Brötchen" },
+          { code: "A", value: "Semmel" },
+          { code: "CH", value: "Brötli" }
+        ],
+        sourceNote: "das Brötchen, - (D); → A: Semmel; CH: Brötli",
+        legacyGuid: "",
+        formsProvenance: "Goethe B1 source",
+        englishProvenance: "Demo enrichment",
+        note: "B1 has no English dataset in this repository. English content here is clearly marked as demo enrichment."
+      },
+      compound: {
+        sourceId: "goethe-b1-1020",
+        lemma: "Geschwindigkeitsbeschränkung",
+        article: "die",
+        cefr: "B1",
+        pos: "noun",
+        gender: "f.",
+        nounForms: "-en",
+        verbForms: "",
+        formNote: "",
+        meaning: "speed limit",
+        examples: [
+          { de: "Bitte beachten Sie die <mark>Geschwindigkeitsbeschränkungen</mark>.", en: "Please observe the speed limits.", audio: false }
+        ],
+        wordAudio: false,
+        usage: "Long compounds wrap naturally without shrinking the entire card.",
+        regions: [],
+        sourceNote: "die Geschwindigkeitsbeschränkung, -en",
+        legacyGuid: "",
+        formsProvenance: "Goethe B1 source",
+        englishProvenance: "Demo enrichment",
+        note: "This stress case validates long German compounds at mobile widths; B1 English is not source-backed yet."
+      }
+    };
+
+    const fieldOrder = [
+      "SourceID", "Lemma", "Article", "CEFR", "POS", "Gender", "NounFormsRaw",
+      "VerbFormsRaw", "FormOrVariantNote", "MeaningEN", "PrimaryExampleDE",
+      "PrimaryExampleEN", "MoreExamplesHTML", "WordAudio", "PrimaryExampleAudio",
+      "UsageNoteEN", "RegionalVariants", "SourceNoteRaw", "LegacyGUID"
+    ];
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, function (char) {
+        return { "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[char];
+      });
+    }
+
+    function stripMarkup(value) {
+      return value.replace(/<\/?mark>/g, "");
+    }
+
+    function metaRail(sample) {
+      return `<div class="meta-rail"><div class="meta-group"><span class="brand">GOETHE</span><span class="meta-separator"></span><span class="pos">${escapeHtml(sample.pos)}</span></div><span class="level">${sample.cefr}</span></div>`;
+    }
+
+    function audioButton(available, label) {
+      if (!available) return `<span class="audio-button audio-missing">NO ${label} AUDIO</span>`;
+      return `<span class="audio-button"><span class="play-icon"></span>${label} AUDIO</span>`;
+    }
+
+    function articleClass(article) {
+      return article === "der" || article === "die" || article === "das" ? `article-${article}` : "";
+    }
+
+    function grammarRail(sample) {
+      const parts = [];
+      if (sample.article) parts.push(`<span class="article ${articleClass(sample.article)}">${sample.article}</span>`);
+      if (sample.nounForms) parts.push(`<span class="grammar-value">Plural: ${escapeHtml(sample.nounForms)}</span>`);
+      if (sample.verbForms) parts.push(`<span class="grammar-value">${escapeHtml(sample.verbForms)}</span>`);
+      if (sample.formNote) parts.push(`<span class="grammar-note">${escapeHtml(sample.formNote)}</span>`);
+      if (!parts.length) return "";
+      return `<div class="grammar-rail">${parts.join("")}</div>`;
+    }
+
+    function exampleBlock(example, index) {
+      const audio = example.audio ? `<span class="mini-audio">▶ ${index + 1}</span>` : "";
+      return `<div class="example"><div class="example-top"><div class="example-en">${escapeHtml(example.en)}</div>${audio}</div><div class="example-de">${example.de}</div></div>`;
+    }
+
+    function examplesSection(sample) {
+      if (!sample.examples.length) return "";
+      const primary = sample.examples.slice(0, 2).map(exampleBlock).join("");
+      const more = sample.examples.slice(2);
+      const details = more.length ? `<details><summary>Show ${more.length} more example${more.length > 1 ? "s" : ""}</summary>${more.map(function (example, index) { return exampleBlock(example, index + 2); }).join("")}</details>` : "";
+      return `<section class="section"><div class="section-title">Examples · English first</div>${primary}${details}</section>`;
+    }
+
+    function regionsSection(sample) {
+      if (!sample.regions.length) return "";
+      const items = sample.regions.map(function (region) { return `<span class="region-item"><span class="region-code">${region.code}</span>${escapeHtml(region.value)}</span>`; }).join("");
+      return `<section class="section"><div class="section-title">Regional forms</div><div class="region-list">${items}</div></section>`;
+    }
+
+    function usageSection(sample) {
+      if (!sample.usage) return "";
+      return `<section class="section"><div class="section-title">Usage note</div><div class="usage">${escapeHtml(sample.usage)}</div></section>`;
+    }
+
+    function fieldData(sample) {
+      const moreExamples = sample.examples.slice(2).map(function (example) { return `${stripMarkup(example.de)} ↔ ${example.en}${example.audio ? " + audio" : ""}`; }).join(" || ");
+      const regions = sample.regions.map(function (region) { return `${region.code}: ${region.value}`; }).join("; ");
+      return {
+        SourceID: sample.sourceId,
+        Lemma: sample.lemma,
+        Article: sample.article,
+        CEFR: sample.cefr,
+        POS: sample.pos,
+        Gender: sample.gender,
+        NounFormsRaw: sample.nounForms,
+        VerbFormsRaw: sample.verbForms,
+        FormOrVariantNote: sample.formNote,
+        MeaningEN: sample.meaning,
+        PrimaryExampleDE: sample.examples[0] ? stripMarkup(sample.examples[0].de) : "",
+        PrimaryExampleEN: sample.examples[0] ? sample.examples[0].en : "",
+        MoreExamplesHTML: moreExamples,
+        WordAudio: sample.wordAudio ? "[sound:word-audio.mp3]" : "",
+        PrimaryExampleAudio: sample.examples[0] && sample.examples[0].audio ? "[sound:example-01.mp3]" : "",
+        UsageNoteEN: sample.usage,
+        RegionalVariants: regions,
+        SourceNoteRaw: sample.sourceNote,
+        LegacyGUID: sample.legacyGuid
+      };
+    }
+
+    function provenanceFor(field, sample) {
+      if (field === "SourceID" && sample.sourceId.indexOf("anki-") === 0) return "Current Anki export";
+      if (["MeaningEN", "PrimaryExampleEN", "UsageNoteEN"].indexOf(field) !== -1) return sample.englishProvenance;
+      if (["Article", "Gender", "NounFormsRaw", "VerbFormsRaw", "FormOrVariantNote"].indexOf(field) !== -1) return sample.formsProvenance;
+      if (["WordAudio", "PrimaryExampleAudio", "LegacyGUID"].indexOf(field) !== -1) return sample.legacyGuid ? "Current Anki export" : "Not available";
+      if (field === "MoreExamplesHTML") return sample.examples.length > 2 ? `${sample.englishProvenance} + paired DE source` : "Not needed";
+      return "Goethe source / normalized";
+    }
+
+    function stateFor(field, value) {
+      if (!value) return "empty";
+      if (field === "Article") return "hidden";
+      if (["SourceID", "Gender", "SourceNoteRaw", "LegacyGUID"].indexOf(field) !== -1) return "hidden";
+      return "rendered";
+    }
+
+    function renderFields(sample) {
+      const data = fieldData(sample);
+      document.querySelector("#field-rows").innerHTML = fieldOrder.map(function (field) {
+        const value = data[field];
+        const state = stateFor(field, value);
+        const provenance = provenanceFor(field, sample);
+        const demoClass = provenance === "Demo enrichment" ? "provenance-demo" : "";
+        return `<tr><th>${field}</th><td class="${value ? "" : "field-empty"}">${value ? escapeHtml(value) : "empty"}</td><td class="${demoClass}">${escapeHtml(provenance)}</td><td><span class="status status-${state}">${state}</span></td></tr>`;
+      }).join("");
+      document.querySelector("#data-note").textContent = sample.note;
+    }
+
+    function render(sampleKey) {
+      const sample = samples[sampleKey];
+      const levelColor = `var(--${sample.cefr.toLowerCase()})`;
+      const front = document.querySelector("#front-card");
+      const back = document.querySelector("#back-card");
+      front.style.setProperty("--level-color", levelColor);
+      back.style.setProperty("--level-color", levelColor);
+
+      front.innerHTML = `${metaRail(sample)}<div class="front-body"><h2 class="headword">${escapeHtml(sample.lemma)}</h2><p class="recall">Recall the English meaning</p>${audioButton(sample.wordAudio, "WORD")}</div>`;
+      back.innerHTML = `${metaRail(sample)}<div class="back-body"><div class="answer-hero"><div class="answer-label">English meaning</div><div class="meaning">${escapeHtml(sample.meaning)}</div><div class="lemma-anchor">${escapeHtml(sample.lemma)}</div></div>${grammarRail(sample)}${examplesSection(sample)}${regionsSection(sample)}${usageSection(sample)}</div>`;
+      renderFields(sample);
+    }
+
+    document.querySelectorAll("button[data-sample]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        document.querySelector("button.active").classList.remove("active");
+        button.classList.add("active");
+        render(button.dataset.sample);
+      });
+    });
+
+    render("noun");
+  </script>
+</body>
+</html>

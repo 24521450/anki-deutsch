@@ -1,0 +1,99 @@
+<main class="gw-card" data-level="{{CEFR}}">
+  <header class="gw-meta">
+    <span class="gw-brand">GOETHE</span>
+    <span class="gw-pos">{{POS}}</span>
+    <span class="gw-level">{{CEFR}}</span>
+  </header>
+  <section class="gw-back">
+    <div id="gw-result" class="gw-result" aria-live="polite"></div>
+    <div class="gw-answer-hero">
+      <h1 class="gw-german-answer">{{#Article}}<span class="gw-article gw-article-{{Article}}">{{Article}}</span> {{/Article}}{{Lemma}}</h1>
+      <p class="gw-meaning-secondary">{{MeaningEN}}</p>
+      {{#WordAudio}}<div class="gw-word-audio">{{WordAudio}}</div>{{/WordAudio}}
+    </div>
+
+    {{#NounFormsRaw}}<div class="gw-grammar"><span>Plural: {{NounFormsRaw}}</span></div>{{/NounFormsRaw}}
+    {{#VerbFormsRaw}}<div class="gw-grammar"><span>{{VerbFormsRaw}}</span></div>{{/VerbFormsRaw}}
+    {{#FormOrVariantNote}}<div class="gw-form-note">{{FormOrVariantNote}}</div>{{/FormOrVariantNote}}
+
+    {{#Example1DE}}<section class="gw-section">
+      <article class="gw-example"><div class="gw-example-main gw-example-de">{{Example1DE}}</div><div class="gw-example-sub">{{Example1EN}}</div>{{#Example1Audio}}<div class="gw-example-audio">{{Example1Audio}}</div>{{/Example1Audio}}</article>
+      {{#Example2DE}}<article class="gw-example"><div class="gw-example-main gw-example-de">{{Example2DE}}</div><div class="gw-example-sub">{{Example2EN}}</div>{{#Example2Audio}}<div class="gw-example-audio">{{Example2Audio}}</div>{{/Example2Audio}}</article>{{/Example2DE}}
+      {{#Example3DE}}<details><summary>Show more examples</summary>
+        <article class="gw-example"><div class="gw-example-main gw-example-de">{{Example3DE}}</div><div class="gw-example-sub">{{Example3EN}}</div>{{#Example3Audio}}<div class="gw-example-audio">{{Example3Audio}}</div>{{/Example3Audio}}</article>
+        {{#Example4DE}}<article class="gw-example"><div class="gw-example-main gw-example-de">{{Example4DE}}</div><div class="gw-example-sub">{{Example4EN}}</div>{{#Example4Audio}}<div class="gw-example-audio">{{Example4Audio}}</div>{{/Example4Audio}}</article>{{/Example4DE}}
+        {{#MoreExamplesHTML}}{{MoreExamplesHTML}}{{/MoreExamplesHTML}}
+      </details>{{/Example3DE}}
+    </section>{{/Example1DE}}
+
+    {{#UsageNoteEN}}<section class="gw-section"><h2>Usage note</h2><div class="gw-usage">{{UsageNoteEN}}</div></section>{{/UsageNoteEN}}
+  </section>
+  <span id="gw-source-id" hidden>{{SourceID}}</span>
+  <span id="gw-lemma" hidden>{{Lemma}}</span>
+  <span id="gw-accepted-answers" hidden>{{AcceptedAnswersDE}}</span>
+  <span id="gw-accepted-articles" hidden>{{AcceptedArticlesDE}}</span>
+  <span id="gw-article" hidden>{{Article}}</span>
+  <span id="gw-noun-forms" hidden>{{NounFormsRaw}}</span>
+  <span id="gw-verb-forms" hidden>{{VerbFormsRaw}}</span>
+  <span id="gw-pos" hidden>{{POS}}</span>
+</main>
+<script>
+{{TargetHighlighter}}
+</script>
+<script>
+(function () {
+  function text(id) {
+    var node = document.getElementById(id);
+    return node ? node.textContent.trim() : "";
+  }
+  function normalize(value) {
+    return String(value || "")
+      .normalize("NFC")
+      .toLocaleLowerCase("de-DE")
+      .replace(/[’]/g, "'")
+      .trim()
+      .replace(/\s+/g, " ")
+      .replace(/[.!?]+$/g, "")
+      .replace(/ä/g, "ae")
+      .replace(/ö/g, "oe")
+      .replace(/ü/g, "ue")
+      .replace(/ß/g, "ss");
+  }
+  function split(value) {
+    return value.split("|").map(function (item) { return item.trim(); }).filter(Boolean);
+  }
+
+  var source = text("gw-source-id");
+  var key = "goethe-werkstatt:" + source + ":production";
+  var raw = "";
+  try { raw = sessionStorage.getItem(key); } catch (error) {}
+  if (raw === null || raw === "") {
+    var memory = globalThis.goetheWerkstattAnswers || {};
+    if (Object.prototype.hasOwnProperty.call(memory, key)) raw = memory[key];
+  }
+  raw = raw || "";
+
+  var answers = split(text("gw-accepted-answers"));
+  if (!answers.length) answers = [text("gw-lemma")];
+  var articles = split(text("gw-accepted-articles"));
+  var accepted = {};
+  answers.forEach(function (answer) {
+    accepted[normalize(answer)] = true;
+    articles.forEach(function (article) { accepted[normalize(article + " " + answer)] = true; });
+  });
+  var correct = raw.trim() !== "" && !!accepted[normalize(raw)];
+  var result = document.getElementById("gw-result");
+  result.classList.add(correct ? "gw-correct" : "gw-incorrect");
+  var title = document.createElement("strong");
+  title.textContent = correct ? "✓ Correct" : "✗ Incorrect";
+  result.appendChild(title);
+  if (!correct) {
+    var given = document.createElement("span");
+    given.textContent = "Your answer: " + (raw.trim() || "(no answer)");
+    result.appendChild(given);
+    var expected = document.createElement("span");
+    expected.textContent = "Correct: " + [text("gw-article"), text("gw-lemma")].filter(Boolean).join(" ");
+    result.appendChild(expected);
+  }
+})();
+</script>

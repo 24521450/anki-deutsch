@@ -1,0 +1,22 @@
+{
+  "a1_legacy": {
+    "84886454529": {
+      "Lemma": "zum Beispiel",
+      "AcceptedAnswersDE": "zum Beispiel|z. B."
+    },
+    "84886454929": {
+      "Lemma": "Das macht nichts",
+      "MeaningEN": "It doesn’t matter. / No problem.",
+      "AcceptedAnswersDE": "Das macht nichts"
+    },
+    "84887177209": {
+      "AcceptedAnswersDE": "fünf Minuten vor eins|fünf Minuten nach eins|fünf Minuten vor ein Uhr|fünf Minuten nach ein Uhr"
+    }
+  },
+  "a2_order": {
+    "614": {
+      "Lemma": "leidtun",
+      "AcceptedAnswersDE": "leidtun|leid tun"
+    }
+  }
+}

@@ -1,0 +1,46 @@
+<main class="gw-card" data-level="{{CEFR}}">
+  <header class="gw-meta">
+    <span class="gw-brand">GOETHE</span>
+    <span class="gw-pos">{{POS}}</span>
+    <span class="gw-level">{{CEFR}}</span>
+  </header>
+  <section class="gw-production-front">
+    <h1 class="gw-production-meaning">{{MeaningEN}}</h1>
+    {{#Example1EN}}<p class="gw-context">{{Example1EN}}</p>{{/Example1EN}}
+    <div class="gw-typebox">{{type:Lemma}}</div>
+  </section>
+  <span id="gw-source-id" hidden>{{SourceID}}</span>
+</main>
+<script>
+(function () {
+  var source = document.getElementById("gw-source-id");
+  if (!source) return;
+  var key = "goethe-werkstatt:" + source.textContent.trim() + ":production";
+  globalThis.goetheWerkstattAnswers = globalThis.goetheWerkstattAnswers || {};
+  function save(value) {
+    globalThis.goetheWerkstattAnswers[key] = value;
+    try { sessionStorage.setItem(key, value); } catch (error) {}
+  }
+  save("");
+  function attach(attempt) {
+    var input = document.getElementById("typeans");
+    if (!input) {
+      if (attempt < 20) setTimeout(function () { attach(attempt + 1); }, 25);
+      return;
+    }
+    input.setAttribute("autocomplete", "off");
+    input.setAttribute("autocapitalize", "off");
+    input.addEventListener("input", function () { save(input.value); });
+    input.addEventListener("change", function () { save(input.value); });
+    input.addEventListener("keydown", function (event) {
+      if (event.key !== "Enter" || input.dataset.submitted === "true") return;
+      event.preventDefault();
+      input.dataset.submitted = "true";
+      save(input.value);
+      pycmd("ans");
+    });
+    input.focus();
+  }
+  attach(0);
+})();
+</script>
