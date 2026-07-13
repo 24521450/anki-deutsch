@@ -104,3 +104,16 @@ def test_redundancy_policy_skips_drills_and_maps_merge_targets():
     assert policy["merge_wortgruppen"]["A2-WG-0163"] == {
         "target": "Viertel vor/nach zwei", "as_example": True,
     }
+
+
+def test_source_text_overrides_join_pdf_line_wrap_and_fix_display_typo():
+    overrides = gc.load_source_text_overrides()["examples"]
+    assert overrides["A1-MAIN-0363"][-1] == "Im Zug fahre ich immer 2. Klasse."
+    assert overrides["A2-MAIN-0855"][-1] == "Ich finde den Film schrecklich. Er macht mir Angst."
+    assert overrides["A2-MAIN-0617"] == ["Sag mal, wie gefällt dir mein neues Kleid?"]
+
+
+def test_redundancy_policy_preserves_reviewed_content_twins_and_routes_phrases():
+    policy = gc.load_redundancy_policy()
+    assert 1584886454573 in policy["preserve_note_ids"]
+    assert policy["source_targets"]["A1-MAIN-0658"] == 1584886455225

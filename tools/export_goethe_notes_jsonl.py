@@ -11,8 +11,8 @@ import goethe_werkstatt_migrate as gw
 
 ROOT = gw.ROOT
 OUTPUT = ROOT / "data" / "build" / "anki_notes.jsonl"
-EXPECTED_NOTES = 1601
-EXPECTED_CARDS = 3202
+EXPECTED_NOTES = 1596
+EXPECTED_CARDS = 3192
 
 
 class ExportError(RuntimeError):

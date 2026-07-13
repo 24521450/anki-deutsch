@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "examples": {
+    "A1-MAIN-0049": [
+      "Die Kinder spielen auf der Straße."
+    ],
+    "A1-MAIN-0363": [
+      "In unserer Klasse sind fünfundzwanzig Schüler.",
+      "Im Zug fahre ich immer 2. Klasse."
+    ],
+    "A2-MAIN-0052": [
+      "Wie heißt das auf Deutsch?",
+      "Das Wörterbuch liegt auf dem Tisch.",
+      "Am Samstag gehen wir auf eine Party.",
+      "Meine Eltern wohnen auf dem Land.",
+      "Auf dem Foto ist auch meine Schwester.",
+      "Die Tür ist auf, kommen Sie rein!",
+      "Hat das Geschäft noch auf?"
+    ],
+    "A2-MAIN-0617": [
+      "Sag mal, wie gefällt dir mein neues Kleid?"
+    ],
+    "A2-MAIN-0855": [
+      "Ich finde ihren Rock schrecklich. Er sieht furchtbar aus!",
+      "Ich finde den Film schrecklich. Er macht mir Angst."
+    ]
+  }
+}

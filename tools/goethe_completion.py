@@ -26,6 +26,7 @@ ROOT = gw.ROOT
 STATE = ROOT / "tools" / ".goethe_completion"
 TRANSLATIONS = ROOT / "review" / "goethe_completion_translations.json"
 REDUNDANCY_POLICY = ROOT / "review" / "goethe_redundancy_policy.json"
+SOURCE_TEXT_OVERRIDES = ROOT / "review" / "goethe_source_text_overrides.json"
 MANIFEST = STATE / "manifest.json"
 MODEL = gw.MODEL
 WG_FILES = {
@@ -157,6 +158,11 @@ def load_live() -> tuple[dict[str, dict[str, Any]], dict[int, list[dict[str, Any
             de = fields[f"Example{index}DE"]
             if de:
                 examples.append({"de": de, "en": fields[f"Example{index}EN"], "audio": fields[f"Example{index}Audio"]})
+        overflow_pattern = re.compile(
+            r'<article class="gw-example"><div class="gw-example-main gw-example-de">(.*?)</div>'
+            r'<div class="gw-example-sub">(.*?)</div></article>', re.S,
+        )
+        examples.extend({"de": html.unescape(de), "en": html.unescape(en), "audio": ""} for de, en in overflow_pattern.findall(fields["MoreExamplesHTML"]))
         refs = split_answers(fields.get("SourceRefs", "")) or ([fields["SourceID"]] if fields["SourceID"] else [])
         records[str(note_id)] = {
             "note_id": note_id,
@@ -180,6 +186,15 @@ def load_redundancy_policy() -> dict[str, Any]:
     if policy.get("version") != 1:
         raise CompletionError("unsupported redundancy policy version")
     return policy
+
+
+def load_source_text_overrides() -> dict[str, Any]:
+    if not SOURCE_TEXT_OVERRIDES.exists():
+        return {"examples": {}}
+    overrides = json.loads(SOURCE_TEXT_OVERRIDES.read_text(encoding="utf-8"))
+    if overrides.get("version") != 1 or not isinstance(overrides.get("examples"), dict):
+        raise CompletionError("unsupported source-text override schema")
+    return overrides
 
 
 def record_variants(record: dict[str, Any]) -> set[str]:
@@ -272,7 +287,8 @@ def add_ref(record: dict[str, Any], ref: str, level: str) -> None:
     record["deck"] = LEVEL_DECK[target]
 
 
-def merge_exact_duplicates(records: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+def merge_exact_duplicates(records: dict[str, dict[str, Any]], preserve_note_ids: set[int] | None = None) -> list[dict[str, Any]]:
+    preserve_note_ids = preserve_note_ids or set()
     groups: dict[tuple[str, str, str], list[str]] = defaultdict(list)
     for key, record in records.items():
         if record["is_new"]:
@@ -283,6 +299,8 @@ def merge_exact_duplicates(records: dict[str, dict[str, Any]]) -> list[dict[str,
     deletions = []
     for identity, keys in groups.items():
         if not identity[1] or len(keys) < 2:
+            continue
+        if any(records[key]["note_id"] in preserve_note_ids for key in keys):
             continue
         keys.sort(key=lambda key: (card_reps(records[key]["cards"]), -int(key)), reverse=True)
         survivor = records[keys[0]]
@@ -307,9 +325,12 @@ def merge_exact_duplicates(records: dict[str, dict[str, Any]]) -> list[dict[str,
 def build_manifest() -> dict[str, Any]:
     records, _ = load_live()
     redundancy_policy = load_redundancy_policy()
+    source_text_overrides = load_source_text_overrides()
     skipped_source_refs = set(redundancy_policy.get("skip_wortgruppen", []))
     merge_wortgruppen = redundancy_policy.get("merge_wortgruppen", {})
-    deletions = merge_exact_duplicates(records)
+    preserve_note_ids = set(map(int, redundancy_policy.get("preserve_note_ids", [])))
+    source_targets = {str(ref): str(note_id) for ref, note_id in redundancy_policy.get("source_targets", {}).items()}
+    deletions = merge_exact_duplicates(records, preserve_note_ids)
     index = variant_index(records)
     ambiguous: list[dict[str, Any]] = []
     source_counts = {"A1_MAIN": 0, "A2_MAIN": 0, "A1_WG": 0, "A2_WG": 0}
@@ -317,7 +338,10 @@ def build_manifest() -> dict[str, Any]:
         for row in gw.parse_markdown(path):
             source_counts[f"{level}_MAIN"] += 1
             ref = f"{level}-MAIN-{row['row']:04d}"
-            key = find_record(records, index, row["word"], row["pos"], row["gender"], row["examples"])
+            configured_target = source_targets.get(ref)
+            if configured_target and configured_target not in records:
+                raise CompletionError(f"configured source target missing: {ref} -> {configured_target}")
+            key = configured_target or find_record(records, index, row["word"], row["pos"], row["gender"], row["examples"])
             if key is None:
                 key = f"new:{ref}"
                 records[key] = new_record(ref, row["word"], level, row["pos"], row["gender"])
@@ -334,7 +358,8 @@ def build_manifest() -> dict[str, Any]:
                 record["fields"]["AcceptedArticlesDE"] = article
             if row["note"] and row["note"] not in record["fields"].get("SourceNoteRaw", ""):
                 record["fields"]["SourceNoteRaw"] = clean(record["fields"].get("SourceNoteRaw", "") + " | " + row["note"])
-            for example in row["examples"]:
+            examples = source_text_overrides["examples"].get(ref, row["examples"])
+            for example in examples:
                 add_example(record, example)
 
     for level, path in WG_FILES.items():
@@ -364,7 +389,7 @@ def build_manifest() -> dict[str, Any]:
             if detail and detail not in record["fields"].get("FormOrVariantNote", ""):
                 record["fields"]["FormOrVariantNote"] = clean(record["fields"].get("FormOrVariantNote", "") + " | " + detail)
 
-    deletions.extend(merge_exact_duplicates(records))
+    deletions.extend(merge_exact_duplicates(records, preserve_note_ids))
     for record in records.values():
         refs = list(dict.fromkeys(record["source_refs"]))
         refs.sort(key=lambda ref: (0 if ref.startswith("A1") else 1, ref))
