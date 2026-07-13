@@ -22,8 +22,9 @@ from pathlib import Path
 from typing import Any, Iterable
 
 ROOT = Path(__file__).resolve().parents[1]
-EXPORT = ROOT / "Goethe Institute.txt"
-BACKUP = ROOT / "Goethe Institute.apkg"
+LEGACY_INPUTS = ROOT / "tools" / ".goethe_werkstatt" / "legacy-inputs"
+EXPORT = LEGACY_INPUTS / "Goethe Institute.txt"
+BACKUP = LEGACY_INPUTS / "Goethe Institute.apkg"
 SOURCE_A1 = ROOT / "sources" / "goethe" / "Goethe_A1.md"
 SOURCE_A2 = ROOT / "sources" / "goethe" / "Goethe_A2.md"
 A1_WORD_MANIFEST = ROOT / "audio" / "a1" / "words_manifest.jsonl"

@@ -45,7 +45,8 @@ python -m pytest
 
 ## Checkpoint already created
 
-- Backup: `Goethe Institute.apkg`
+- Legacy export: `tools/.goethe_werkstatt/legacy-inputs/Goethe Institute.txt`
+- Backup: `tools/.goethe_werkstatt/legacy-inputs/Goethe Institute.apkg`
 - Backup SHA-256: `54b786c84bc5ed0d8205fc263eb4432ea4728678ae106952343bf7b8f1489fc3`
 - Snapshot: `tools/.goethe_werkstatt/snapshot.json`
 - Snapshot: 1,581 notes / 3,162 cards

@@ -15,6 +15,13 @@ German Anki resource repo for Goethe word lists, Duden audio, and Matrix TTS wor
 - Run A1 word-audio preflight with `python tools/a1_preflight.py`.
 - Inspect Duden tooling with `python tools/download_duden_a1_audio.py --help`.
 
+## AnkiConnect
+
+- Anki desktop may be controlled through AnkiConnect at `http://127.0.0.1:8765`.
+- Check availability with the read-only `version` action before each session; do not assume Anki is running.
+- Before destructive operations, identify and verify the exact target note or card.
+- Do not edit `collection.anki2` directly.
+
 ## Goethe Source Rules
 
 - Preserve row order and existing columns unless the task explicitly says otherwise.

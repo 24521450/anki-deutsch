@@ -5,6 +5,9 @@ This repository is a German Anki resource project split out from the IELTS deck 
 ## Scope
 
 - `sources/goethe/` contains source Goethe word lists and reference PDFs.
+- `sources/goethe/Goethe_A1_Wortgruppen.md`, `Goethe_A2_Wortgruppen.md`, and
+  `Goethe_B1_Wortgruppen.md` contain the thematic inventories omitted from the
+  alphabetical word-list files.
 - `tools/` contains German audio generation and Duden lookup tools.
 - `audio/` is generated output. MP3s, logs, checkpoints, staging directories, and generated manifests are ignored by default.
 - `review/duden_overrides.json` and level-specific override files are the hand-reviewed Duden policy files.
@@ -42,6 +45,12 @@ Run German-resource tests explicitly:
 
 ```powershell
 python -m pytest
+```
+
+Validate the structured A1-B1 thematic inventories and their source provenance:
+
+```powershell
+python tools/validate_goethe_wortgruppen.py
 ```
 
 ## Notes
