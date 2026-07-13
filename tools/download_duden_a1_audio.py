@@ -1560,6 +1560,10 @@ async def resolve_row(
         if not gender_matches(row.gender, page.h1_gender):
             continue
         page_hits.append(page)
+        # Candidate URLs differ only by spelling/case variants.  Once the
+        # exact headword plus POS/gender has matched, fetching a lower-cased
+        # duplicate cannot improve the decision and wastes a page request.
+        break
 
     if not page_hits:
         return (
@@ -1695,6 +1699,135 @@ def load_existing_manifest_rows(path: Path) -> list[dict[str, Any]]:
             continue
         rows.append(json.loads(raw))
     return rows
+
+
+def validate_live_duden_manifest(expected_rows: int | None = None) -> list[dict[str, Any]]:
+    """Validate the live Duden manifest before any resume-style mutation."""
+    rows = load_existing_manifest_rows(LIVE_MANIFEST_PATH)
+    expected = EXPECTED_ROWS if expected_rows is None else expected_rows
+    if len(rows) != expected:
+        raise RuntimeError(f"live Duden manifest expected {expected} rows, got {len(rows)}")
+    required = {"row", "word", "output_filename", "source", "status"}
+    bad_schema = [int(item.get("row") or 0) for item in rows if not required.issubset(item)]
+    if bad_schema:
+        raise RuntimeError(
+            "live manifest is not a Duden manifest; repair it before resume/audit/fill "
+            f"(first bad rows: {bad_schema[:5]})"
+        )
+    if any(normalize_text(str(item.get("source") or "")).lower() != "duden" for item in rows):
+        raise RuntimeError("live manifest contains non-Duden rows; repair it before resume/audit/fill")
+    invalid_statuses = sorted({
+        normalize_text(str(item.get("status") or "")).lower()
+        for item in rows
+        if normalize_text(str(item.get("status") or "")).lower() not in ALLOWED_STATUSES
+    })
+    if invalid_statuses:
+        raise RuntimeError(f"live Duden manifest has invalid statuses: {invalid_statuses}")
+    return rows
+
+
+def repair_live_duden_manifest(
+    source_rows: list[SourceRow], *, dry_run: bool, confirmation: str | None,
+) -> dict[str, Any]:
+    """Reconstruct a lost Duden manifest from the latest valid checkpoint and audit."""
+    candidates: list[tuple[int, Path, list[dict[str, Any]]]] = []
+    for checkpoint in sorted(DUDEN_CHECKPOINT_ROOT.glob("duden_*")):
+        manifest_path = checkpoint / LIVE_MANIFEST_PATH.name
+        rows = load_existing_manifest_rows(manifest_path)
+        if len(rows) != len(source_rows):
+            continue
+        if any(normalize_text(str(item.get("source") or "")).lower() != "duden" for item in rows):
+            continue
+        candidates.append((sum(item.get("status") == "ok" for item in rows), checkpoint, rows))
+    if not candidates:
+        raise RuntimeError("no valid Duden checkpoint manifest available for repair")
+    _, checkpoint, base_rows = max(candidates, key=lambda item: (item[0], item[1].name))
+    audit_rows = load_audit_rows(MISSING_AUDIT_PATH)
+    by_source = source_row_by_number(source_rows)
+    repaired: list[dict[str, Any]] = []
+    expected_files: set[str] = set()
+    for item in base_rows:
+        row_num = int(item["row"])
+        source_row = by_source[row_num]
+        filename = filename_for_row(source_row)
+        live_path = LIVE_WORDS_DIR / filename
+        if item.get("status") == "ok":
+            if not existing_file_is_valid(live_path, item.get("sha256"), item.get("size")):
+                raise RuntimeError(f"checkpoint-backed Duden file failed validation: {filename}")
+            current = dict(item)
+        else:
+            audit = audit_rows.get(row_num)
+            if audit and audit.get("status") == "exact_audio_found" and live_path.exists():
+                if not existing_file_is_valid(live_path):
+                    raise RuntimeError(f"audited Duden file failed validation: {filename}")
+                current = make_manifest_row(
+                    source_row,
+                    status="ok",
+                    reason=normalize_text(str(audit.get("reason") or "repaired from Duden audit")),
+                    match_method="audit-missing-repair",
+                    duden_page_url=audit.get("selected_page_url"),
+                    duden_audio_url=audit.get("selected_audio_url"),
+                    file_id=audit.get("selected_file_id"),
+                    size=live_path.stat().st_size,
+                    sha256=hash_file(live_path),
+                    content_type="audio/mpeg",
+                )
+            else:
+                status = normalize_text(str((audit or {}).get("status") or "unresolved"))
+                current = make_manifest_row(
+                    source_row,
+                    status="unresolved",
+                    reason=f"{status}: {normalize_text(str((audit or {}).get('reason') or item.get('reason') or 'no accepted Duden audio'))}",
+                    match_method=f"audit-{status or 'unresolved'}",
+                    duden_page_url=(audit or {}).get("selected_page_url"),
+                )
+        if current.get("status") == "ok":
+            expected_files.add(filename)
+        repaired.append(current)
+    actual_files = {path.name for path in LIVE_WORDS_DIR.glob("*.mp3")}
+    if actual_files != expected_files:
+        raise RuntimeError(
+            "live Duden file set does not match reconstructed manifest: "
+            f"missing={sorted(expected_files - actual_files)[:5]} extra={sorted(actual_files - expected_files)[:5]}"
+        )
+    counts = manifest_status_counts(repaired)
+    result = {
+        "checkpoint": str(checkpoint),
+        "rows": len(repaired),
+        "files": len(actual_files),
+        "status_counts": counts,
+        "dry_run": dry_run,
+    }
+    if dry_run:
+        return result
+    if confirmation != "REPAIR_A1_DUDEN_MANIFEST":
+        raise RuntimeError("confirmation must equal REPAIR_A1_DUDEN_MANIFEST")
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    backup_dir = DUDEN_CHECKPOINT_ROOT / f"manifest_repair_{stamp}"
+    backup_dir.mkdir(parents=True, exist_ok=False)
+    shutil.copytree(LIVE_WORDS_DIR, backup_dir / "words", copy_function=shutil.copy2)
+    if LIVE_MANIFEST_PATH.exists():
+        shutil.copy2(LIVE_MANIFEST_PATH, backup_dir / LIVE_MANIFEST_PATH.name)
+    if LIVE_META_PATH.exists():
+        shutil.copy2(LIVE_META_PATH, backup_dir / LIVE_META_PATH.name)
+    write_manifest(LIVE_MANIFEST_PATH, repaired)
+    atomic_write_text(
+        LIVE_META_PATH,
+        json.dumps(
+            {
+                "phase": "repair-manifest",
+                "created_utc": datetime.now(timezone.utc).isoformat(),
+                "source_rows": len(source_rows),
+                "status_counts": counts,
+                "checkpoint": str(checkpoint),
+                "backup": str(backup_dir),
+            },
+            ensure_ascii=False,
+            indent=2,
+        ),
+    )
+    result["backup"] = str(backup_dir)
+    return result
 
 
 def find_row_index(rows: list[dict[str, Any]], row_num: int) -> int:
@@ -1928,6 +2061,8 @@ async def process_rows(
             "Duden downloads require --confirm-usage and a manual check of "
             "https://www.duden.de/form/license-request plus https://www.duden.de/robots.txt."
         )
+    if mode == "resume" and LIVE_MANIFEST_PATH.exists():
+        validate_live_duden_manifest(len(rows))
 
     overrides = load_overrides(OVERRIDES_PATH)
     if mode == "resume":
@@ -2136,6 +2271,7 @@ async def process_rows(
 async def process_audit_missing(rows: list[SourceRow], *, confirm_usage: bool) -> int:
     if not confirm_usage:
         raise RuntimeError("Duden audit requires --confirm-usage.")
+    validate_live_duden_manifest(len(rows))
     targets = live_missing_rows(rows)
     print(f"audit_targets={len(targets)}")
     decisions: list[AuditDecision] = []
@@ -2193,6 +2329,7 @@ async def process_audit_missing(rows: list[SourceRow], *, confirm_usage: bool) -
 async def process_fill_missing(rows: list[SourceRow], *, confirm_usage: bool) -> int:
     if not confirm_usage:
         raise RuntimeError("Duden fill requires --confirm-usage.")
+    validate_live_duden_manifest(len(rows))
     audit_rows = load_audit_rows(MISSING_AUDIT_PATH)
     if not audit_rows:
         raise RuntimeError(f"missing audit file: {MISSING_AUDIT_PATH}")
@@ -2319,12 +2456,14 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     level_match = re.search(r"Goethe_([A-Z]\d)", SOURCE_PATH.stem)
     level = level_match.group(1) if level_match else "A1"
     parser = argparse.ArgumentParser(description=f"Download Duden audio for Goethe {level}.")
-    parser.add_argument("mode", choices=["preflight", "pilot", "full", "resume", "audit-missing", "fill-missing"])
+    parser.add_argument("mode", choices=["preflight", "pilot", "full", "resume", "audit-missing", "fill-missing", "repair-manifest"])
     parser.add_argument(
         "--confirm-usage",
         action="store_true",
         help="Confirm you have checked Duden licensing and robots rules before downloading.",
     )
+    parser.add_argument("--dry-run", action="store_true", help="Report a manifest repair without writing it.")
+    parser.add_argument("--confirmation", help="Required confirmation token for manifest repair.")
     return parser.parse_args(argv)
 
 
@@ -2335,6 +2474,9 @@ def main(argv: list[str] | None = None) -> int:
         raise RuntimeError(f"expected {EXPECTED_ROWS} source rows, got {len(rows)}")
     if len({filename_for_row(row) for row in rows}) != len(rows):
         raise RuntimeError("duplicate output filename detected")
+    if args.mode == "repair-manifest":
+        print(json.dumps(repair_live_duden_manifest(rows, dry_run=args.dry_run, confirmation=args.confirmation), ensure_ascii=False, indent=2))
+        return 0
     if args.mode == "preflight":
         inventory = current_matrix_inventory()
         print(f"source_rows={len(rows)}")

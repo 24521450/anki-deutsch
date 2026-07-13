@@ -760,3 +760,50 @@ def test_resume_refuses_before_cooldown(tmp_path: Path, monkeypatch):
     rows = [duden.SourceRow(1, "a", "n.", "", "A1", "x", "")]
     exit_code = asyncio.run(duden.process_rows(rows, mode="resume", confirm_usage=True))
     assert exit_code == duden.EXIT_COOLDOWN
+
+
+def test_validate_live_duden_manifest_rejects_matrix_schema(tmp_path: Path, monkeypatch):
+    manifest = tmp_path / "words_manifest.jsonl"
+    manifest.write_text(json.dumps({"row": 1, "word": "ab", "tts_status": "pending"}) + "\n", encoding="utf-8")
+    monkeypatch.setattr(duden, "LIVE_MANIFEST_PATH", manifest)
+    with pytest.raises(RuntimeError, match="not a Duden manifest"):
+        duden.validate_live_duden_manifest(1)
+
+
+def test_repair_live_duden_manifest_dry_run_reconstructs_audited_file(tmp_path: Path, monkeypatch):
+    live_words = tmp_path / "words"
+    live_words.mkdir()
+    checkpoint = tmp_path / "checkpoints" / "duden_1"
+    checkpoint.mkdir(parents=True)
+    source_rows = [
+        duden.SourceRow(1, "ab", "prep.", "", "A1", "", ""),
+        duden.SourceRow(2, "aber", "conj.", "", "A1", "", ""),
+    ]
+    first = live_words / duden.filename_for_row(source_rows[0])
+    second = live_words / duden.filename_for_row(source_rows[1])
+    first.write_bytes(b"ID3" + b"\x00" * 16)
+    second.write_bytes(b"ID3" + b"\x01" * 16)
+    base = [
+        duden.make_manifest_row(
+            source_rows[0], status="ok", reason="ok", size=first.stat().st_size,
+            sha256=duden.hash_file(first), content_type="audio/mpeg",
+        ),
+        duden.make_manifest_row(source_rows[1], status="unresolved", reason="missing"),
+    ]
+    (checkpoint / "words_manifest.jsonl").write_text(
+        "\n".join(json.dumps(row) for row in base) + "\n", encoding="utf-8"
+    )
+    audit = tmp_path / "audit.jsonl"
+    audit.write_text(json.dumps({
+        "row": 2, "status": "exact_audio_found", "reason": "found",
+        "selected_page_url": "https://example/page", "selected_audio_url": "https://example/audio.mp3",
+        "selected_file_id": "id2", "candidates": [],
+    }) + "\n", encoding="utf-8")
+    monkeypatch.setattr(duden, "DUDEN_CHECKPOINT_ROOT", tmp_path / "checkpoints")
+    monkeypatch.setattr(duden, "LIVE_WORDS_DIR", live_words)
+    monkeypatch.setattr(duden, "LIVE_MANIFEST_PATH", tmp_path / "words_manifest.jsonl")
+    monkeypatch.setattr(duden, "LIVE_META_PATH", tmp_path / "words_manifest.meta.json")
+    monkeypatch.setattr(duden, "MISSING_AUDIT_PATH", audit)
+    result = duden.repair_live_duden_manifest(source_rows, dry_run=True, confirmation=None)
+    assert result["status_counts"] == {"ok": 2}
+    assert result["files"] == 2
