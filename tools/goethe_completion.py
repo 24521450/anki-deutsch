@@ -25,6 +25,7 @@ import goethe_werkstatt_migrate as gw
 ROOT = gw.ROOT
 STATE = ROOT / "tools" / ".goethe_completion"
 TRANSLATIONS = ROOT / "review" / "goethe_completion_translations.json"
+REDUNDANCY_POLICY = ROOT / "review" / "goethe_redundancy_policy.json"
 MANIFEST = STATE / "manifest.json"
 MODEL = gw.MODEL
 WG_FILES = {
@@ -172,6 +173,15 @@ def load_live() -> tuple[dict[str, dict[str, Any]], dict[int, list[dict[str, Any
     return records, by_note
 
 
+def load_redundancy_policy() -> dict[str, Any]:
+    if not REDUNDANCY_POLICY.exists():
+        return {"skip_wortgruppen": [], "merge_wortgruppen": {}}
+    policy = json.loads(REDUNDANCY_POLICY.read_text(encoding="utf-8"))
+    if policy.get("version") != 1:
+        raise CompletionError("unsupported redundancy policy version")
+    return policy
+
+
 def record_variants(record: dict[str, Any]) -> set[str]:
     values = [record["fields"]["Lemma"]] + split_answers(record["fields"].get("AcceptedAnswersDE", ""))
     return {variant for value in values for variant in source_variants(value)}
@@ -296,6 +306,9 @@ def merge_exact_duplicates(records: dict[str, dict[str, Any]]) -> list[dict[str,
 
 def build_manifest() -> dict[str, Any]:
     records, _ = load_live()
+    redundancy_policy = load_redundancy_policy()
+    skipped_source_refs = set(redundancy_policy.get("skip_wortgruppen", []))
+    merge_wortgruppen = redundancy_policy.get("merge_wortgruppen", {})
     deletions = merge_exact_duplicates(records)
     index = variant_index(records)
     ambiguous: list[dict[str, Any]] = []
@@ -327,14 +340,21 @@ def build_manifest() -> dict[str, Any]:
     for level, path in WG_FILES.items():
         for row in parse_wortgruppen(path):
             source_counts[f"{level}_WG"] += 1
+            if row["id"] in skipped_source_refs:
+                continue
             lemma = wg_lemma(row)
-            key = find_record(records, index, row["match"] or lemma)
+            merge_spec = merge_wortgruppen.get(row["id"], {})
+            key = find_record(records, index, merge_spec.get("target") or row["match"] or lemma)
             if key is None:
+                if merge_spec:
+                    raise CompletionError(f"redundancy merge target missing: {row['id']} -> {merge_spec.get('target')}")
                 key = f"new:{row['id']}"
                 records[key] = new_record(row["id"], lemma, level)
                 index_record(index, key, records[key])
             record = records[key]
             add_ref(record, row["id"], level)
+            if merge_spec.get("as_example"):
+                add_example(record, lemma)
             accepted = split_answers(record["fields"].get("AcceptedAnswersDE", ""))
             record["fields"]["AcceptedAnswersDE"] = "|".join(dict.fromkeys(accepted + wg_answers(row)))
             category = category_slug(row["category"])
@@ -361,7 +381,8 @@ def build_manifest() -> dict[str, Any]:
         )
     manifest = {
         "version": 1, "records": records, "deletions": deletions,
-        "source_counts": source_counts, "ambiguous": ambiguous,
+        "source_counts": source_counts, "skipped_source_refs": sorted(skipped_source_refs),
+        "ambiguous": ambiguous,
     }
     return manifest
 
@@ -465,8 +486,11 @@ def validate_manifest(manifest: dict[str, Any]) -> dict[str, int]:
         if any(not item["en"] for item in record["examples"]):
             raise CompletionError(f"untranslated example: {fields['Lemma']}")
     refs = {ref for record in records for ref in record["source_refs"]}
-    expected = sum(manifest["source_counts"].values())
+    skipped_source_refs = set(manifest.get("skipped_source_refs", []))
+    expected = sum(manifest["source_counts"].values()) - len(skipped_source_refs)
     source_refs = {ref for ref in refs if re.match(r"A[12]-(?:MAIN|WG)-", ref)}
+    if source_refs & skipped_source_refs:
+        raise CompletionError("skipped source ref was retained in the manifest")
     if len(source_refs) != expected:
         raise CompletionError(f"source coverage mismatch: {len(source_refs)} != {expected}")
     deleted = {item["note_id"] for item in manifest["deletions"]}

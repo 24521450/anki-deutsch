@@ -95,3 +95,12 @@ def test_apply_cli_exposes_history_preserving_duplicate_mode():
     args = gc.build_parser().parse_args(["apply", "--confirmation", gc.CONFIRMATION, "--keep-duplicates", "--skip-new"])
     assert args.keep_duplicates is True
     assert args.skip_new is True
+
+
+def test_redundancy_policy_skips_drills_and_maps_merge_targets():
+    policy = gc.load_redundancy_policy()
+    assert "A2-WG-0160" in policy["skip_wortgruppen"]
+    assert "A2-WG-0114" in policy["skip_wortgruppen"]
+    assert policy["merge_wortgruppen"]["A2-WG-0163"] == {
+        "target": "Viertel vor/nach zwei", "as_example": True,
+    }

@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "skip_wortgruppen": [
+    "A1-WG-0044",
+    "A1-WG-0045",
+    "A1-WG-0046",
+    "A1-WG-0047",
+    "A1-WG-0048",
+    "A1-WG-0049",
+    "A1-WG-0092",
+    "A2-WG-0114",
+    "A2-WG-0115",
+    "A2-WG-0116",
+    "A2-WG-0117",
+    "A2-WG-0118",
+    "A2-WG-0119",
+    "A2-WG-0120",
+    "A2-WG-0121",
+    "A2-WG-0122",
+    "A2-WG-0123",
+    "A2-WG-0124",
+    "A2-WG-0125",
+    "A2-WG-0126",
+    "A2-WG-0155",
+    "A2-WG-0156",
+    "A2-WG-0157",
+    "A2-WG-0160",
+    "A2-WG-0161",
+    "A2-WG-0162",
+    "A2-WG-0212"
+  ],
+  "merge_wortgruppen": {
+    "A1-WG-0040": {
+      "target": "ein halb; halb",
+      "as_example": false
+    },
+    "A1-WG-0041": {
+      "target": "ein Viertel; Viertel",
+      "as_example": false
+    },
+    "A2-WG-0163": {
+      "target": "Viertel vor/nach zwei",
+      "as_example": true
+    },
+    "A2-WG-0164": {
+      "target": "Viertel vor/nach zwei",
+      "as_example": true
+    }
+  }
+}
