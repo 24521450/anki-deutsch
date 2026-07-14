@@ -10,8 +10,8 @@ import goethe_examples
 
 ROOT = gw.ROOT
 OUTPUT = ROOT / "data" / "build" / "anki_notes.jsonl"
-EXPECTED_NOTES = 1596
-EXPECTED_CARDS = 3192
+EXPECTED_NOTES = 1530
+EXPECTED_CARDS = 3060
 
 
 class ExportError(RuntimeError):

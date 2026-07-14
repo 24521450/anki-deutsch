@@ -70,8 +70,8 @@ COMMONS_CONFIG = {
 }
 SOURCE_FIELDS = ("Lemma", "POS", "Gender", "AcceptedAnswersDE", "SourceRefs", "CEFR")
 PILOT_SIZE = 12
-LIVE_NOTE_COUNT = 1596
-LIVE_CARD_COUNT = 3192
+LIVE_NOTE_COUNT = 1530
+LIVE_CARD_COUNT = 3060
 
 
 class WordAudioError(RuntimeError):

@@ -117,3 +117,12 @@ def test_redundancy_policy_preserves_reviewed_content_twins_and_routes_phrases()
     policy = gc.load_redundancy_policy()
     assert 1584886454573 in policy["preserve_note_ids"]
     assert policy["source_targets"]["A1-MAIN-0658"] == 1584886455225
+
+
+def test_completion_uses_same_level_example_whitelist():
+    allowed = gc.goethe_source_examples.allowed_examples_by_level()
+    examples = [
+        {"de": "Hast du die Tür abgeschlossen?", "en": "lock", "audio": "a"},
+        {"de": "Darf ich Ihnen ein Stück Kuchen anbieten?", "en": "offer", "audio": "b"},
+    ]
+    assert gc.goethe_source_examples.filter_examples("A2", examples, allowed) == [examples[0]]

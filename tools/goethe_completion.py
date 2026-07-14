@@ -6,6 +6,7 @@ an explicit confirmation and operates through AnkiConnect, never collection.anki
 from __future__ import annotations
 
 import argparse
+import copy
 import concurrent.futures
 import hashlib
 import html
@@ -22,11 +23,13 @@ from typing import Any
 
 import goethe_werkstatt_migrate as gw
 import goethe_examples
+import goethe_source_examples
 
 ROOT = gw.ROOT
 STATE = ROOT / "tools" / ".goethe_completion"
 TRANSLATIONS = ROOT / "review" / "goethe_completion_translations.json"
 REDUNDANCY_POLICY = ROOT / "review" / "goethe_redundancy_policy.json"
+HEADWORD_POLICY = ROOT / "review" / "goethe_headword_merges.json"
 SOURCE_TEXT_OVERRIDES = ROOT / "review" / "goethe_source_text_overrides.json"
 MANIFEST = STATE / "manifest.json"
 MODEL = gw.MODEL
@@ -49,8 +52,7 @@ def clean(value: str) -> str:
 
 
 def sentence_key(value: str) -> str:
-    value = unicodedata.normalize("NFC", clean(value)).replace("’", "'").replace("–", "-")
-    return value.casefold()
+    return goethe_source_examples.sentence_key(value)
 
 
 def lemma_key(value: str, *, fold: bool = False) -> str:
@@ -69,6 +71,10 @@ def compatible_pos(source: str, target: str) -> bool:
 
 
 def split_answers(value: str) -> list[str]:
+    return [clean(part) for part in value.split("|") if clean(part)]
+
+
+def split_refs(value: str) -> list[str]:
     return [clean(part) for part in value.split("|") if clean(part)]
 
 
@@ -319,6 +325,43 @@ def merge_exact_duplicates(records: dict[str, dict[str, Any]], preserve_note_ids
     return deletions
 
 
+def apply_headword_policy(records: dict[str, dict[str, Any]], deletions: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    if not HEADWORD_POLICY.exists():
+        return deletions
+    policy = json.loads(HEADWORD_POLICY.read_text(encoding="utf-8"))
+    if policy.get("schema_version") != 1:
+        raise CompletionError("unsupported headword merge policy")
+    existing_deletions = {item["note_id"] for item in deletions}
+    updates = {str(note_id): value for note_id, value in policy.get("updates", {}).items()}
+    for entry in policy.get("groups", []):
+        survivor_key = str(entry["survivor"])
+        if survivor_key not in records:
+            continue
+        survivor = records[survivor_key]
+        if survivor_key in updates:
+            survivor["fields"] = copy.deepcopy(updates[survivor_key])
+            survivor["examples"] = goethe_examples.parse_fields(survivor["fields"])
+            survivor["source_refs"] = split_refs(survivor["fields"].get("SourceRefs", ""))
+        for duplicate_id in entry.get("delete", []):
+            duplicate_key = str(duplicate_id)
+            if duplicate_key not in records:
+                continue
+            duplicate = records[duplicate_key]
+            if duplicate_id not in existing_deletions:
+                deletions.append({
+                    "note_id": duplicate_id, "survivor": entry["survivor"],
+                    "cards": duplicate["cards"], "fields": duplicate["fields"], "tags": duplicate["tags"],
+                })
+                existing_deletions.add(duplicate_id)
+            del records[duplicate_key]
+    for note_id, value in updates.items():
+        if note_id in records and not any(note_id == str(entry["survivor"]) for entry in policy.get("groups", [])):
+            records[note_id]["fields"] = copy.deepcopy(value)
+            records[note_id]["examples"] = goethe_examples.parse_fields(records[note_id]["fields"])
+            records[note_id]["source_refs"] = split_refs(records[note_id]["fields"].get("SourceRefs", ""))
+    return deletions
+
+
 def build_manifest() -> dict[str, Any]:
     records, _ = load_live()
     redundancy_policy = load_redundancy_policy()
@@ -387,6 +430,8 @@ def build_manifest() -> dict[str, Any]:
                 record["fields"]["FormOrVariantNote"] = clean(record["fields"].get("FormOrVariantNote", "") + " | " + detail)
 
     deletions.extend(merge_exact_duplicates(records, preserve_note_ids))
+    deletions = apply_headword_policy(records, deletions)
+    allowed_examples = goethe_source_examples.allowed_examples_by_level()
     for record in records.values():
         refs = list(dict.fromkeys(record["source_refs"]))
         refs.sort(key=lambda ref: (0 if ref.startswith("A1") else 1, ref))
@@ -395,6 +440,9 @@ def build_manifest() -> dict[str, Any]:
         if refs:
             record["fields"]["SourceID"] = refs[0]
         level = record["fields"]["CEFR"]
+        record["examples"] = goethe_source_examples.filter_examples(
+            level, record["examples"], allowed_examples,
+        )
         record["deck"] = LEVEL_DECK[level]
         record["tags"] = sorted(
             (set(record["tags"]) - set(LEVEL_TAG.values()))
