@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 import goethe_examples
+import goethe_english_audit
 import goethe_source_examples
 import goethe_werkstatt_migrate as gw
 import goethe_word_audio as word_audio
@@ -25,9 +26,9 @@ EXPECTED_NOTES = 1530
 EXPECTED_CARDS = 3060
 EXPECTED_AFFECTED = 0
 EXPECTED_REMOVED = 0
-EXPECTED_REMAINING = 1868
-EXPECTED_EMPTY = 206
-EXPECTED_BY_LEVEL = {"A1": 929, "A2": 939}
+EXPECTED_REMAINING = 2008
+EXPECTED_EMPTY = 66
+EXPECTED_BY_LEVEL = {"A1": 988, "A2": 1020}
 PILOT_IDS = [
     1497484860718, 1497484860719, 1497484860720, 1497484860727,
     1497484860737, 1497484860784, 1497484860912, 1584886454497,
@@ -68,6 +69,7 @@ def source_hashes() -> dict[str, str]:
         "A1": goethe_source_examples.SOURCE_PATHS["A1"],
         "A2": goethe_source_examples.SOURCE_PATHS["A2"],
         "overrides": goethe_source_examples.OVERRIDES_PATH,
+        "english_audit": goethe_english_audit.MANIFEST,
     }
     return {name: hash_file(path) for name, path in paths.items()}
 
@@ -97,6 +99,17 @@ def desired_example_fields(
     return example_fields(rendered), kept, [item for item in before if item not in kept]
 
 
+def reviewed_allowed_examples() -> dict[str, dict[str, str]]:
+    allowed = goethe_source_examples.allowed_examples_by_level()
+    manifest = goethe_english_audit.load_json(goethe_english_audit.MANIFEST)
+    goethe_english_audit.validate_manifest(manifest)
+    for entry in manifest["entries"].values():
+        for example in entry["desired_examples"]:
+            key = goethe_source_examples.sentence_key(example["de"])
+            allowed[entry["cefr"]].setdefault(key, example["de"])
+    return allowed
+
+
 def record_fingerprint(record: dict[str, Any]) -> str:
     return canonical_hash({
         "model": record["model"], "fields": record["fields"], "tags": record["tags"],
@@ -105,7 +118,7 @@ def record_fingerprint(record: dict[str, Any]) -> str:
 
 
 def compile_manifest(records: dict[int, dict[str, Any]]) -> dict[str, Any]:
-    allowed = goethe_source_examples.allowed_examples_by_level()
+    allowed = reviewed_allowed_examples()
     updates: dict[str, dict[str, str]] = {}
     removals: list[dict[str, Any]] = []
     remaining_by_level = {"A1": 0, "A2": 0}

@@ -85,12 +85,12 @@ def test_update_notes_sends_only_partial_example_fields(monkeypatch):
 def test_example_audio_baseline_matches_cleanup_projection():
     import goethe_example_audio
 
-    assert goethe_example_audio.EXPECTED_OCCURRENCES == 1868
-    assert goethe_example_audio.EXPECTED_UNIQUE == 1780
+    assert goethe_example_audio.EXPECTED_OCCURRENCES == 2008
+    assert goethe_example_audio.EXPECTED_UNIQUE == 1918
 
 
 def test_exported_examples_obey_the_level_source_policy():
-    allowed = source_examples.allowed_examples_by_level()
+    allowed = cleanup.reviewed_allowed_examples()
     rows = [
         json.loads(line)
         for line in (ROOT / "data" / "build" / "anki_notes.jsonl").read_text(encoding="utf-8").splitlines()

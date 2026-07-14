@@ -23,31 +23,54 @@
     }
     return value;
   }
+  function stripGenderQualifier(value) {
+    return value.replace(/\s*\((?:m\u00e4nnlich|weiblich)\)\s*$/i, "").trim();
+  }
   function terms() {
     var lemma = text("gw-lemma");
-    var values = [lemma];
-    values = values.concat(text("gw-accepted-answers").split("|"));
+    var lexicalLemma = stripGenderQualifier(lemma);
+    var values = [lemma, lexicalLemma];
+    values = values.concat(text("gw-accepted-answers").split("|").map(stripGenderQualifier));
 
     var noun = text("gw-noun-forms");
     var suffixes = noun.match(/-(?:e|en|er|n|s)\b/gi) || [];
-    suffixes.forEach(function (suffix) { values.push(lemma + suffix.slice(1)); });
+    suffixes.forEach(function (suffix) { values.push(lexicalLemma + suffix.slice(1)); });
     if (/-[AÄÖÜäöü]/.test(noun)) {
       var ending = /,\s*(e|er|en|n)?\b/i.exec(noun);
-      values.push(umlaut(lemma) + (ending && ending[1] ? ending[1] : ""));
+      values.push(umlaut(lexicalLemma) + (ending && ending[1] ? ending[1] : ""));
+    }
+
+    var pos = text("gw-pos");
+    if (/^n\.?$/i.test(pos) && /e$/i.test(lexicalLemma) && /-(?:n|en)\b/i.test(noun)) {
+      var nominalizedBase = lexicalLemma.slice(0, -1);
+      ["e", "en", "em", "er", "es"].forEach(function (ending) {
+        values.push(nominalizedBase + ending);
+      });
     }
 
     var stop = { hat: true, ist: true, sind: true, wird: true, sein: true, haben: true, sich: true };
+    var verbLemma = lexicalLemma.replace(/^\(sich\)\s*/i, "").replace(/^sich\s+/i, "").trim();
+    var isSingleWordVerb = /^v\.?$/i.test(pos) && !/\s/.test(verbLemma);
     text("gw-verb-forms").split(",").forEach(function (form) {
       form = form.trim();
       if (!form) return;
       values.push(form);
-      form.split(/\s+/).forEach(function (part) {
+      var parts = form.split(/\s+/);
+      parts.forEach(function (part) {
         if (!stop[part.toLocaleLowerCase("de-DE")]) values.push(part);
       });
+      if (isSingleWordVerb && parts.length > 1) {
+        var particle = parts[parts.length - 1];
+        var lowerLemma = verbLemma.toLocaleLowerCase("de-DE");
+        var lowerParticle = particle.toLocaleLowerCase("de-DE");
+        if (lowerParticle.length > 1 && lowerLemma.indexOf(lowerParticle) === 0 && verbLemma.length > particle.length + 2) {
+          values.push(verbLemma.slice(particle.length));
+        }
+      }
     });
 
-    if (/adj|det|pron/i.test(text("gw-pos"))) {
-      var base = lemma.replace(/-$/, "");
+    if (/adj|det|pron/i.test(pos)) {
+      var base = lexicalLemma.replace(/-$/, "");
       ["e", "en", "em", "er", "es"].forEach(function (ending) { values.push(base + ending); });
     }
     return unique(values.map(function (value) { return value.trim(); })).sort(function (left, right) { return right.length - left.length; });

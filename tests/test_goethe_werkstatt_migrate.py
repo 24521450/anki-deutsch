@@ -363,6 +363,28 @@ terms = configure({"gw-lemma": "anfangen", "gw-verb-forms": "fängt an, hat ange
 let source = "Hier fängt die Straße an.";
 let found = api.matchRanges(source, terms).map((range) => source.slice(range[0], range[1]));
 if (!found.includes("fängt") || !found.includes("an")) throw new Error("missing separable verb parts");
+terms = configure({"gw-lemma": "abfahren", "gw-verb-forms": "fährt ab, ist abgefahren", "gw-pos": "v."});
+source = "Wir fahren um zwölf Uhr ab.";
+found = api.matchRanges(source, terms).map((range) => source.slice(range[0], range[1]));
+if (found.join("|") !== "fahren|ab") throw new Error("missing infinitive stem or particle: " + found.join("|"));
+for (const [lemma, form, base, particle, sentence] of [
+  ["ausgehen", "geht aus, ist ausgegangen", "gehen", "aus", "Gehen wir am Freitag zusammen aus?"],
+  ["einziehen", "zieht ein, ist eingezogen", "ziehen", "ein", "Im Juni ziehen unsere neuen Nachbarn ein."],
+  ["herstellen", "stellt her, hat hergestellt", "stellen", "her", "In unserer Firma stellen wir Möbel her."]
+]) {
+  terms = configure({"gw-lemma": lemma, "gw-verb-forms": form, "gw-pos": "v."});
+  found = api.matchRanges(sentence, terms).map((range) => sentence.slice(range[0], range[1]));
+  if (!found.some((value) => value.toLocaleLowerCase("de-DE") === base) || !found.includes(particle)) throw new Error("missing parts for " + lemma);
+}
+terms = configure({"gw-lemma": "Bekannte", "gw-noun-forms": "-n", "gw-pos": "n."});
+source = "Ein Bekannter von mir heißt Klaus.";
+found = api.matchRanges(source, terms).map((range) => source.slice(range[0], range[1]));
+if (found.length !== 1 || found[0] !== "Bekannter") throw new Error("missing full nominalized inflection");
+terms = configure({"gw-lemma": "Bekannte (männlich)", "gw-noun-forms": "-n", "gw-pos": "n."});
+found = api.matchRanges(source, terms).map((range) => source.slice(range[0], range[1]));
+if (found.length !== 1 || found[0] !== "Bekannter") throw new Error("gender qualifier blocked inflection");
+terms = configure({"gw-lemma": "einverstanden sein", "gw-verb-forms": "ist einverstanden, war einverstanden", "gw-pos": "v."});
+if (terms.includes("verstanden")) throw new Error("multi-word phrase treated as separable verb");
 terms = configure({"gw-lemma": "an", "gw-pos": "prep."});
 source = "Kann ich an der Ampel halten?";
 found = api.matchRanges(source, terms).map((range) => source.slice(range[0], range[1]));

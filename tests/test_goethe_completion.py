@@ -40,6 +40,17 @@ def test_wortgruppe_gender_variants_become_accepted_answers():
     assert gc.wg_answers(row) == ["Prüfer", "Prüferin"]
 
 
+def test_enriched_wortgruppe_uses_canonical_grammar(tmp_path):
+    path = tmp_path / "wg.md"
+    path.write_text(
+        "| A2-WG-0001 | die Schweiz |  | A2 | 1 |  | Land | Schweiz | n. | die | f. |  |  | Normally used with its article. | https://www.duden.de/rechtschreibung/Schweiz |\n",
+        encoding="utf-8",
+    )
+    row = gc.parse_wortgruppen(path)[0]
+    assert gc.wg_lemma(row) == "Schweiz"
+    assert gc.wg_answers(row) == ["Schweiz"]
+
+
 def test_more_examples_html_is_escaped_and_highlightable():
     record = gc.new_record("A1-MAIN-0001", "testen", "A1")
     record["fields"]["MeaningEN"] = "test"

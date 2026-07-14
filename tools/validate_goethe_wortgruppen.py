@@ -11,7 +11,17 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_DIR = ROOT / "sources" / "goethe"
-HEADER = ("ID", "Entry", "Detail", "CEFR", "Source Page", "Alphabetical Match", "Note")
+SOURCE_HEADER = ("ID", "Entry", "Detail", "CEFR", "Source Page", "Alphabetical Match", "Note")
+ENRICHMENT_HEADER = (
+    "Canonical Lemma", "POS", "Article", "Gender", "Noun Forms",
+    "Accepted Variants", "Grammar Note", "Dictionary Sources",
+)
+HEADERS = {
+    "A1": SOURCE_HEADER + ENRICHMENT_HEADER,
+    "A2": SOURCE_HEADER + ENRICHMENT_HEADER,
+    "B1": SOURCE_HEADER,
+}
+ALLOWED_POS = {"n.", "v.", "adj.", "adv.", "phrase"}
 MOJIBAKE_MARKERS = ("Ã", "Â", "â€", "�")
 
 
@@ -122,20 +132,21 @@ def parse_inventory(path: Path, level: str) -> tuple[list[str], list[dict[str, s
     text = path.read_text(encoding="utf-8")
     sections = [line.lstrip("#").strip() for line in text.splitlines() if line.startswith(("## ", "### "))]
     rows = []
+    header = HEADERS[level]
     prefix = f"| {level}-WG-"
     header_count = 0
     for line_number, line in enumerate(text.splitlines(), 1):
         if line.startswith("| ID |"):
             cells = tuple(cell.strip() for cell in line.strip("|").split("|"))
-            if cells != HEADER:
+            if cells != header:
                 raise ValueError(f"{path.name}:{line_number}: table header does not match the schema")
             header_count += 1
         if not line.startswith(prefix):
             continue
         cells = [cell.strip() for cell in line.strip("|").split("|")]
-        if len(cells) != len(HEADER):
-            raise ValueError(f"{path.name}:{line_number}: expected {len(HEADER)} cells, got {len(cells)}")
-        row = dict(zip(HEADER, cells))
+        if len(cells) != len(header):
+            raise ValueError(f"{path.name}:{line_number}: expected {len(header)} cells, got {len(cells)}")
+        row = dict(zip(header, cells))
         row["_line"] = str(line_number)
         rows.append(row)
     if not header_count:
@@ -203,6 +214,27 @@ def validate_level(level: str) -> dict[str, object]:
         for reference in filter(None, row["Alphabetical Match"].split("<br>")):
             if reference not in headwords:
                 errors.append(f"line {line}: unknown alphabetical headword {reference!r}")
+        canonical = row.get("Canonical Lemma", "")
+        if not canonical:
+            continue
+        pos = row["POS"]
+        article = row["Article"]
+        gender = row["Gender"]
+        grammar_note = row["Grammar Note"]
+        sources = [item.strip() for item in row["Dictionary Sources"].split("<br>") if item.strip()]
+        if pos not in ALLOWED_POS:
+            errors.append(f"line {line}: unsupported enriched POS {pos!r}")
+        if not sources or any(not source.startswith("https://") for source in sources):
+            errors.append(f"line {line}: Dictionary Sources must contain HTTPS URLs")
+        if pos != "n." and any((article, gender, row["Noun Forms"])):
+            errors.append(f"line {line}: non-noun enrichment contains noun grammar")
+        if pos == "n." and not gender:
+            errors.append(f"line {line}: enriched noun is missing Gender")
+        expected = {"der": "m.", "die": "f.", "das": "n."}
+        if article and expected.get(article) != gender:
+            errors.append(f"line {line}: Article/Gender mismatch {article!r}/{gender!r}")
+        if pos == "n." and not article and "normally used without an article" not in grammar_note.casefold():
+            errors.append(f"line {line}: articleless noun needs an explicit usage note")
 
     if page_counts != spec.page_counts:
         errors.append(f"page counts changed: expected {spec.page_counts}, got {page_counts}")

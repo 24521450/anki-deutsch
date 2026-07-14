@@ -23,6 +23,7 @@ from typing import Any
 
 import goethe_werkstatt_migrate as gw
 import goethe_examples
+import goethe_english_audit as english_audit
 import goethe_source_examples
 
 ROOT = gw.ROOT
@@ -107,9 +108,13 @@ def parse_wortgruppen(path: Path) -> list[dict[str, str]]:
         if not line.startswith("| A"):
             continue
         cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
-        if len(cells) != 7:
+        if len(cells) != 15:
             raise CompletionError(f"bad Wortgruppen row: {line}")
-        row = dict(zip(("id", "entry", "detail", "cefr", "page", "match", "note"), cells))
+        row = dict(zip((
+            "id", "entry", "detail", "cefr", "page", "match", "note",
+            "canonical", "pos", "article", "gender", "noun_forms",
+            "variants", "grammar_note", "dictionary_sources",
+        ), cells))
         row["category"] = category
         rows.append(row)
     return rows
@@ -121,6 +126,8 @@ def category_slug(value: str) -> str:
 
 
 def wg_lemma(row: dict[str, str]) -> str:
+    if row.get("canonical"):
+        return row["canonical"]
     if row["match"]:
         return row["match"]
     entry = clean(row["entry"])
@@ -131,6 +138,12 @@ def wg_lemma(row: dict[str, str]) -> str:
 
 
 def wg_answers(row: dict[str, str]) -> list[str]:
+    if row.get("canonical"):
+        variants = [
+            item.strip() for item in re.split(r"<br\s*/?>", row.get("variants", ""), flags=re.I)
+            if item.strip()
+        ]
+        return list(dict.fromkeys([row["canonical"], *variants]))
     entry = clean(row["entry"])
     if re.fullmatch(r"[\d\s.,:/%+-]+", entry):
         return [wg_lemma(row)]
@@ -403,13 +416,18 @@ def build_manifest() -> dict[str, Any]:
                 add_example(record, example)
 
     for level, path in WG_FILES.items():
+        by_source_ref = {
+            ref: key for key, record in records.items() for ref in record["source_refs"]
+        }
         for row in parse_wortgruppen(path):
             source_counts[f"{level}_WG"] += 1
             if row["id"] in skipped_source_refs:
                 continue
             lemma = wg_lemma(row)
             merge_spec = merge_wortgruppen.get(row["id"], {})
-            key = find_record(records, index, merge_spec.get("target") or row["match"] or lemma)
+            key = by_source_ref.get(row["id"]) or find_record(
+                records, index, merge_spec.get("target") or row["match"] or lemma,
+            )
             if key is None:
                 if merge_spec:
                     raise CompletionError(f"redundancy merge target missing: {row['id']} -> {merge_spec.get('target')}")
@@ -418,6 +436,16 @@ def build_manifest() -> dict[str, Any]:
                 index_record(index, key, records[key])
             record = records[key]
             add_ref(record, row["id"], level)
+            if row["canonical"]:
+                fields = record["fields"]
+                fields["Lemma"] = row["canonical"]
+                fields["POS"] = row["pos"]
+                fields["Article"] = row["article"]
+                fields["Gender"] = row["gender"]
+                fields["NounFormsRaw"] = row["noun_forms"]
+                fields["AcceptedAnswersDE"] = "|".join(wg_answers(row))
+                fields["AcceptedArticlesDE"] = row["article"]
+                record["tags"] = sorted(set(record["tags"]) | {"goethe::quality::grammar_audited"})
             if merge_spec.get("as_example"):
                 add_example(record, lemma)
             accepted = split_answers(record["fields"].get("AcceptedAnswersDE", ""))
@@ -428,10 +456,26 @@ def build_manifest() -> dict[str, Any]:
             detail = clean("; ".join(value for value in (row["entry"], row["detail"], row["note"]) if value))
             if detail and detail not in record["fields"].get("FormOrVariantNote", ""):
                 record["fields"]["FormOrVariantNote"] = clean(record["fields"].get("FormOrVariantNote", "") + " | " + detail)
+            grammar_note = row.get("grammar_note", "")
+            if grammar_note and grammar_note not in record["fields"].get("FormOrVariantNote", ""):
+                record["fields"]["FormOrVariantNote"] = clean(
+                    record["fields"].get("FormOrVariantNote", "") + " | " + grammar_note
+                )
 
     deletions.extend(merge_exact_duplicates(records, preserve_note_ids))
     deletions = apply_headword_policy(records, deletions)
     allowed_examples = goethe_source_examples.allowed_examples_by_level()
+    audit_manifest = None
+    if english_audit.MANIFEST.exists():
+        try:
+            audit_manifest = english_audit.load_json(english_audit.MANIFEST)
+            english_audit.validate_manifest(audit_manifest)
+            for entry in audit_manifest["entries"].values():
+                for example in entry["desired_examples"]:
+                    key = goethe_source_examples.sentence_key(example["de"])
+                    allowed_examples[entry["cefr"]].setdefault(key, example["de"])
+        except english_audit.AuditError as exc:
+            raise CompletionError(f"English audit policy failed: {exc}") from exc
     for record in records.values():
         refs = list(dict.fromkeys(record["source_refs"]))
         refs.sort(key=lambda ref: (0 if ref.startswith("A1") else 1, ref))
@@ -449,6 +493,11 @@ def build_manifest() -> dict[str, Any]:
             | {LEVEL_TAG[level], "goethe::migration::completed"}
             | {f"goethe::wortgruppe::{category}" for category in record["categories"]}
         )
+    if audit_manifest is not None:
+        try:
+            english_audit.apply_manifest_to_records(records, audit_manifest, strict=True)
+        except english_audit.AuditError as exc:
+            raise CompletionError(f"English audit policy failed: {exc}") from exc
     manifest = {
         "version": 1, "records": records, "deletions": deletions,
         "source_counts": source_counts, "skipped_source_refs": sorted(skipped_source_refs),

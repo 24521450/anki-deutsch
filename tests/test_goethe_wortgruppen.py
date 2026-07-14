@@ -52,5 +52,38 @@ def test_malformed_inventory_row_is_rejected(tmp_path: Path) -> None:
     path = tmp_path / "bad.md"
     path.write_text("| A1-WG-0001 | only two cells |\n", encoding="utf-8")
 
-    with pytest.raises(ValueError, match="expected 7 cells"):
+    with pytest.raises(ValueError, match="expected 15 cells"):
         validator.parse_inventory(path, "A1")
+
+
+def test_a1_a2_enrichment_covers_all_wortgruppen_only_notes() -> None:
+    import json
+
+    rows = [
+        json.loads(line)
+        for line in (ROOT / "data" / "build" / "anki_notes.jsonl").read_text(encoding="utf-8").splitlines()
+        if line
+    ]
+    expected = {
+        row["source_id"]
+        for row in rows
+        if row["source_id"].startswith(("A1-WG-", "A2-WG-"))
+        and all("-WG-" in ref for ref in row["source_refs"])
+    }
+    actual = set()
+    for level in ("A1", "A2"):
+        _, inventory = validator.parse_inventory(
+            validator.SOURCE_DIR / f"Goethe_{level}_Wortgruppen.md", level,
+        )
+        actual.update(row["ID"] for row in inventory if row["Canonical Lemma"])
+    assert actual == expected
+
+
+def test_stundenplan_enrichment_is_complete() -> None:
+    _, rows = validator.parse_inventory(validator.SOURCE_DIR / "Goethe_A2_Wortgruppen.md", "A2")
+    row = next(item for item in rows if item["ID"] == "A2-WG-0098")
+    assert row["Canonical Lemma"] == "Stundenplan"
+    assert (row["POS"], row["Article"], row["Gender"], row["Noun Forms"]) == (
+        "n.", "der", "m.", "¨-e",
+    )
+    assert row["Dictionary Sources"] == "https://www.duden.de/rechtschreibung/Stundenplan"
