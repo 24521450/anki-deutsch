@@ -149,7 +149,7 @@ Use the real Reviewer, not Card Preview:
 - Wrong article fails.
 - `für=fuer`, `grüßen=gruessen`, `Straße=strasse`; missing `e` fails.
 - `leidtun` and `leid tun` both pass.
-- Full phrase is required; terminal `.?!` is ignored; internal hyphen remains strict.
+- Full phrases remain strict except the reviewed long-state forms ending in `sein`, which also accept the state word alone; terminal `.?!` is ignored and internal hyphens remain strict.
 - English → German front has no German/audio; word audio starts only after reveal.
 - Example audio is manual and examples 3–4 are under **Show more examples**.
 - Wrong answers show the submitted and expected answers without an extra rating hint.

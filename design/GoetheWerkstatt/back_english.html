@@ -7,9 +7,11 @@
   <section class="gw-back">
     <div id="gw-result" class="gw-result" aria-live="polite"></div>
     <div class="gw-answer-hero">
-      <h1 class="gw-german-answer">{{#Article}}<span class="gw-article gw-article-{{Article}}">{{Article}}</span> {{/Article}}{{Lemma}}</h1>
+      <div class="gw-answer-title">
+        <h1 class="gw-german-answer">{{#Article}}<span class="gw-article gw-article-{{Article}}">{{Article}}</span> {{/Article}}{{Lemma}}</h1>
+        {{#WordAudio}}<div class="gw-word-audio">{{WordAudio}}</div>{{/WordAudio}}
+      </div>
       <p class="gw-meaning-secondary">{{MeaningEN}}</p>
-      {{#WordAudio}}<div class="gw-word-audio">{{WordAudio}}</div>{{/WordAudio}}
     </div>
 
     {{#NounFormsRaw}}<div class="gw-grammar"><span>Plural: {{NounFormsRaw}}</span></div>{{/NounFormsRaw}}
@@ -41,6 +43,9 @@
 {{TargetHighlighter}}
 </script>
 <script>
+{{ExampleAudioController}}
+</script>
+<script>
 (function () {
   function text(id) {
     var node = document.getElementById(id);
@@ -62,6 +67,17 @@
   function split(value) {
     return value.split("|").map(function (item) { return item.trim(); }).filter(Boolean);
   }
+  function variants(answer) {
+    var longStateCores = {
+      "dabei": true, "dagegen": true, "dafuer": true, "einverstanden": true,
+      "erkaeltet": true, "erlaubt": true, "fertig": true, "fit": true,
+      "gueltig": true, "unterwegs": true, "verabredet": true, "verboten": true
+    };
+    var normalized = normalize(answer);
+    if (!normalized.endsWith(" sein")) return [answer];
+    var core = answer.replace(/\s+sein\s*$/i, "");
+    return longStateCores[normalize(core)] ? [answer, core] : [answer];
+  }
 
   var source = text("gw-source-id");
   var key = "goethe-werkstatt:" + source + ":production";
@@ -78,8 +94,10 @@
   var articles = split(text("gw-accepted-articles"));
   var accepted = {};
   answers.forEach(function (answer) {
-    accepted[normalize(answer)] = true;
-    articles.forEach(function (article) { accepted[normalize(article + " " + answer)] = true; });
+    variants(answer).forEach(function (variant) {
+      accepted[normalize(variant)] = true;
+      articles.forEach(function (article) { accepted[normalize(article + " " + variant)] = true; });
+    });
   });
   var correct = raw.trim() !== "" && !!accepted[normalize(raw)];
   var result = document.getElementById("gw-result");

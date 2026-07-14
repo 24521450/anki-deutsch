@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import Any
 
 import goethe_werkstatt_migrate as gw
+import goethe_examples
 
 ROOT = gw.ROOT
 STATE = ROOT / "tools" / ".goethe_completion"
@@ -158,11 +159,7 @@ def load_live() -> tuple[dict[str, dict[str, Any]], dict[int, list[dict[str, Any
             de = fields[f"Example{index}DE"]
             if de:
                 examples.append({"de": de, "en": fields[f"Example{index}EN"], "audio": fields[f"Example{index}Audio"]})
-        overflow_pattern = re.compile(
-            r'<article class="gw-example"><div class="gw-example-main gw-example-de">(.*?)</div>'
-            r'<div class="gw-example-sub">(.*?)</div></article>', re.S,
-        )
-        examples.extend({"de": html.unescape(de), "en": html.unescape(en), "audio": ""} for de, en in overflow_pattern.findall(fields["MoreExamplesHTML"]))
+        examples.extend(goethe_examples.parse_overflow(fields["MoreExamplesHTML"]))
         refs = split_answers(fields.get("SourceRefs", "")) or ([fields["SourceID"]] if fields["SourceID"] else [])
         records[str(note_id)] = {
             "note_id": note_id,
@@ -483,20 +480,7 @@ def command_translate(_: argparse.Namespace) -> None:
 
 
 def render_examples(record: dict[str, Any]) -> None:
-    fields = record["fields"]
-    for index in range(1, 5):
-        example = record["examples"][index - 1] if len(record["examples"]) >= index else {"de": "", "en": "", "audio": ""}
-        fields[f"Example{index}DE"] = example["de"]
-        fields[f"Example{index}EN"] = example["en"]
-        fields[f"Example{index}Audio"] = example["audio"]
-    overflow = []
-    for example in record["examples"][4:]:
-        overflow.append(
-            '<article class="gw-example"><div class="gw-example-main gw-example-de">'
-            + html.escape(example["de"]) + '</div><div class="gw-example-sub">'
-            + html.escape(example["en"]) + "</div></article>"
-        )
-    fields["MoreExamplesHTML"] = "".join(overflow)
+    goethe_examples.render_fields(record["fields"], record["examples"])
 
 
 def validate_manifest(manifest: dict[str, Any]) -> dict[str, int]:

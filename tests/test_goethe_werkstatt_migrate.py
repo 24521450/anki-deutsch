@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import shutil
 import subprocess
 import sys
@@ -49,6 +50,42 @@ def test_answer_accepts_reviewed_variants_but_not_blank_or_partial_phrase():
     assert gw.answer_is_correct("das macht nichts.", "Das macht nichts", "Das macht nichts")
 
 
+@pytest.mark.parametrize(
+    "answer",
+    [
+        "dabei sein",
+        "dagegen sein",
+        "dafür sein",
+        "einverstanden sein",
+        "erkältet sein",
+        "erlaubt sein",
+        "fertig sein",
+        "fit sein",
+        "gültig sein",
+        "unterwegs sein",
+        "verabredet sein",
+        "verboten sein",
+    ],
+)
+def test_answer_accepts_long_state_with_or_without_terminal_sein(answer):
+    core = answer.removesuffix(" sein")
+    assert gw.answer_is_correct(answer, answer, answer)
+    assert gw.answer_is_correct(core, answer, answer)
+
+
+def test_answer_accepts_transliteration_when_terminal_sein_is_omitted():
+    assert gw.answer_is_correct("erkältet", "erkältet sein", "erkältet sein")
+    assert gw.answer_is_correct("erkaeltet", "erkältet sein", "erkältet sein")
+    assert not gw.answer_is_correct("", "erkältet sein", "erkältet sein")
+
+
+@pytest.mark.parametrize("answer", ["an sein", "aus sein", "auf sein", "weg sein", "zu sein"])
+def test_answer_keeps_short_particle_sein_phrases_strict(answer):
+    core = answer.removesuffix(" sein")
+    assert gw.answer_is_correct(answer, answer, answer)
+    assert not gw.answer_is_correct(core, answer, answer)
+
+
 def test_internal_hyphen_and_word_order_remain_strict():
     assert gw.answer_is_correct("E-Mail", "E-Mail")
     assert not gw.answer_is_correct("Email", "E-Mail")
@@ -91,6 +128,16 @@ def test_card_flip_uses_staged_motion_with_reduced_motion_fallback():
     assert "@media (prefers-reduced-motion: reduce)" in css
 
 
+def test_noir_palette_keeps_semantic_levels_and_readable_metadata():
+    css = (gw.DESIGN / "styling.css").read_text(encoding="utf-8")
+    for color in ("#0f1416", "#171c1f", "#262b2d", "#3d4946", "#dfe3e6", "#bdc9c5", "#879390", "#71d8c5"):
+        assert color in css
+    assert '.gw-card[data-level="A2"] { --level: #e5b85b; }' in css
+    assert ".gw-article-der { color: #7fa8ff; }" in css
+    assert ".gw-article-die { color: #f08aa6; }" in css
+    assert ".gw-article-das { color: #72cda5; }" in css
+
+
 def test_export_shape_and_counts_are_stable():
     a1, a2 = gw.parse_export()
     assert len(a1) == 925
@@ -113,6 +160,14 @@ def test_templates_do_not_leak_german_or_audio_on_production_front():
     assert "{{Article}}" not in front
     assert "{{WordAudio}}" not in front
     assert "{{Example1DE}}" not in front
+
+
+def test_both_answer_templates_offer_headword_audio_replay():
+    for name in ("back_german.html", "back_english.html"):
+        template = (gw.DESIGN / name).read_text(encoding="utf-8")
+        assert template.count("{{WordAudio}}") == 1
+        assert '<div class="gw-answer-title">' in template
+        assert '{{#WordAudio}}<div class="gw-word-audio">' in template
 
 
 def test_production_front_submits_once_on_enter_without_a_custom_button():
@@ -144,6 +199,80 @@ def test_back_templates_put_german_first_and_inject_target_highlighter():
         assert "{{TargetHighlighter}}" not in back
 
 
+def test_back_templates_inject_click_to_play_example_audio():
+    css = (gw.DESIGN / "styling.css").read_text(encoding="utf-8")
+    assert ".gw-example-audio { display: none; }" in css
+    rendered = gw.templates()
+    for card in rendered.values():
+        back = card["Back"]
+        assert "goetheWerkstattExampleAudio" in back
+        assert "{{ExampleAudioController}}" not in back
+
+
+def test_example_audio_controller_replays_and_switches_sentences():
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("Node.js is required for the card JavaScript regression test")
+    script = (gw.DESIGN / "example_audio.js").read_text(encoding="utf-8")
+    harness = r'''
+function classes() {
+  const values = new Set();
+  return { add: (v) => values.add(v), remove: (v) => values.delete(v), contains: (v) => values.has(v) };
+}
+function sentence(text) {
+  const listeners = {};
+  return {
+    textContent: text, classList: classes(), attributes: {}, listeners,
+    setAttribute: function (key, value) { this.attributes[key] = value; },
+    addEventListener: function (name, callback) { listeners[name] = callback; }
+  };
+}
+function audio() {
+  const listeners = {};
+  return {
+    currentTime: 9, paused: true, playCount: 0, pauseCount: 0, listeners,
+    addEventListener: function (name, callback) { listeners[name] = callback; },
+    pause: function () { this.pauseCount += 1; this.paused = true; if (listeners.pause) listeners.pause(); },
+    play: function () { this.playCount += 1; this.paused = false; if (listeners.play) listeners.play(); return { catch: function () {} }; },
+    emit: function (name) { if (listeners[name]) listeners[name](); }
+  };
+}
+function article(s, a) {
+  return { querySelector: (selector) => selector === ".gw-example-main" ? s : (selector === ".gw-example-audio audio" ? a : null) };
+}
+const firstSentence = sentence("Er kommt allein.");
+const secondSentence = sentence("Sie lernt Deutsch.");
+const silentSentence = sentence("Kein Audio.");
+const firstAudio = audio();
+const secondAudio = audio();
+const articles = [article(firstSentence, firstAudio), article(secondSentence, secondAudio), article(silentSentence, null)];
+globalThis.document = { querySelectorAll: (selector) => selector === ".gw-example" ? articles : [] };
+''' + script + r'''
+if (globalThis.goetheWerkstattExampleAudio.count !== 2) throw new Error("wrong playable count");
+if (!firstSentence.classList.contains("gw-example-playable")) throw new Error("sentence not playable");
+if (silentSentence.classList.contains("gw-example-playable")) throw new Error("silent sentence is playable");
+if (firstSentence.attributes.role !== "button" || firstSentence.attributes.tabindex !== "0") throw new Error("missing accessibility attributes");
+function event(key) {
+  return { key, prevented: false, stopped: false, preventDefault: function () { this.prevented = true; }, stopPropagation: function () { this.stopped = true; } };
+}
+let click = event();
+firstSentence.listeners.click(click);
+if (!click.prevented || !click.stopped || firstAudio.playCount !== 1 || firstAudio.currentTime !== 0) throw new Error("click did not play from start");
+if (!firstSentence.classList.contains("gw-example-playing")) throw new Error("missing playing state");
+firstAudio.currentTime = 4;
+firstSentence.listeners.click(event());
+if (firstAudio.playCount !== 2 || firstAudio.currentTime !== 0) throw new Error("second click did not replay");
+secondSentence.listeners.click(event());
+if (!firstAudio.paused || firstAudio.currentTime !== 0 || secondAudio.playCount !== 1) throw new Error("switch did not stop previous audio");
+secondAudio.emit("ended");
+if (secondSentence.classList.contains("gw-example-playing")) throw new Error("ended state remained active");
+const key = event(" ");
+secondSentence.listeners.keydown(key);
+if (!key.prevented || !key.stopped || secondAudio.playCount !== 2) throw new Error("space did not play safely");
+'''
+    subprocess.run([node, "-e", harness], check=True, capture_output=True, text=True)
+
+
 def test_templates_omit_redundant_recall_prompt():
     front = (gw.DESIGN / "front_german.html").read_text(encoding="utf-8")
     assert "Recall the English meaning" not in front
@@ -156,6 +285,58 @@ def test_production_card_omits_redundant_instruction_labels():
         assert label not in front
     for label in ("Correct answer", "Press 1 for Again", "gw-again-hint"):
         assert label not in back
+
+
+def test_english_back_runtime_grades_optional_sein_and_articles():
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("Node.js is required for the typed-answer JavaScript regression test")
+    back = (gw.DESIGN / "back_english.html").read_text(encoding="utf-8")
+    checker = back.rsplit("<script>", 1)[1].split("</script>", 1)[0]
+    harness = r'''
+const vm = require("vm");
+const checker = CHECKER;
+function grade(raw, lemma, acceptedAnswers, acceptedArticles, article) {
+  const values = {
+    "gw-source-id": "test", "gw-lemma": lemma,
+    "gw-accepted-answers": acceptedAnswers, "gw-accepted-articles": acceptedArticles,
+    "gw-article": article || ""
+  };
+  const classes = new Set();
+  const result = {
+    textContent: "", classList: { add: (value) => classes.add(value) },
+    appendChild: function () {}
+  };
+  const context = {
+    sessionStorage: { getItem: () => raw },
+    document: {
+      getElementById: (id) => id === "gw-result" ? result : ({ textContent: values[id] || "" }),
+      createElement: () => ({ textContent: "" })
+    }
+  };
+  context.globalThis = context;
+  vm.runInNewContext(checker, context);
+  return classes.has("gw-correct");
+}
+[
+  "dabei sein", "dagegen sein", "dafür sein", "einverstanden sein",
+  "erkältet sein", "erlaubt sein", "fertig sein", "fit sein", "gültig sein",
+  "unterwegs sein", "verabredet sein", "verboten sein"
+].forEach(function (answer) {
+  const core = answer.replace(/ sein$/, "");
+  if (!grade(core, answer, answer, "", "")) throw new Error("bare state rejected: " + answer);
+  if (!grade(answer, answer, answer, "", "")) throw new Error("full state rejected: " + answer);
+});
+if (!grade("erkaeltet", "erkältet sein", "erkältet sein", "", "")) throw new Error("transliterated state rejected");
+["an sein", "aus sein", "auf sein", "weg sein", "zu sein"].forEach(function (answer) {
+  if (grade(answer.replace(/ sein$/, ""), answer, answer, "", "")) throw new Error("short particle accepted: " + answer);
+});
+if (!grade("Bett", "Bett", "Bett", "das", "das")) throw new Error("bare noun rejected");
+if (!grade("das Bett", "Bett", "Bett", "das", "das")) throw new Error("correct article rejected");
+if (grade("die Bett", "Bett", "Bett", "das", "das")) throw new Error("wrong article accepted");
+if (grade("", "erkältet sein", "erkältet sein", "", "")) throw new Error("blank accepted");
+'''.replace("CHECKER", json.dumps(checker))
+    subprocess.run([node, "-e", harness], check=True, capture_output=True, text=True)
 
 
 def test_target_highlighter_handles_inflections_separable_verbs_and_short_words():

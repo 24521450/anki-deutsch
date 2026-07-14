@@ -10,7 +10,7 @@
 - Final inventory: **1,596 notes / 3,192 cards** (884 A1, 712 A2).
 - Every survivor retains its card IDs, scheduling tuple, and review history.
 - Every survivor is tagged `goethe::quality::english_verified::british`; no `translation_review_needed` tag remains.
-- Word audio is complete using Duden → Wikimedia Commons → Edge TTS; no sentence audio was generated.
+- Word audio is complete using Duden → Wikimedia Commons → Edge TTS. Example audio is maintained separately by the Edge-only A1+A2 workflow documented in `GOETHE_EXAMPLE_AUDIO.md`.
 
 ## Deleted notes
 

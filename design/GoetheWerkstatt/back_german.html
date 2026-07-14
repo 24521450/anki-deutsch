@@ -7,7 +7,10 @@
   <section class="gw-back">
     <div class="gw-answer-hero">
       <span class="gw-label">German</span>
-      <h1 class="gw-german-answer">{{#Article}}<span class="gw-article gw-article-{{Article}}">{{Article}}</span> {{/Article}}{{Lemma}}</h1>
+      <div class="gw-answer-title">
+        <h1 class="gw-german-answer">{{#Article}}<span class="gw-article gw-article-{{Article}}">{{Article}}</span> {{/Article}}{{Lemma}}</h1>
+        {{#WordAudio}}<div class="gw-word-audio">{{WordAudio}}</div>{{/WordAudio}}
+      </div>
       <p class="gw-meaning-secondary">{{MeaningEN}}</p>
     </div>
 
@@ -35,4 +38,7 @@
 </main>
 <script>
 {{TargetHighlighter}}
+</script>
+<script>
+{{ExampleAudioController}}
 </script>

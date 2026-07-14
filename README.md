@@ -27,11 +27,18 @@ python tools/a1_generate.py
 Example sentence audio:
 
 ```powershell
-python tools/a1_example_audio.py preflight
-python tools/a1_example_audio.py pilot
-python tools/a1_example_audio.py full
-python tools/a1_example_audio.py resume
+python tools/goethe_example_audio.py audit
+python tools/goethe_example_audio.py prepare --scope pilot
+python tools/goethe_example_audio.py prepare --scope full
+python tools/goethe_example_audio.py snapshot
+python tools/goethe_example_audio.py apply --scope pilot --confirmation APPLY_GOETHE_EXAMPLE_AUDIO
+python tools/goethe_example_audio.py verify --scope pilot
+python tools/goethe_example_audio.py apply --scope full --confirmation APPLY_GOETHE_EXAMPLE_AUDIO
+python tools/goethe_example_audio.py verify --scope full
 ```
+
+This A1+A2 workflow uses deterministic Edge TTS voices and preserves Anki
+scheduling and review history. See `docs/GOETHE_EXAMPLE_AUDIO.md`.
 
 Duden dictionary audio:
 

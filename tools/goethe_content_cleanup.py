@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Any
 
 import export_goethe_notes_jsonl as export_jsonl
+import goethe_examples
 import goethe_completion as completion
 import goethe_werkstatt_migrate as gw
 
@@ -181,12 +182,7 @@ def render_examples(fields: dict[str, str], examples: list[dict[str, str]]) -> N
         fields[f"Example{index}DE"] = item["de"]
         fields[f"Example{index}EN"] = item["en"]
         fields[f"Example{index}Audio"] = item.get("audio", "")
-    fields["MoreExamplesHTML"] = "".join(
-        '<article class="gw-example"><div class="gw-example-main gw-example-de">'
-        + html.escape(item["de"]) + '</div><div class="gw-example-sub">'
-        + html.escape(item["en"]) + "</div></article>"
-        for item in examples[4:]
-    )
+    fields["MoreExamplesHTML"] = goethe_examples.render_overflow(examples[4:])
 
 
 def normalized_text(value: str) -> str:

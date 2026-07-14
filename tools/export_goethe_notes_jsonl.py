@@ -2,12 +2,11 @@
 from __future__ import annotations
 
 import json
-import html
-import re
 from pathlib import Path
 from typing import Any
 
 import goethe_werkstatt_migrate as gw
+import goethe_examples
 
 ROOT = gw.ROOT
 OUTPUT = ROOT / "data" / "build" / "anki_notes.jsonl"
@@ -36,14 +35,7 @@ def stable_guid(fields: dict[str, str]) -> str:
 
 
 def overflow_examples(value: str) -> list[dict[str, str]]:
-    pattern = re.compile(
-        r'<article class="gw-example"><div class="gw-example-main gw-example-de">(.*?)</div>'
-        r'<div class="gw-example-sub">(.*?)</div></article>', re.S,
-    )
-    return [
-        {"de": html.unescape(german), "en": html.unescape(english), "audio": ""}
-        for german, english in pattern.findall(value or "")
-    ]
+    return goethe_examples.parse_overflow(value)
 
 
 def serialize_note(note: dict[str, Any], cards: list[dict[str, Any]]) -> dict[str, Any]:

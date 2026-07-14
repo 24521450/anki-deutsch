@@ -144,11 +144,30 @@ def split_accepted(value: str) -> list[str]:
     return [part.strip() for part in value.split("|") if part.strip()]
 
 
+LONG_STATE_SEIN_CORES = {
+    normalize_answer(value)
+    for value in (
+        "dabei", "dagegen", "dafür", "einverstanden", "erkältet", "erlaubt",
+        "fertig", "fit", "gültig", "unterwegs", "verabredet", "verboten",
+    )
+}
+
+
+def accepted_answer_variants(answer: str) -> list[str]:
+    variants = [answer]
+    if normalize_answer(answer).endswith(" sein"):
+        core = answer.rsplit(None, 1)[0]
+        if normalize_answer(core) in LONG_STATE_SEIN_CORES:
+            variants.append(core)
+    return variants
+
+
 def answer_is_correct(raw: str, lemma: str, accepted_answers: str = "", accepted_articles: str = "") -> bool:
     answers = split_accepted(accepted_answers) or [lemma]
     articles = split_accepted(accepted_articles)
-    expected = {normalize_answer(answer) for answer in answers}
-    expected.update(normalize_answer(f"{article} {answer}") for article in articles for answer in answers)
+    variants = [variant for answer in answers for variant in accepted_answer_variants(answer)]
+    expected = {normalize_answer(answer) for answer in variants}
+    expected.update(normalize_answer(f"{article} {answer}") for article in articles for answer in variants)
     return bool(raw.strip()) and normalize_answer(raw) in expected
 
 
@@ -487,14 +506,15 @@ def command_preflight(_: argparse.Namespace) -> None:
 
 def templates() -> dict[str, Any]:
     highlighter = (DESIGN / "target_highlighter.js").read_text(encoding="utf-8")
+    example_audio = (DESIGN / "example_audio.js").read_text(encoding="utf-8")
     return {
         "German → English": {
             "Front": (DESIGN / "front_german.html").read_text(encoding="utf-8"),
-            "Back": (DESIGN / "back_german.html").read_text(encoding="utf-8").replace("{{TargetHighlighter}}", highlighter),
+            "Back": (DESIGN / "back_german.html").read_text(encoding="utf-8").replace("{{TargetHighlighter}}", highlighter).replace("{{ExampleAudioController}}", example_audio),
         },
         "English → German": {
             "Front": (DESIGN / "front_english.html").read_text(encoding="utf-8"),
-            "Back": (DESIGN / "back_english.html").read_text(encoding="utf-8").replace("{{TargetHighlighter}}", highlighter),
+            "Back": (DESIGN / "back_english.html").read_text(encoding="utf-8").replace("{{TargetHighlighter}}", highlighter).replace("{{ExampleAudioController}}", example_audio),
         },
     }
 
