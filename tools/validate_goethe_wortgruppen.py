@@ -19,7 +19,7 @@ ENRICHMENT_HEADER = (
 HEADERS = {
     "A1": SOURCE_HEADER + ENRICHMENT_HEADER,
     "A2": SOURCE_HEADER + ENRICHMENT_HEADER,
-    "B1": SOURCE_HEADER,
+    "B1": SOURCE_HEADER + ENRICHMENT_HEADER,
 }
 ALLOWED_POS = {"n.", "v.", "adj.", "adv.", "phrase"}
 MOJIBAKE_MARKERS = ("Ã", "Â", "â€", "�")
@@ -231,7 +231,14 @@ def validate_level(level: str) -> dict[str, object]:
         if pos == "n." and not gender:
             errors.append(f"line {line}: enriched noun is missing Gender")
         expected = {"der": "m.", "die": "f.", "das": "n."}
-        if article and expected.get(article) != gender:
+        articles = article.split("/") if article else []
+        genders = gender.split("/") if gender else []
+        valid_gender = gender == "pl." and articles == ["die"]
+        valid_gender = valid_gender or (
+            bool(articles) and len(articles) == len(genders)
+            and all(expected.get(item) == genders[index] for index, item in enumerate(articles))
+        )
+        if article and not valid_gender:
             errors.append(f"line {line}: Article/Gender mismatch {article!r}/{gender!r}")
         if pos == "n." and not article and "normally used without an article" not in grammar_note.casefold():
             errors.append(f"line {line}: articleless noun needs an explicit usage note")

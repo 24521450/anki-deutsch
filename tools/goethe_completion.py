@@ -1,4 +1,4 @@
-"""Complete the live Goethe A1/A2 deck from alphabetical and Wortgruppen sources.
+"""Complete the live Goethe A1-B1 deck from alphabetical and Wortgruppen sources.
 
 Build and translation commands only write ignored state. ``apply`` is guarded by
 an explicit confirmation and operates through AnkiConnect, never collection.anki2.
@@ -32,16 +32,21 @@ TRANSLATIONS = ROOT / "review" / "goethe_completion_translations.json"
 REDUNDANCY_POLICY = ROOT / "review" / "goethe_redundancy_policy.json"
 HEADWORD_POLICY = ROOT / "review" / "goethe_headword_merges.json"
 SOURCE_TEXT_OVERRIDES = ROOT / "review" / "goethe_source_text_overrides.json"
+B1_ENGLISH_OVERRIDES = ROOT / "review" / "goethe_b1_english_overrides.json"
+B1_DATA_OVERRIDES = ROOT / "review" / "goethe_b1_data_overrides.json"
 MANIFEST = STATE / "manifest.json"
 MODEL = gw.MODEL
 WG_FILES = {
     "A1": ROOT / "sources" / "goethe" / "Goethe_A1_Wortgruppen.md",
     "A2": ROOT / "sources" / "goethe" / "Goethe_A2_Wortgruppen.md",
+    "B1": ROOT / "sources" / "goethe" / "Goethe_B1_Wortgruppen.md",
 }
-LEVEL_DECK = {"A1": gw.A1_DECK, "A2": gw.A2_DECK}
-LEVEL_TAG = {"A1": "goethe::level::a1", "A2": "goethe::level::a2"}
+LEVELS = ("A1", "A2", "B1")
+LEVEL_RANK = {level: index for index, level in enumerate(LEVELS)}
+LEVEL_DECK = {"A1": gw.A1_DECK, "A2": gw.A2_DECK, "B1": gw.B1_DECK}
+LEVEL_TAG = {level: f"goethe::level::{level.lower()}" for level in LEVELS}
 QUALITY_TRANSLATION = "goethe::quality::translation_review_needed"
-CONFIRMATION = "COMPLETE_GOETHE_A1_A2"
+CONFIRMATION = "COMPLETE_GOETHE_A1_A2_B1"
 
 
 class CompletionError(RuntimeError):
@@ -68,7 +73,10 @@ def compatible_pos(source: str, target: str) -> bool:
     source, target = clean(source).casefold(), clean(target).casefold()
     if not source or not target:
         return True
-    return source.split(".")[0] == target.split(".")[0]
+    left, right = source.split(".")[0], target.split(".")[0]
+    if {left, right} <= {"adj", "adv"}:
+        return True
+    return left == right
 
 
 def split_answers(value: str) -> list[str]:
@@ -105,7 +113,7 @@ def parse_wortgruppen(path: Path) -> list[dict[str, str]]:
     for line in path.read_text(encoding="utf-8").splitlines():
         if line.startswith("## "):
             category = line[3:].strip()
-        if not line.startswith("| A"):
+        if not re.match(r"^\| (?:A1|A2|B1)-WG-", line):
             continue
         cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
         if len(cells) != 15:
@@ -245,6 +253,8 @@ def find_record(
         prefix = lemma_key(word)[:-1]
         exact = sorted({key for variant, keys in index.items() if not variant.startswith("~") and variant.startswith(prefix) for key in keys})
     candidates = [key for key in exact if compatible_pos(pos, records[key]["fields"].get("POS", ""))]
+    if pos and exact and not candidates:
+        return None
     if not candidates:
         candidates = exact
     if gender:
@@ -283,7 +293,10 @@ def new_record(ref: str, lemma: str, level: str, pos: str = "", gender: str = ""
 
 
 def lower_level(left: str, right: str) -> str:
-    return "A1" if "A1" in {left, right} else "A2"
+    try:
+        return min((left, right), key=LEVEL_RANK.__getitem__)
+    except KeyError as exc:
+        raise CompletionError(f"unsupported Goethe level: {exc.args[0]}") from exc
 
 
 def add_example(record: dict[str, Any], german: str) -> None:
@@ -301,6 +314,53 @@ def add_ref(record: dict[str, Any], ref: str, level: str) -> None:
     target = lower_level(current, level)
     record["fields"]["CEFR"] = target
     record["deck"] = LEVEL_DECK[target]
+
+
+def apply_main_grammar(record: dict[str, Any], row: dict[str, Any]) -> None:
+    """Populate grammar fields directly supported by a Goethe source entry."""
+    raw = clean(row.get("note", "")).removeprefix("source: ").strip()
+    if not raw:
+        return
+    fields = record["fields"]
+    pos = clean(row.get("pos", ""))
+    if pos == "n.":
+        articles = list(dict.fromkeys(re.findall(r"\b(?:der|die|das)\b", raw.split("→", 1)[0])))
+        if row.get("gender") == "pl.":
+            articles = ["die"]
+            genders = ["pl."]
+        else:
+            genders = [{"der": "m.", "die": "f.", "das": "n."}[item] for item in articles]
+        if articles:
+            fields["Article"] = "/".join(articles)
+            fields["AcceptedArticlesDE"] = "|".join(articles)
+            fields["Gender"] = "/".join(genders)
+        forms = []
+        for segment in re.split(r";\s*(?=(?:source:\s*)?(?:der|die|das)\b)", raw):
+            segment = segment.removeprefix("source: ").strip()
+            if "," in segment:
+                value = clean(segment.split(",", 1)[1].split("→", 1)[0])
+                value = re.sub(r"\s*\((?:D|A|CH)(?:\s*,\s*(?:D|A|CH))*\)\s*$", "", value)
+                if value and value not in forms:
+                    forms.append(value)
+            elif re.search(r"\((?:nur\s+)?Pl\.(?:ural)?\)", segment, re.I):
+                forms.append("(plural only)")
+        if forms:
+            fields["NounFormsRaw"] = " / ".join(dict.fromkeys(forms))
+    elif pos == "v.":
+        forms = []
+        for segment in re.split(r";\s*(?=(?:source:\s*)?(?:\(?sich\)?\s+)?[a-zäöüß])", raw):
+            segment = segment.removeprefix("source: ").strip()
+            if "," not in segment:
+                continue
+            value = clean(segment.split(",", 1)[1].split("→", 1)[0])
+            value = re.sub(r"\s*\((?:D|A|CH)(?:\s*,\s*(?:D|A|CH))*\)\s*$", "", value)
+            if value and value not in forms:
+                forms.append(value)
+        if forms:
+            fields["VerbFormsRaw"] = " / ".join(forms)
+    if "→" in raw or re.search(r"\((?:D|A|CH)(?:\s*,\s*(?:D|A|CH))*\)", raw):
+        fields["RegionalVariants"] = raw
+    record["tags"] = sorted(set(record["tags"]) | {"goethe::quality::grammar_audited"})
 
 
 def merge_exact_duplicates(records: dict[str, dict[str, Any]], preserve_note_ids: set[int] | None = None) -> list[dict[str, Any]]:
@@ -384,23 +444,38 @@ def build_manifest() -> dict[str, Any]:
     preserve_note_ids = set(map(int, redundancy_policy.get("preserve_note_ids", [])))
     source_targets = {str(ref): str(note_id) for ref, note_id in redundancy_policy.get("source_targets", {}).items()}
     deletions = merge_exact_duplicates(records, preserve_note_ids)
+    # Stored merge-policy snapshots are an A1/A2 baseline. Apply them before
+    # adding B1 provenance so they cannot erase freshly attached B1 refs.
+    deletions = apply_headword_policy(records, deletions)
     index = variant_index(records)
+    by_source_ref = {
+        ref: key for key, record in records.items() for ref in record["source_refs"]
+    }
     ambiguous: list[dict[str, Any]] = []
-    source_counts = {"A1_MAIN": 0, "A2_MAIN": 0, "A1_WG": 0, "A2_WG": 0}
-    for level, path in (("A1", gw.SOURCE_A1), ("A2", gw.SOURCE_A2)):
+    source_counts = {f"{level}_{kind}": 0 for level in LEVELS for kind in ("MAIN", "WG")}
+    main_files = {"A1": gw.SOURCE_A1, "A2": gw.SOURCE_A2, "B1": gw.SOURCE_B1}
+    for level, path in main_files.items():
         for row in gw.parse_markdown(path):
             source_counts[f"{level}_MAIN"] += 1
             ref = f"{level}-MAIN-{row['row']:04d}"
             configured_target = source_targets.get(ref)
             if configured_target and configured_target not in records:
                 raise CompletionError(f"configured source target missing: {ref} -> {configured_target}")
-            key = configured_target or find_record(records, index, row["word"], row["pos"], row["gender"], row["examples"])
+            key = configured_target or by_source_ref.get(ref) or find_record(
+                records, index, row["word"], row["pos"], row["gender"], row["examples"],
+            )
             if key is None:
                 key = f"new:{ref}"
                 records[key] = new_record(ref, row["word"], level, row["pos"], row["gender"])
                 index_record(index, key, records[key])
             record = records[key]
+            prior_level = record["fields"].get("CEFR") or level
             add_ref(record, ref, level)
+            by_source_ref[ref] = key
+            if level == "B1" and LEVEL_RANK[prior_level] < LEVEL_RANK[level]:
+                # Lower-level ownership wins. Overlaps gain provenance only;
+                # B1 examples and metadata must not expand the A1/A2 note.
+                continue
             if not record["fields"].get("POS"):
                 record["fields"]["POS"] = row["pos"]
             if not record["fields"].get("Gender"):
@@ -411,14 +486,13 @@ def build_manifest() -> dict[str, Any]:
                 record["fields"]["AcceptedArticlesDE"] = article
             if row["note"] and row["note"] not in record["fields"].get("SourceNoteRaw", ""):
                 record["fields"]["SourceNoteRaw"] = clean(record["fields"].get("SourceNoteRaw", "") + " | " + row["note"])
+            if level == "B1":
+                apply_main_grammar(record, row)
             examples = source_text_overrides["examples"].get(ref, row["examples"])
             for example in examples:
                 add_example(record, example)
 
     for level, path in WG_FILES.items():
-        by_source_ref = {
-            ref: key for key, record in records.items() for ref in record["source_refs"]
-        }
         for row in parse_wortgruppen(path):
             source_counts[f"{level}_WG"] += 1
             if row["id"] in skipped_source_refs:
@@ -435,7 +509,11 @@ def build_manifest() -> dict[str, Any]:
                 records[key] = new_record(row["id"], lemma, level)
                 index_record(index, key, records[key])
             record = records[key]
+            prior_level = record["fields"].get("CEFR") or level
             add_ref(record, row["id"], level)
+            by_source_ref[row["id"]] = key
+            if level == "B1" and LEVEL_RANK[prior_level] < LEVEL_RANK[level]:
+                continue
             if row["canonical"]:
                 fields = record["fields"]
                 fields["Lemma"] = row["canonical"]
@@ -443,8 +521,10 @@ def build_manifest() -> dict[str, Any]:
                 fields["Article"] = row["article"]
                 fields["Gender"] = row["gender"]
                 fields["NounFormsRaw"] = row["noun_forms"]
+                if row["pos"] == "v." and row.get("grammar_note", "").startswith("Conjugation: "):
+                    fields["VerbFormsRaw"] = row["grammar_note"].removeprefix("Conjugation: ")
                 fields["AcceptedAnswersDE"] = "|".join(wg_answers(row))
-                fields["AcceptedArticlesDE"] = row["article"]
+                fields["AcceptedArticlesDE"] = "|".join(row["article"].split("/"))
                 record["tags"] = sorted(set(record["tags"]) | {"goethe::quality::grammar_audited"})
             if merge_spec.get("as_example"):
                 add_example(record, lemma)
@@ -463,7 +543,6 @@ def build_manifest() -> dict[str, Any]:
                 )
 
     deletions.extend(merge_exact_duplicates(records, preserve_note_ids))
-    deletions = apply_headword_policy(records, deletions)
     allowed_examples = goethe_source_examples.allowed_examples_by_level()
     audit_manifest = None
     if english_audit.MANIFEST.exists():
@@ -478,7 +557,7 @@ def build_manifest() -> dict[str, Any]:
             raise CompletionError(f"English audit policy failed: {exc}") from exc
     for record in records.values():
         refs = list(dict.fromkeys(record["source_refs"]))
-        refs.sort(key=lambda ref: (0 if ref.startswith("A1") else 1, ref))
+        refs.sort(key=lambda ref: (LEVEL_RANK.get(ref.split("-", 1)[0], 99), ref))
         record["source_refs"] = refs
         record["fields"]["SourceRefs"] = "|".join(refs)
         if refs:
@@ -498,6 +577,9 @@ def build_manifest() -> dict[str, Any]:
             english_audit.apply_manifest_to_records(records, audit_manifest, strict=True)
         except english_audit.AuditError as exc:
             raise CompletionError(f"English audit policy failed: {exc}") from exc
+    apply_translation_cache(records)
+    apply_b1_english_overrides(records)
+    apply_b1_data_overrides(records)
     manifest = {
         "version": 1, "records": records, "deletions": deletions,
         "source_counts": source_counts, "skipped_source_refs": sorted(skipped_source_refs),
@@ -509,6 +591,71 @@ def build_manifest() -> dict[str, Any]:
 def save_manifest(manifest: dict[str, Any]) -> None:
     STATE.mkdir(parents=True, exist_ok=True)
     MANIFEST.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def apply_translation_cache(records: dict[str, dict[str, Any]]) -> None:
+    if not TRANSLATIONS.exists():
+        return
+    cache = json.loads(TRANSLATIONS.read_text(encoding="utf-8"))
+    for record in records.values():
+        changed = False
+        fields = record["fields"]
+        if not fields.get("MeaningEN") and fields.get("Lemma") in cache:
+            fields["MeaningEN"] = cache[fields["Lemma"]]
+            changed = True
+        for example in record["examples"]:
+            if not example["en"] and example["de"] in cache:
+                example["en"] = cache[example["de"]]
+                changed = True
+        if changed:
+            record["translated"] = True
+            record["tags"] = sorted(set(record["tags"]) | {QUALITY_TRANSLATION, "goethe::quality::review_needed"})
+
+
+def apply_b1_english_overrides(records: dict[str, dict[str, Any]]) -> None:
+    if not B1_ENGLISH_OVERRIDES.exists():
+        return
+    overrides = json.loads(B1_ENGLISH_OVERRIDES.read_text(encoding="utf-8"))
+    by_ref = {ref: record for record in records.values() for ref in record["source_refs"]}
+    for source_id, override in overrides.items():
+        if source_id not in by_ref:
+            raise CompletionError(f"B1 English override source missing: {source_id}")
+        record = by_ref[source_id]
+        if record["fields"].get("CEFR") != "B1":
+            continue
+        if "meaning_en" in override:
+            record["fields"]["MeaningEN"] = clean(override["meaning_en"])
+        examples = override.get("examples", {})
+        available = {item["de"]: item for item in record["examples"]}
+        unknown = set(examples) - set(available)
+        if unknown:
+            raise CompletionError(f"B1 English override examples missing for {source_id}: {sorted(unknown)!r}")
+        for german, english in examples.items():
+            available[german]["en"] = clean(english)
+        record["tags"] = sorted(
+            (set(record["tags"]) - {QUALITY_TRANSLATION}) | {"goethe::quality::english_audited"}
+        )
+
+
+def apply_b1_data_overrides(records: dict[str, dict[str, Any]]) -> None:
+    if not B1_DATA_OVERRIDES.exists():
+        return
+    overrides = json.loads(B1_DATA_OVERRIDES.read_text(encoding="utf-8"))
+    by_ref = {ref: record for record in records.values() for ref in record["source_refs"]}
+    allowed = {"POS", "Article", "Gender", "NounFormsRaw", "VerbFormsRaw", "RegionalVariants"}
+    for source_id, fields in overrides.items():
+        if source_id not in by_ref:
+            raise CompletionError(f"B1 data override source missing: {source_id}")
+        unknown = set(fields) - allowed
+        if unknown:
+            raise CompletionError(f"unsupported B1 data override fields for {source_id}: {sorted(unknown)!r}")
+        record = by_ref[source_id]
+        if record["fields"].get("CEFR") != "B1":
+            continue
+        record["fields"].update({name: clean(value) for name, value in fields.items()})
+        if "Article" in fields:
+            record["fields"]["AcceptedArticlesDE"] = "|".join(fields["Article"].split("/"))
+        record["tags"] = sorted(set(record["tags"]) | {"goethe::quality::grammar_audited"})
 
 
 def command_build(_: argparse.Namespace) -> None:
@@ -594,7 +741,7 @@ def validate_manifest(manifest: dict[str, Any]) -> dict[str, int]:
     refs = {ref for record in records for ref in record["source_refs"]}
     skipped_source_refs = set(manifest.get("skipped_source_refs", []))
     expected = sum(manifest["source_counts"].values()) - len(skipped_source_refs)
-    source_refs = {ref for ref in refs if re.match(r"A[12]-(?:MAIN|WG)-", ref)}
+    source_refs = {ref for ref in refs if re.match(r"(?:A1|A2|B1)-(?:MAIN|WG)-", ref)}
     if source_refs & skipped_source_refs:
         raise CompletionError("skipped source ref was retained in the manifest")
     if len(source_refs) != expected:
@@ -608,6 +755,7 @@ def validate_manifest(manifest: dict[str, Any]) -> dict[str, int]:
         "delete": len(deleted), "source_refs": len(source_refs),
         "a1": sum(record["fields"]["CEFR"] == "A1" for record in records),
         "a2": sum(record["fields"]["CEFR"] == "A2" for record in records),
+        "b1": sum(record["fields"]["CEFR"] == "B1" for record in records),
     }
 
 
@@ -681,6 +829,68 @@ def command_apply(args: argparse.Namespace) -> None:
     print(json.dumps({**summary, "new_ids": len(new_ids), "deleted_ids": deleted_count, "kept_duplicates": len(delete_ids) if args.keep_duplicates else 0, "skipped_new": bool(args.skip_new)}, indent=2))
 
 
+def command_apply_b1(args: argparse.Namespace) -> None:
+    if args.confirmation != "ADD_GOETHE_B1":
+        raise CompletionError("confirmation must equal ADD_GOETHE_B1")
+    if gw.anki("version") != 6:
+        raise CompletionError("unexpected AnkiConnect API version")
+    manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    validate_manifest(manifest)
+    if gw.anki("modelFieldNames", modelName=MODEL) != gw.FIELDS:
+        raise CompletionError("target model schema differs")
+    live, _ = load_live()
+    live_refs = {ref for record in live.values() for ref in record["source_refs"]}
+    candidates = sorted(
+        (record for record in manifest["records"].values() if record["is_new"]),
+        key=lambda record: record["fields"]["OriginalOrder"],
+    )
+    stale = [record["fields"]["SourceID"] for record in candidates if set(record["source_refs"]) & live_refs]
+    if stale:
+        raise CompletionError(f"manifest is stale; rebuild before B1 apply: {stale[:5]}")
+    selected = candidates[: args.limit_new] if args.limit_new else candidates
+    gw.anki("createDeck", deck=gw.B1_DECK)
+    config = gw.anki("getDeckConfig", deck=gw.B1_DECK)
+    if config.get("name") != "goethe-b1":
+        source = gw.anki("getDeckConfig", deck=gw.A1_DECK)
+        config_id = gw.anki("cloneDeckConfigId", name="goethe-b1", cloneFrom=str(source["id"]))
+        if not config_id or not gw.anki("setDeckConfigId", decks=[gw.B1_DECK], configId=config_id):
+            raise CompletionError("failed to create or assign goethe-b1 preset")
+        config = gw.anki("getDeckConfig", deck=gw.B1_DECK)
+    config["new"]["perDay"] = 0
+    if not gw.anki("saveDeckConfig", config=config):
+        raise CompletionError("failed to lock B1 new cards/day at zero")
+    added = []
+    for record in selected:
+        note_id = gw.anki("addNote", note={
+            "deckName": gw.B1_DECK, "modelName": MODEL,
+            "fields": record["fields"], "tags": record["tags"],
+            "options": {"allowDuplicate": True},
+        })
+        if not note_id:
+            raise CompletionError(f"failed to add B1 note: {record['fields']['Lemma']}")
+        cards = gw.anki("cardsInfo", cards=gw.anki("findCards", query=f"nid:{note_id}"))
+        if len(cards) != 2 or any(card["deckName"] != gw.B1_DECK for card in cards):
+            raise CompletionError(f"B1 note verification failed: {note_id}")
+        added.append({"note_id": note_id, "source_id": record["fields"]["SourceID"], "lemma": record["fields"]["Lemma"]})
+    provenance_updates = 0
+    if not args.limit_new:
+        for record in manifest["records"].values():
+            if record["is_new"] or not any(ref.startswith("B1-") for ref in record["source_refs"]):
+                continue
+            live_record = live.get(str(record["note_id"]))
+            if live_record is None:
+                raise CompletionError(f"live overlap note missing: {record['note_id']}")
+            desired = "|".join(record["source_refs"])
+            if live_record["fields"].get("SourceRefs", "") == desired:
+                continue
+            gw.anki("updateNoteFields", note={"id": record["note_id"], "fields": {"SourceRefs": desired}})
+            provenance_updates += 1
+    print(json.dumps({
+        "added": len(added), "provenance_updates": provenance_updates,
+        "remaining_new": len(candidates) - len(selected), "notes": added,
+    }, ensure_ascii=False, indent=2))
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
     sub = parser.add_subparsers(dest="command", required=True)
@@ -692,6 +902,10 @@ def build_parser() -> argparse.ArgumentParser:
     apply.add_argument("--keep-duplicates", action="store_true")
     apply.add_argument("--skip-new", action="store_true")
     apply.set_defaults(func=command_apply)
+    apply_b1 = sub.add_parser("apply-b1")
+    apply_b1.add_argument("--confirmation", required=True)
+    apply_b1.add_argument("--limit-new", type=int, default=0)
+    apply_b1.set_defaults(func=command_apply_b1)
     return parser
 
 

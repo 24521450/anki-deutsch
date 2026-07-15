@@ -27,6 +27,7 @@ EXPORT = LEGACY_INPUTS / "Goethe Institute.txt"
 BACKUP = LEGACY_INPUTS / "Goethe Institute.apkg"
 SOURCE_A1 = ROOT / "sources" / "goethe" / "Goethe_A1.md"
 SOURCE_A2 = ROOT / "sources" / "goethe" / "Goethe_A2.md"
+SOURCE_B1 = ROOT / "sources" / "goethe" / "Goethe_B1.md"
 A1_WORD_MANIFEST = ROOT / "audio" / "a1" / "words_manifest.jsonl"
 OVERRIDES = ROOT / "review" / "goethe_werkstatt_overrides.json"
 DESIGN = ROOT / "design" / "GoetheWerkstatt"
@@ -38,6 +39,7 @@ A1_MODEL = "Goethe Vocab List"
 A2_MODEL = "Basic (and reversed card)-75aea"
 A1_DECK = "Goethe Institute::A1 Wordlist"
 A2_DECK = "Goethe Institute::A2 Wordlist"
+B1_DECK = "Goethe Institute::B1 Wordlist"
 EXPECTED_NOTES = {A1_DECK: 925, A2_DECK: 656}
 EXPECTED_CARDS = {A1_DECK: 1850, A2_DECK: 1312}
 EXPECTED_BACKUP_SHA256 = "54b786c84bc5ed0d8205fc263eb4432ea4728678ae106952343bf7b8f1489fc3"
@@ -448,7 +450,7 @@ def load_manifest() -> dict[str, Any]:
 
 def all_card_info() -> list[dict[str, Any]]:
     cards = []
-    for deck in (A1_DECK, A2_DECK):
+    for deck in (A1_DECK, A2_DECK, B1_DECK):
         cards.extend(anki("findCards", query=f'deck:"{deck}"'))
     result = []
     for batch in chunks(cards, 100):

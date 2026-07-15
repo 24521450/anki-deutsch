@@ -1,0 +1,16 @@
+{
+  "B1-MAIN-0179": {"VerbFormsRaw": "schreibt auf, schrieb auf, hat aufgeschrieben"},
+  "B1-MAIN-0342": {"VerbFormsRaw": "gibt Bescheid, gab Bescheid, hat Bescheid gegeben"},
+  "B1-MAIN-0343": {"VerbFormsRaw": "sagt Bescheid, sagte Bescheid, hat Bescheid gesagt"},
+  "B1-MAIN-0345": {"VerbFormsRaw": "beschränkt, beschränkte, hat beschränkt"},
+  "B1-MAIN-0680": {"VerbFormsRaw": "kommt entgegen, kam entgegen, ist entgegengekommen"},
+  "B1-MAIN-1031": {"VerbFormsRaw": "lebt getrennt, lebte getrennt, hat getrennt gelebt"},
+  "B1-MAIN-1219": {"VerbFormsRaw": "geht in Rente, ging in Rente, ist in Rente gegangen"},
+  "B1-MAIN-1296": {"VerbFormsRaw": "geht kaputt, ging kaputt, ist kaputtgegangen"},
+  "B1-MAIN-1297": {"VerbFormsRaw": "macht kaputt, machte kaputt, hat kaputtgemacht"},
+  "B1-MAIN-1390": {"VerbFormsRaw": "kopiert, kopierte, hat kopiert"},
+  "B1-MAIN-1882": {"VerbFormsRaw": "präsentiert, präsentierte, hat präsentiert"},
+  "B1-MAIN-2043": {"POS": "det., pron."},
+  "B1-MAIN-2297": {"VerbFormsRaw": "bleibt stehen, blieb stehen, ist stehen geblieben"},
+  "B1-MAIN-2402": {"VerbFormsRaw": "lässt Tee ziehen, ließ Tee ziehen, hat Tee ziehen lassen"}
+}

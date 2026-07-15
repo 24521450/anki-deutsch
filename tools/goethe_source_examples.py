@@ -11,7 +11,7 @@ import goethe_werkstatt_migrate as gw
 
 
 ROOT = gw.ROOT
-SOURCE_PATHS = {"A1": gw.SOURCE_A1, "A2": gw.SOURCE_A2}
+SOURCE_PATHS = {"A1": gw.SOURCE_A1, "A2": gw.SOURCE_A2, "B1": gw.SOURCE_B1}
 OVERRIDES_PATH = ROOT / "review" / "goethe_source_text_overrides.json"
 
 
@@ -33,7 +33,7 @@ def load_overrides() -> dict[str, list[str]]:
 
 def allowed_examples_by_level() -> dict[str, dict[str, str]]:
     overrides = load_overrides()
-    allowed: dict[str, dict[str, str]] = {"A1": {}, "A2": {}}
+    allowed: dict[str, dict[str, str]] = {level: {} for level in SOURCE_PATHS}
     for level, path in SOURCE_PATHS.items():
         for row in gw.parse_markdown(path):
             ref = f"{level}-MAIN-{row['row']:04d}"
