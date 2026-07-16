@@ -97,3 +97,25 @@ def test_uncovered_record_is_marked_for_review_not_verified():
     audit.apply_manifest_to_records(records, audit.load_json(audit.MANIFEST), strict=False)
     assert audit.REVIEW_TAG in records["new"]["tags"]
     assert audit.AUDITED_TAG not in records["new"]["tags"]
+
+
+def test_strict_coverage_accepts_merged_alias_source_refs_without_applying_alias_content():
+    full_manifest = audit.load_json(audit.MANIFEST)
+    canonical = copy.deepcopy(full_manifest["entries"]["A1-84886454963"])
+    alias = copy.deepcopy(full_manifest["entries"]["A2-0679"])
+    fields = {name: "" for name in audit.gw.FIELDS}
+    fields.update({
+        "SourceID": canonical["source_id"],
+        "SourceRefs": f"{canonical['source_id']}|{alias['source_id']}",
+        "MeaningEN": canonical["expected_meaning_en"],
+    })
+    audit.goethe_examples.render_fields(fields, canonical["expected_examples"])
+    records = {"merged": {"fields": fields, "examples": [], "tags": []}}
+
+    audit.apply_manifest_to_records(
+        records,
+        {"entries": {canonical["source_id"]: canonical, alias["source_id"]: alias}},
+        strict=True,
+    )
+
+    assert records["merged"]["fields"]["MeaningEN"] == canonical["desired_meaning_en"]

@@ -15,6 +15,23 @@
     "A2-MAIN-1117": 1584886455225,
     "A2-MAIN-1118": 1584886455226
   },
+  "main_source_aliases": {
+    "B1-MAIN-0255": "B1-MAIN-0252",
+    "B1-MAIN-2084": "B1-MAIN-0476",
+    "B1-MAIN-1851": "B1-MAIN-0798",
+    "B1-MAIN-1050": "B1-MAIN-1049",
+    "B1-MAIN-1876": "B1-MAIN-1874",
+    "B1-MAIN-2228": "B1-MAIN-2060",
+    "B1-MAIN-1950": "A1-MAIN-0508",
+    "A2-MAIN-0996": "A1-MAIN-0601",
+    "A2-MAIN-0223": "A1-MAIN-0159",
+    "B1-MAIN-0538": "A1-MAIN-0159",
+    "B1-MAIN-0539": "A1-MAIN-0159",
+    "B1-MAIN-1596": "A2-MAIN-0634",
+    "A2-MAIN-0672": "A1-MAIN-0449",
+    "B1-MAIN-1201": "A1-MAIN-0301",
+    "B1-MAIN-1855": "A2-MAIN-0734"
+  },
   "skip_wortgruppen": [
     "A1-WG-0044",
     "A1-WG-0045",

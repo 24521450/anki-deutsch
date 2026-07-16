@@ -156,6 +156,13 @@ def find_entry(fields: dict[str, str], manifest: dict[str, Any]) -> dict[str, An
     return matches[0] if matches else None
 
 
+def covered_source_ids(fields: dict[str, str], manifest: dict[str, Any]) -> set[str]:
+    """Return every audited source row carried by a merged note."""
+    refs = {item.strip() for item in str(fields.get("SourceRefs", "")).split("|") if item.strip()}
+    refs.add(str(fields.get("SourceID", "")).strip())
+    return refs & set(manifest["entries"])
+
+
 def pair_state(current: list[dict[str, str]], entry: dict[str, Any]) -> str:
     pairs = example_pairs(current)
     if pairs == example_pairs(entry["expected_examples"]):
@@ -201,7 +208,7 @@ def apply_manifest_to_records(records: dict[str, dict[str, Any]], manifest: dict
         if entry is None:
             record["tags"] = sorted((set(record["tags"]) - {AUDITED_TAG}) | {REVIEW_TAG})
             continue
-        matched.add(entry["source_id"])
+        matched.update(covered_source_ids(record["fields"], manifest))
         record["fields"] = desired_fields(record["fields"], entry)
         record["examples"] = goethe_examples.parse_fields(record["fields"])
         record["tags"] = desired_tags(record["tags"])
@@ -314,7 +321,7 @@ def validate_records(records: dict[int, dict[str, Any]], manifest: dict[str, Any
             raise AuditError(f"identity drift: {entry['source_id']}")
         desired_fields(record["fields"], entry)
         resolved[note_id] = entry
-        used.add(entry["source_id"])
+        used.update(covered_source_ids(record["fields"], manifest))
     if used != set(manifest["entries"]):
         raise AuditError("live audit coverage mismatch")
     return resolved

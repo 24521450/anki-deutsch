@@ -212,6 +212,33 @@ def load_redundancy_policy() -> dict[str, Any]:
     return policy
 
 
+def configured_main_source_key(
+    ref: str,
+    main_source_aliases: dict[str, str],
+    source_targets: dict[str, str],
+    records: dict[str, dict[str, Any]],
+    by_source_ref: dict[str, str],
+) -> str | None:
+    """Resolve a reviewed main-list alias before heuristic matching.
+
+    Alias targets use source references rather than note IDs so a fresh
+    manifest can route split rows after the canonical row has been created.
+    The function fails closed when a configured target is unavailable.
+    """
+    target_ref = main_source_aliases.get(ref)
+    if target_ref:
+        key = by_source_ref.get(target_ref)
+        if key is None:
+            raise CompletionError(f"main source alias target missing: {ref} -> {target_ref}")
+        return key
+    configured_target = source_targets.get(ref)
+    if configured_target:
+        if configured_target not in records:
+            raise CompletionError(f"configured source target missing: {ref} -> {configured_target}")
+        return configured_target
+    return by_source_ref.get(ref)
+
+
 def load_source_text_overrides() -> dict[str, Any]:
     if not SOURCE_TEXT_OVERRIDES.exists():
         return {"examples": {}}
@@ -443,6 +470,9 @@ def build_manifest() -> dict[str, Any]:
     merge_wortgruppen = redundancy_policy.get("merge_wortgruppen", {})
     preserve_note_ids = set(map(int, redundancy_policy.get("preserve_note_ids", [])))
     source_targets = {str(ref): str(note_id) for ref, note_id in redundancy_policy.get("source_targets", {}).items()}
+    main_source_aliases = {
+        str(ref): str(target) for ref, target in redundancy_policy.get("main_source_aliases", {}).items()
+    }
     deletions = merge_exact_duplicates(records, preserve_note_ids)
     # Stored merge-policy snapshots are an A1/A2 baseline. Apply them before
     # adding B1 provenance so they cannot erase freshly attached B1 refs.
@@ -458,10 +488,9 @@ def build_manifest() -> dict[str, Any]:
         for row in gw.parse_markdown(path):
             source_counts[f"{level}_MAIN"] += 1
             ref = f"{level}-MAIN-{row['row']:04d}"
-            configured_target = source_targets.get(ref)
-            if configured_target and configured_target not in records:
-                raise CompletionError(f"configured source target missing: {ref} -> {configured_target}")
-            key = configured_target or by_source_ref.get(ref) or find_record(
+            key = configured_main_source_key(
+                ref, main_source_aliases, source_targets, records, by_source_ref,
+            ) or find_record(
                 records, index, row["word"], row["pos"], row["gender"], row["examples"],
             )
             if key is None:
@@ -472,6 +501,13 @@ def build_manifest() -> dict[str, Any]:
             prior_level = record["fields"].get("CEFR") or level
             add_ref(record, ref, level)
             by_source_ref[ref] = key
+            if ref in main_source_aliases:
+                accepted = split_answers(record["fields"].get("AcceptedAnswersDE", ""))
+                for variant in source_variants(row["word"]):
+                    if variant not in accepted:
+                        accepted.append(variant)
+                record["fields"]["AcceptedAnswersDE"] = "|".join(accepted)
+                index_record(index, key, record)
             if level == "B1" and LEVEL_RANK[prior_level] < LEVEL_RANK[level]:
                 # Lower-level ownership wins. Overlaps gain provenance only;
                 # B1 examples and metadata must not expand the A1/A2 note.
@@ -566,6 +602,7 @@ def build_manifest() -> dict[str, Any]:
         record["examples"] = goethe_source_examples.filter_examples(
             level, record["examples"], allowed_examples,
         )
+        goethe_examples.render_fields(record["fields"], record["examples"])
         record["deck"] = LEVEL_DECK[level]
         record["tags"] = sorted(
             (set(record["tags"]) - set(LEVEL_TAG.values()))

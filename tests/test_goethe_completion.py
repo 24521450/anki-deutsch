@@ -3,6 +3,8 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
 TOOLS = ROOT / "tools"
 if str(TOOLS) not in sys.path:
@@ -130,6 +132,33 @@ def test_redundancy_policy_preserves_reviewed_content_twins_and_routes_phrases()
     assert policy["source_targets"]["A1-MAIN-0658"] == 1584886455225
 
 
+def test_redundancy_policy_routes_reviewed_main_source_aliases():
+    policy = gc.load_redundancy_policy()
+    aliases = policy["main_source_aliases"]
+    assert len(aliases) == 15
+    assert aliases["B1-MAIN-0255"] == "B1-MAIN-0252"
+    assert aliases["B1-MAIN-0539"] == "A1-MAIN-0159"
+    assert aliases["B1-MAIN-1855"] == "A2-MAIN-0734"
+
+
+def test_configured_main_source_alias_fails_closed_until_target_exists():
+    with pytest.raises(gc.CompletionError, match="main source alias target missing"):
+        gc.configured_main_source_key(
+            "B1-MAIN-0255",
+            {"B1-MAIN-0255": "B1-MAIN-0252"},
+            {},
+            {},
+            {},
+        )
+    assert gc.configured_main_source_key(
+        "B1-MAIN-0255",
+        {"B1-MAIN-0255": "B1-MAIN-0252"},
+        {},
+        {"1": {}},
+        {"B1-MAIN-0252": "1"},
+    ) == "1"
+
+
 def test_completion_uses_same_level_example_whitelist():
     allowed = gc.goethe_source_examples.allowed_examples_by_level()
     examples = [
@@ -137,3 +166,4 @@ def test_completion_uses_same_level_example_whitelist():
         {"de": "Darf ich Ihnen ein Stück Kuchen anbieten?", "en": "offer", "audio": "b"},
     ]
     assert gc.goethe_source_examples.filter_examples("A2", examples, allowed) == [examples[0]]
+
