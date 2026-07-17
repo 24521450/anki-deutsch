@@ -100,9 +100,9 @@ def test_extract_occurrences_normalizes_source():
     assert target["source_text"] == "\u2013 Nein, ich m\u00f6chte die andere."
 
 
-def test_apply_overrides_replaces_13_known_spans():
+def test_apply_overrides_normalizes_known_spans():
     occs = [
-        {"row": 18, "example_index": 1, "word": "x", "source_text": "WiIlst du diese Jacke?"},
+        {"row": 18, "example_index": 1, "word": "x", "source_text": "Willst du diese Jacke?"},
         {"row": 145, "example_index": 1, "word": "y", "source_text": "Damen (an der Toilette)"},
         {"row": 555, "example_index": 4, "word": "z",
          "source_text": "So, das war's/w\u00e4r's!"},
@@ -162,10 +162,10 @@ def test_assign_audio_ids_handles_empty_spoken_text():
     assert occs[0]["audio_id"] is None
 
 
-def test_assign_voices_produces_446_445_balance():
-    texts = [f"text-{i:04d}" for i in range(891)]
+def test_assign_voices_produces_446_444_balance():
+    texts = [f"text-{i:04d}" for i in range(890)]
     voices = aea._assign_voices(texts)
-    assert len(voices) == 891
+    assert len(voices) == 890
     counts: dict[str, int] = {}
     for v in voices:
         counts[v] = counts.get(v, 0) + 1
@@ -173,7 +173,7 @@ def test_assign_voices_produces_446_445_balance():
 
 
 def test_assign_voices_is_deterministic_across_runs():
-    texts = [f"text-{i:04d}" for i in range(891)]
+    texts = [f"text-{i:04d}" for i in range(890)]
     v1 = aea._assign_voices(texts)
     v2 = aea._assign_voices(texts)
     assert v1 == v2
@@ -182,7 +182,7 @@ def test_assign_voices_is_deterministic_across_runs():
 def test_assign_voices_is_invariant_per_sorted_text():
     """Voice per text is keyed on alphabetic position, so reversing the input
     must produce the same per-text voice (after re-aligning by input position)."""
-    texts = [f"text-{i:04d}" for i in range(891)]
+    texts = [f"text-{i:04d}" for i in range(890)]
     sorted_texts = sorted(texts)
     v1 = aea._assign_voices(texts)  # paired with `texts`
     v2 = aea._assign_voices(list(reversed(texts)))  # paired with reversed list
@@ -428,11 +428,11 @@ def _make_unique(aid: str, status: str = "ok") -> dict:
     }
 
 
-def test_try_promote_rejects_891_uniques_with_one_bad_status(tmp_path, monkeypatch):
+def test_try_promote_rejects_890_uniques_with_one_bad_status(tmp_path, monkeypatch):
     monkeypatch.setattr(aea, "STAGING_DIR", tmp_path)
     monkeypatch.setattr(aea, "LIVE_DIR", tmp_path / "live")
     uniques = [_make_unique(f"a{i:04d}", status=("failed" if i == 0 else "ok"))
-               for i in range(891)]
+               for i in range(890)]
     for u in uniques:
         (tmp_path / u["output_filename"]).write_bytes(b"\xff\xfb\x90\x00" * 5)
     assert aea.try_promote(uniques) is False
@@ -441,7 +441,7 @@ def test_try_promote_rejects_891_uniques_with_one_bad_status(tmp_path, monkeypat
 def test_try_promote_rejects_when_one_file_missing(tmp_path, monkeypatch):
     monkeypatch.setattr(aea, "STAGING_DIR", tmp_path)
     monkeypatch.setattr(aea, "LIVE_DIR", tmp_path / "live")
-    uniques = [_make_unique(f"b{i:04d}") for i in range(891)]
+    uniques = [_make_unique(f"b{i:04d}") for i in range(890)]
     for u in uniques[1:]:  # skip first; intentionally missing
         (tmp_path / u["output_filename"]).write_bytes(b"\xff\xfb\x90\x00" * 5)
     assert aea.try_promote(uniques) is False
@@ -450,22 +450,22 @@ def test_try_promote_rejects_when_one_file_missing(tmp_path, monkeypatch):
 def test_try_promote_rejects_count_mismatch(tmp_path, monkeypatch):
     monkeypatch.setattr(aea, "STAGING_DIR", tmp_path)
     monkeypatch.setattr(aea, "LIVE_DIR", tmp_path / "live")
-    uniques = [_make_unique(f"c{i:04d}") for i in range(890)]  # not 891
+    uniques = [_make_unique(f"c{i:04d}") for i in range(889)]  # not 890
     assert aea.try_promote(uniques) is False
 
 
-def test_try_promote_succeeds_with_full_891_valid(tmp_path, monkeypatch):
+def test_try_promote_succeeds_with_full_890_valid(tmp_path, monkeypatch):
     monkeypatch.setattr(aea, "STAGING_DIR", tmp_path / "stg")
     monkeypatch.setattr(aea, "LIVE_DIR", tmp_path / "live")
     aea.STAGING_DIR.mkdir(parents=True)
     aea.LIVE_DIR.mkdir(parents=True)
-    uniques = [_make_unique(f"d{i:04d}") for i in range(891)]
+    uniques = [_make_unique(f"d{i:04d}") for i in range(890)]
     for u in uniques:
         (aea.STAGING_DIR / u["output_filename"]).write_bytes(b"\xff\xfb\x90\x00" * 5)
     assert aea.try_promote(uniques) is True
     # Sample-copy check: at least 3 files in live
     live_files = list(aea.LIVE_DIR.glob("ex_*.mp3"))
-    assert len(live_files) == 891
+    assert len(live_files) == 890
     # No leftover .tmp files
     assert not list(aea.LIVE_DIR.glob("*.tmp"))
 
@@ -479,7 +479,7 @@ def test_try_promote_treats_skipped_existing_valid_as_ok(tmp_path, monkeypatch):
         _make_unique("first", status="ok"),
         _make_unique("second", status="skipped_existing_valid"),
     ] + [
-        _make_unique(f"pad{i:04d}") for i in range(889)
+        _make_unique(f"pad{i:04d}") for i in range(888)
     ]
     for u in uniques:
         (aea.STAGING_DIR / u["output_filename"]).write_bytes(b"\xff\xfb\x90\x00" * 5)

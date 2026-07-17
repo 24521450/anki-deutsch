@@ -21,7 +21,7 @@ def fields(level: str, rows: list[dict[str, str]]) -> dict[str, str]:
 
 def test_reviewed_overrides_define_canonical_level_whitelists():
     allowed = source_examples.allowed_examples_by_level()
-    assert len(allowed["A1"]) == 887
+    assert len(allowed["A1"]) == 872
     assert len(allowed["A2"]) == 1835
     assert source_examples.sentence_key("Im Zug fahre ich immer 2. Klasse.") in allowed["A1"]
     assert source_examples.sentence_key("Im Zug fahre ich immer 2.") not in allowed["A1"]
@@ -85,8 +85,8 @@ def test_update_notes_sends_only_partial_example_fields(monkeypatch):
 def test_example_audio_baseline_matches_cleanup_projection():
     import goethe_example_audio
 
-    assert goethe_example_audio.EXPECTED_OCCURRENCES == 2008
-    assert goethe_example_audio.EXPECTED_UNIQUE == 1918
+    assert goethe_example_audio.EXPECTED_OCCURRENCES == 2007
+    assert goethe_example_audio.EXPECTED_UNIQUE == 1917
 
 
 def test_exported_examples_obey_the_level_source_policy():

@@ -53,7 +53,9 @@ FIELDS = [
     "Example3DE", "Example3EN", "Example3Audio",
     "Example4DE", "Example4EN", "Example4Audio",
     "MoreExamplesHTML", "SourceID", "SourceRefs", "OriginalOrder", "SourceNoteRaw", "LegacyGUID",
+    "AcceptedFullAnswersDE", "ProductionEnabled", "ProductionHint", "ExampleTargetSpansJSON",
 ]
+ADDITIVE_FIELDS = ("AcceptedFullAnswersDE", "ProductionEnabled", "ProductionHint", "ExampleTargetSpansJSON")
 
 PILOT_A1 = [
     1584886454452, 1584886454486, 1584886454531, 1584886455241,
@@ -173,6 +175,18 @@ def answer_is_correct(raw: str, lemma: str, accepted_answers: str = "", accepted
     return bool(raw.strip()) and normalize_answer(raw) in expected
 
 
+def parse_example_cell(value: str) -> list[str]:
+    examples: list[str] = []
+    for part in (item.strip() for item in re.split(r"<br\s*/?>", value, flags=re.I)):
+        if not part:
+            continue
+        if examples and re.match(r"^[–—-]\s*", part):
+            examples[-1] += "<br>" + part
+        else:
+            examples.append(part)
+    return examples
+
+
 def parse_markdown(path: Path) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for line in path.read_text(encoding="utf-8").splitlines():
@@ -187,7 +201,7 @@ def parse_markdown(path: Path) -> list[dict[str, Any]]:
             "pos": cells[1],
             "gender": cells[2],
             "cefr": cells[3],
-            "examples": [part.strip() for part in cells[4].split("<br>") if part.strip()],
+            "examples": parse_example_cell(cells[4]),
             "note": cells[5],
         })
     return rows
@@ -509,14 +523,15 @@ def command_preflight(_: argparse.Namespace) -> None:
 def templates() -> dict[str, Any]:
     highlighter = (DESIGN / "target_highlighter.js").read_text(encoding="utf-8")
     example_audio = (DESIGN / "example_audio.js").read_text(encoding="utf-8")
+    word_audio = (DESIGN / "word_audio.js").read_text(encoding="utf-8")
     return {
         "German → English": {
-            "Front": (DESIGN / "front_german.html").read_text(encoding="utf-8"),
-            "Back": (DESIGN / "back_german.html").read_text(encoding="utf-8").replace("{{TargetHighlighter}}", highlighter).replace("{{ExampleAudioController}}", example_audio),
+            "Front": (DESIGN / "front_german.html").read_text(encoding="utf-8").replace("{{WordAudioController}}", word_audio),
+            "Back": (DESIGN / "back_german.html").read_text(encoding="utf-8").replace("{{TargetHighlighter}}", highlighter).replace("{{ExampleAudioController}}", example_audio).replace("{{WordAudioController}}", word_audio),
         },
         "English → German": {
             "Front": (DESIGN / "front_english.html").read_text(encoding="utf-8"),
-            "Back": (DESIGN / "back_english.html").read_text(encoding="utf-8").replace("{{TargetHighlighter}}", highlighter).replace("{{ExampleAudioController}}", example_audio),
+            "Back": (DESIGN / "back_english.html").read_text(encoding="utf-8").replace("{{TargetHighlighter}}", highlighter).replace("{{ExampleAudioController}}", example_audio).replace("{{WordAudioController}}", word_audio),
         },
     }
 
@@ -537,6 +552,11 @@ def command_create_model(_: argparse.Namespace) -> None:
         legacy_fields = [field for field in FIELDS if field not in {"MoreExamplesHTML", "SourceRefs"}]
         if actual == legacy_fields:
             for field in ("MoreExamplesHTML", "SourceRefs"):
+                anki("modelFieldAdd", modelName=MODEL, fieldName=field, index=FIELDS.index(field))
+            actual = anki("modelFieldNames", modelName=MODEL)
+        old_fields = [field for field in FIELDS if field not in ADDITIVE_FIELDS]
+        if actual == old_fields:
+            for field in ADDITIVE_FIELDS:
                 anki("modelFieldAdd", modelName=MODEL, fieldName=field, index=FIELDS.index(field))
             actual = anki("modelFieldNames", modelName=MODEL)
         if actual != FIELDS:

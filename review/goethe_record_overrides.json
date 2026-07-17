@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "records": {
+    "A1-MAIN-0018": {
+      "expected": {"Lemma": "anderen"},
+      "set": {
+        "Lemma": "ander-",
+        "AcceptedAnswersDE": "ander|anderen",
+        "AcceptedFullAnswersDE": "ander|anderen",
+        "FormOrVariantNote": "inflected form: anderen"
+      }
+    },
+    "A1-84886454459": {"set": {"Lemma": "anziehen", "AcceptedAnswersDE": "sich anziehen", "AcceptedFullAnswersDE": "sich anziehen|s anziehen"}},
+    "A1-84886454629": {"set": {"Lemma": "duschen", "AcceptedAnswersDE": "sich duschen", "AcceptedFullAnswersDE": "sich duschen|s duschen"}},
+    "A1-84886454711": {"set": {"Lemma": "freuen", "AcceptedAnswersDE": "sich freuen", "AcceptedFullAnswersDE": "sich freuen|s freuen"}},
+    "A1-84886455145": {"set": {"Lemma": "treffen", "AcceptedAnswersDE": "sich treffen", "AcceptedFullAnswersDE": "sich treffen|s treffen"}},
+    "A1-84886455189": {"set": {"Lemma": "vorstellen", "AcceptedAnswersDE": "sich vorstellen", "AcceptedFullAnswersDE": "sich vorstellen|s vorstellen"}},
+    "A1-84886455201": {"set": {"Lemma": "waschen", "AcceptedAnswersDE": "sich waschen", "AcceptedFullAnswersDE": "sich waschen|s waschen"}},
+    "A1-84887177194": {"set": {"FormOrVariantNote": "ordinal number", "AcceptedAnswersDE": "erste", "AcceptedFullAnswersDE": "erste"}},
+    "A1-84887177195": {"set": {"FormOrVariantNote": "ordinal number", "AcceptedAnswersDE": "zweite", "AcceptedFullAnswersDE": "zweite"}},
+    "A1-84887177196": {"set": {"FormOrVariantNote": "ordinal number", "AcceptedAnswersDE": "dritte", "AcceptedFullAnswersDE": "dritte"}},
+    "A1-84887177197": {"set": {"FormOrVariantNote": "ordinal number", "AcceptedAnswersDE": "vierte", "AcceptedFullAnswersDE": "vierte"}}
+  }
+}

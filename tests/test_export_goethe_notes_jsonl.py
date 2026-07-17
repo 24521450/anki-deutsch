@@ -17,6 +17,8 @@ def note():
     values.update({
         "Lemma": "Viertel", "MeaningEN": "quarter", "CEFR": "A1",
         "AcceptedAnswersDE": "Viertel|das Viertel", "AcceptedArticlesDE": "das",
+        "AcceptedFullAnswersDE": "das Viertel", "ProductionEnabled": "1",
+        "ProductionHint": "Germany/Austria", "ExampleTargetSpansJSON": "[[[0,7]]]",
         "Example1DE": "Viertel nach zwei", "Example1EN": "quarter past two",
         "SourceID": "A1-X", "SourceRefs": "A1-X|A1-WG-X", "OriginalOrder": "10",
     })
@@ -37,6 +39,10 @@ def test_serialize_note_is_agent_readable_and_stable():
     row = export.serialize_note(note(), cards())
     assert row["guid"] == "goethe:A1-X"
     assert row["accepted_answers_de"] == ["Viertel", "das Viertel"]
+    assert row["accepted_full_answers_de"] == ["das Viertel"]
+    assert row["production_enabled"] is True
+    assert row["production_hint"] == "Germany/Austria"
+    assert row["example_target_spans"] == [[[0, 7]]]
     assert row["examples"] == [{"de": "Viertel nach zwei", "en": "quarter past two", "audio": ""}]
     assert row["source_refs"] == ["A1-X", "A1-WG-X"]
     assert row["tags"] == ["a", "z"]

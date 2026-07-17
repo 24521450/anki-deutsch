@@ -15,6 +15,12 @@ def test_spoken_text_normalizes_only_tts_punctuation():
     assert audio.spoken_text("Das kostet 10 Euro (inklusive).") == "Das kostet 10 Euro (inklusive)."
 
 
+def test_spoken_text_converts_html_dialogue_break_to_a_pause():
+    assert audio.spoken_text(
+        "Willst du diese Jacke?<br>– Nein, ich möchte die andere."
+    ) == "Willst du diese Jacke? Nein, ich möchte die andere."
+
+
 def test_voice_and_request_id_are_deterministic():
     text = "Guten Morgen."
     voice = audio.voice_for(text)

@@ -70,8 +70,6 @@ COMMONS_CONFIG = {
 }
 SOURCE_FIELDS = ("Lemma", "POS", "Gender", "AcceptedAnswersDE", "SourceRefs", "CEFR")
 PILOT_SIZE = 12
-LIVE_NOTE_COUNT = 1530
-LIVE_CARD_COUNT = 3060
 
 
 class WordAudioError(RuntimeError):
@@ -152,12 +150,8 @@ def live_records() -> dict[int, dict[str, Any]]:
             "tags": sorted(note.get("tags", [])),
             "cards": sorted(note_cards, key=lambda item: item["cardId"]),
         }
-    card_count = sum(len(item["cards"]) for item in records.values())
-    if len(records) != LIVE_NOTE_COUNT or card_count != LIVE_CARD_COUNT:
-        raise WordAudioError(
-            f"expected live baseline {LIVE_NOTE_COUNT} notes / {LIVE_CARD_COUNT} cards, got "
-            f"{len(records)} / {card_count}"
-        )
+    if any(len(item["cards"]) != 2 for item in records.values()):
+        raise WordAudioError("every target note must have exactly two cards")
     return records
 
 
@@ -181,6 +175,9 @@ def note_variants(fields: dict[str, str]) -> set[str]:
 
 def source_matches(fields: dict[str, str], item: dict[str, Any], variants: set[str] | None = None) -> bool:
     word = completion.lemma_key(clean(item.get("word", "")))
+    target = completion.lemma_key(clean(fields.get("Lemma", "")))
+    if word in {"der", "die", "das"} and target not in {"der", "die", "das"}:
+        return False
     if word not in (variants if variants is not None else note_variants(fields)):
         return False
     return completion.compatible_pos(clean(item.get("pos", "")), fields.get("POS", "")) and compatible_gender(
@@ -772,7 +769,8 @@ def finalize_manifest(manifest: dict[str, Any], duden_index: dict[str, Any], com
                 raise WordAudioError(f"missing Edge result for {item['lemma']!r}")
             item["assignment"] = assignment("edge", Path(edge["path"]), detail=edge)
         counts[item["assignment"]["source"]] += 1
-    if len(manifest["notes"]) != LIVE_NOTE_COUNT or sum(counts.values()) != LIVE_NOTE_COUNT:
+    expected = len(manifest["notes"])
+    if expected != manifest.get("note_count") or sum(counts.values()) != expected:
         raise WordAudioError("prepared manifest is incomplete")
     manifest.update({"prepared_utc": now_utc(), "counts": dict(counts), "missing_overrides": []})
     atomic_json(MANIFEST_PATH, manifest)
@@ -783,7 +781,7 @@ async def command_prepare(_: argparse.Namespace) -> None:
     if not _.confirm_commons_license:
         raise WordAudioError("Commons preparation requires --confirm-commons-license")
     manifest = load_json(MANIFEST_PATH, None) if _.offline else build_audit()
-    if not manifest or manifest.get("note_count") != LIVE_NOTE_COUNT:
+    if not manifest or manifest.get("note_count") != len(manifest.get("notes", {})):
         raise WordAudioError("offline preparation requires a complete prior audit manifest")
     if manifest["missing_overrides"]:
         raise WordAudioError(

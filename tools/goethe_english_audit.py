@@ -131,7 +131,10 @@ def load_json(path: Path) -> dict[str, Any]:
 
 
 def example_pairs(examples: list[dict[str, Any]]) -> list[dict[str, str]]:
-    return [{"de": str(item.get("de") or ""), "en": str(item.get("en") or "")} for item in examples]
+    return [
+        {"de": item["de"], "en": item["en"]}
+        for item in goethe_examples.merge_dialogue_replies(examples)
+    ]
 
 
 def normalize_meaning(value: str) -> str:
@@ -187,10 +190,10 @@ def desired_fields(fields: dict[str, str], entry: dict[str, Any]) -> dict[str, s
     if pair_state(current_examples, entry) == "drift":
         raise AuditError(f"example drift: {entry['source_id']}")
     audio_by_de = {item["de"]: item.get("audio", "") for item in current_examples}
-    examples = [
+    examples = goethe_examples.merge_dialogue_replies([
         {"de": item["de"], "en": item["en"], "audio": audio_by_de.get(item["de"], "")}
         for item in entry["desired_examples"]
-    ]
+    ])
     result = copy.deepcopy(fields)
     result["MeaningEN"] = entry["desired_meaning_en"]
     goethe_examples.render_fields(result, examples)

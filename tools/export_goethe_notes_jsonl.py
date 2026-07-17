@@ -7,6 +7,7 @@ from typing import Any
 
 import goethe_werkstatt_migrate as gw
 import goethe_examples
+import goethe_target_highlights
 
 ROOT = gw.ROOT
 OUTPUT = ROOT / "data" / "build" / "anki_notes.jsonl"
@@ -36,6 +37,24 @@ def stable_guid(fields: dict[str, str]) -> str:
 
 def overflow_examples(value: str) -> list[dict[str, str]]:
     return goethe_examples.parse_overflow(value)
+
+
+def target_spans(value: str, fields: dict[str, str] | None = None) -> list[Any]:
+    if not value:
+        return []
+    try:
+        parsed = json.loads(value)
+    except json.JSONDecodeError as exc:
+        raise ExportError("ExampleTargetSpansJSON is not valid JSON") from exc
+    if not isinstance(parsed, list):
+        raise ExportError("ExampleTargetSpansJSON must contain a list")
+    if fields is not None:
+        try:
+            texts = goethe_target_highlights.example_texts(fields)
+            goethe_target_highlights.parse_target_spans(value, texts)
+        except goethe_target_highlights.HighlightError as exc:
+            raise ExportError(f"invalid ExampleTargetSpansJSON: {exc}") from exc
+    return parsed
 
 
 def serialize_note(note: dict[str, Any], cards: list[dict[str, Any]]) -> dict[str, Any]:
@@ -69,6 +88,10 @@ def serialize_note(note: dict[str, Any], cards: list[dict[str, Any]]) -> dict[st
         "regional_variants": fields["RegionalVariants"],
         "accepted_answers_de": split_pipe(fields["AcceptedAnswersDE"]),
         "accepted_articles_de": split_pipe(fields["AcceptedArticlesDE"]),
+        "accepted_full_answers_de": split_pipe(fields["AcceptedFullAnswersDE"]),
+        "production_enabled": fields["ProductionEnabled"] == "1",
+        "production_hint": fields["ProductionHint"],
+        "example_target_spans": target_spans(fields["ExampleTargetSpansJSON"], fields),
         "word_audio": fields["WordAudio"],
         "examples": examples,
         "more_examples_html": fields["MoreExamplesHTML"],

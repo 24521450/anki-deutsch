@@ -26,6 +26,11 @@
   function stripGenderQualifier(value) {
     return value.replace(/\s*\((?:m\u00e4nnlich|weiblich)\)\s*$/i, "").trim();
   }
+  function addFirstPersonPresentForm(values, infinitive) {
+    if (!/en$/i.test(infinitive)) return;
+    var stem = infinitive.slice(0, -2);
+    values.push(stem + "e");
+  }
   function terms() {
     var lemma = text("gw-lemma");
     var lexicalLemma = stripGenderQualifier(lemma);
@@ -51,6 +56,7 @@
     var stop = { hat: true, ist: true, sind: true, wird: true, sein: true, haben: true, sich: true };
     var verbLemma = lexicalLemma.replace(/^\(sich\)\s*/i, "").replace(/^sich\s+/i, "").trim();
     var isSingleWordVerb = /^v\.?$/i.test(pos) && !/\s/.test(verbLemma);
+    if (isSingleWordVerb) addFirstPersonPresentForm(values, verbLemma);
     text("gw-verb-forms").split(",").forEach(function (form) {
       form = form.trim();
       if (!form) return;
@@ -64,7 +70,9 @@
         var lowerLemma = verbLemma.toLocaleLowerCase("de-DE");
         var lowerParticle = particle.toLocaleLowerCase("de-DE");
         if (lowerParticle.length > 1 && lowerLemma.indexOf(lowerParticle) === 0 && verbLemma.length > particle.length + 2) {
-          values.push(verbLemma.slice(particle.length));
+          var baseInfinitive = verbLemma.slice(particle.length);
+          values.push(baseInfinitive);
+          addFirstPersonPresentForm(values, baseInfinitive);
         }
       }
     });
@@ -94,30 +102,109 @@
     });
     return selected;
   }
-  function highlight(node, candidates) {
-    var source = node.textContent;
-    var selected = matchRanges(source, candidates);
-    if (!selected.length) {
-      var badge = document.createElement("span");
-      badge.className = "gw-target-fallback";
-      badge.textContent = "Target · " + text("gw-lemma");
-      node.parentNode.insertBefore(badge, node);
+  function validateRanges(source, ranges) {
+    if (!Array.isArray(ranges)) return null;
+    var sorted = ranges.map(function (range) {
+      if (!Array.isArray(range) || range.length !== 2) return null;
+      var start = range[0];
+      var end = range[1];
+      if (!Number.isInteger(start) || !Number.isInteger(end) || start < 0 || end <= start || end > source.length) return null;
+      return [start, end];
+    });
+    if (sorted.some(function (range) { return !range; })) return null;
+    sorted.sort(function (left, right) { return left[0] - right[0] || left[1] - right[1]; });
+    for (var index = 1; index < sorted.length; index += 1) {
+      if (sorted[index][0] < sorted[index - 1][1]) return null;
+    }
+    return sorted;
+  }
+  function parsePrecomputed(raw) {
+    if (!raw) return null;
+    try {
+      var value = JSON.parse(raw);
+      return Array.isArray(value) ? value : null;
+    } catch (error) {
+      return null;
+    }
+  }
+  function hasTargetAncestor(node, root) {
+    var parent = node.parentNode;
+    while (parent && parent !== root) {
+      if (parent.classList && parent.classList.contains("gw-target-word")) return true;
+      parent = parent.parentNode;
+    }
+    return false;
+  }
+  function collectTextNodes(root) {
+    if (!document.createTreeWalker) return [];
+    var walker = document.createTreeWalker(root, 4, null, false);
+    var nodes = [];
+    var current;
+    while ((current = walker.nextNode())) {
+      nodes.push({ node: current, marked: hasTargetAncestor(current, root) });
+    }
+    return nodes;
+  }
+  function addFallback(node) {
+    var badge = document.createElement("span");
+    badge.className = "gw-target-fallback";
+    badge.textContent = "Target · " + text("gw-lemma");
+    node.parentNode.insertBefore(badge, node);
+  }
+  function wrapRange(root, start, end) {
+    var cursor = 0;
+    collectTextNodes(root).forEach(function (entry) {
+      var textNode = entry.node;
+      var length = textNode.nodeValue.length;
+      var localStart = Math.max(start - cursor, 0);
+      var localEnd = Math.min(end - cursor, length);
+      if (!entry.marked && localStart < localEnd) {
+        var target = textNode;
+        if (localStart > 0) target = target.splitText(localStart);
+        var targetLength = localEnd - localStart;
+        if (targetLength < target.nodeValue.length) target.splitText(targetLength);
+        var mark = document.createElement("mark");
+        mark.className = "gw-target-word";
+        mark.textContent = target.nodeValue;
+        target.parentNode.replaceChild(mark, target);
+      }
+      cursor += length;
+    });
+  }
+  function highlightRanges(node, ranges) {
+    if (!ranges || !ranges.length) {
+      addFallback(node);
       return;
     }
-    var fragment = document.createDocumentFragment();
-    var cursor = 0;
-    selected.forEach(function (range) {
-      fragment.appendChild(document.createTextNode(source.slice(cursor, range[0])));
-      var mark = document.createElement("mark");
-      mark.className = "gw-target-word";
-      mark.textContent = source.slice(range[0], range[1]);
-      fragment.appendChild(mark);
-      cursor = range[1];
-    });
-    fragment.appendChild(document.createTextNode(source.slice(cursor)));
-    node.replaceChildren(fragment);
+    for (var index = ranges.length - 1; index >= 0; index -= 1) {
+      wrapRange(node, ranges[index][0], ranges[index][1]);
+    }
   }
-  globalThis.goetheWerkstattTargetHighlighter = { terms: terms, matchRanges: matchRanges };
-  var candidates = terms();
-  document.querySelectorAll(".gw-example-de").forEach(function (node) { highlight(node, candidates); });
+  function highlight(node, candidates) {
+    var source = node.textContent;
+    highlightRanges(node, matchRanges(source, candidates));
+  }
+  function setExampleLanguages() {
+    document.querySelectorAll(".gw-example-de").forEach(function (node) { node.setAttribute("lang", "de"); });
+    document.querySelectorAll(".gw-example-sub").forEach(function (node) { node.setAttribute("lang", "en"); });
+  }
+
+  globalThis.goetheWerkstattTargetHighlighter = {
+    terms: terms,
+    matchRanges: matchRanges,
+    validateRanges: validateRanges,
+    parsePrecomputed: parsePrecomputed,
+  };
+  setExampleLanguages();
+  var targetRaw = text("gw-example-target-spans");
+  var precomputed = parsePrecomputed(targetRaw);
+  var candidates = targetRaw === "" ? terms() : null;
+  document.querySelectorAll(".gw-example-de").forEach(function (node, index) {
+    if (targetRaw !== "") {
+      var ranges = precomputed && validateRanges(node.textContent, precomputed[index]);
+      highlightRanges(node, ranges);
+      return;
+    }
+    highlight(node, candidates);
+  });
 })();

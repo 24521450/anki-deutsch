@@ -222,7 +222,7 @@ This word list is derived from the alphabetical word list on pages 8-31 of the G
 |------|-----|:------:|:----:|----------|------|
 | **da** | adv. |  | A2 | Welche Bluse nehmen Sie? - Die da.<br>Ist Herr Klein schon da?<br>Wir sprechen gerade über Paul. Da kommt er ja.<br>Da drüben ist der Bahnhof. |  |
 | **da(r)** | adv. |  | A2 | Darauf fällt mir keine Antwort ein.<br>Darüber spreche ich nicht gern. | source: da(r) (Bsp. darauf, darüber) |
-| **dabei** | v. |  | A2 | Hast du einen Stift dabei?<br>Schön, dass du da bist. Ist deine Familie auch dabei? | source: dabei (sein), |
+| **dabei** | adv. |  | A2 | Hast du einen Stift dabei?<br>Schön, dass du da bist. Ist deine Familie auch dabei? | source: dabei (sein), |
 | **dafür/dagegen sein** | v. |  | A2 | Ich bin dafür/dagegen. | source: dafür/dagegen sein, |
 | **damals** | adv. |  | A2 | Als Student hatte ich viel Zeit und wollte reisen.<br>Aber damals hatte ich kein Geld. |  |
 | **Dame** | n. | f. | A2 | Damen (an der Toilette) Sehr geehrte Damen und Herren, | source: die Dame, -n |
@@ -659,7 +659,7 @@ This word list is derived from the alphabetical word list on pages 8-31 of the G
 | **letzt-** | adj. |  | A2 | Morgen ist der letzte Kurstag.<br>Was hast du letzte Woche gemacht? |  |
 | **Leute** | n. | pl. | A2 | Auf der Party sind viele Leute. | source: die Leute (Pl.) |
 | **Licht** | n. | n. | A2 | Es ist so dunkel. Mach bitte das Licht an! | source: das Licht, -er |
-| **lieb-** | adj. |  | A2 | Liebe Susanne, lieber Hans, Ich fahre lieber mit dem Zug als mit dem Bus.<br>Möchtest du Pommes oder lieber eine Pizza? |  |
+| **lieb** | adj. |  | A2 | Liebe Susanne, lieber Hans, Ich fahre lieber mit dem Zug als mit dem Bus.<br>Möchtest du Pommes oder lieber eine Pizza? |  |
 | **lieben** | v. |  | A2 | Ich liebe dich! | source: lieben, liebt, |
 | **Lieblings-** | adj. |  | A2 | Meine Lieblingsfarbe ist Blau. |  |
 | **Lied** | n. | n. | A2 | Zum Geburtstag singen wir dir ein Lied. | source: das Lied, -er |

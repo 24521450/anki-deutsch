@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import json
 import re
 import sys
 from pathlib import Path
@@ -42,7 +43,7 @@ def test_audited_glosses_have_no_dictionary_placeholders_or_spaced_slashes():
 def test_every_retained_example_was_reaudited_with_explicit_origin():
     entries = audit.load_json(audit.MANIFEST)["entries"].values()
     examples = [example for entry in entries for example in entry["desired_examples"]]
-    assert len(examples) == 2008
+    assert len(examples) == 2007
     assert sum(example["origin"] == "review-authored" for example in examples) == 139
     assert not any(" a author" in example["en"] for example in examples)
     assert not any(" a artist" in example["en"] for example in examples)
@@ -66,6 +67,23 @@ def test_herzlich_has_a_general_learner_gloss_not_the_context_bound_heartfelt():
         "origin": "goethe",
     }]
     assert len(entry["evidence"]) >= 2
+
+
+def test_achtung_is_one_contextual_example_and_turkei_uses_standard_english():
+    entries = audit.load_json(audit.MANIFEST)["entries"]
+    assert entries["A1-MAIN-0008"]["desired_examples"] == [{
+        "de": "Achtung! Das dürfen Sie nicht tun.",
+        "en": "Watch out! You're not allowed to do that.",
+        "origin": "goethe",
+    }]
+    assert entries["A1-WG-0107"]["desired_meaning_en"] == "Turkey"
+    assert entries["A1-WG-0107"]["desired_examples"] == [{
+        "de": "Sie kommt aus der Türkei.",
+        "en": "She comes from Turkey.",
+        "origin": "review-authored",
+    }]
+    translations = json.loads((ROOT / "review" / "goethe_completion_translations.json").read_text(encoding="utf-8"))
+    assert translations["Türkei"] == "Turkey"
 
 
 def test_desired_fields_is_idempotent_and_preserves_audio():

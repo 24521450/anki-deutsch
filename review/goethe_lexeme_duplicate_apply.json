@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "applied_utc": "2026-07-15T03:05:28.329309+00:00",
+  "post_cleanup_utc": "2026-07-15T03:17:27.694206+00:00",
+  "duplicate_history_policy": "DELETE_REDUNDANT_NOTES_REGARDLESS_OF_REVIEW_HISTORY",
+  "backup": "C:\\Users\\admin\\Downloads\\anki-deutsch\\tools\\.goethe_lexeme_duplicates\\Goethe_Institute_pre_lexeme_merge_20260715T030251Z.apkg",
+  "backup_sha256": "1e915e2b957b8c86946948286888f6155f9b299eb92e5e18e8e354cf5b76bd5c",
+  "snapshot": "C:\\Users\\admin\\Downloads\\anki-deutsch\\tools\\.goethe_lexeme_duplicates\\snapshot_Goethe_Institute_pre_lexeme_merge_20260715T030251Z.json",
+  "before": {
+    "notes": 3522,
+    "cards": 7044,
+    "inventory_signature": "adeacaabbc821393c760e8a05d17b905b07f9518577b6ac4359255bb1e6f7c6d"
+  },
+  "after": {
+    "notes": 3516,
+    "cards": 7032,
+    "inventory_signature": "2978257cde00797493f09729c5005fc6ce444ba4ac1f1ada872bbd2e0f08e6e4"
+  },
+  "groups": [
+    {
+      "group_id": "lexeme-cb15ba8671",
+      "member_ids": [
+        1497484860819,
+        1497484860820,
+        1584886454531
+      ],
+      "survivor_id": 1584886454531,
+      "archive_ids": [],
+      "delete_ids": [
+        1497484860819,
+        1497484860820
+      ],
+      "evidence_assessment": "Cambridge treats Bekannte as one masculine-feminine noun meaning acquaintance; Goethe A1/A2/B1 also use one m./f. headword."
+    },
+    {
+      "group_id": "lexeme-df9b8d7e9b",
+      "member_ids": [
+        1783863833253,
+        1784075521894
+      ],
+      "survivor_id": 1783863833253,
+      "archive_ids": [],
+      "delete_ids": [
+        1784075521894
+      ],
+      "evidence_assessment": "Duden classifies dabei as an adverb and explicitly records dabei sein as a separated construction. The A2 v. label is source metadata error; both notes share the same lemma, audio, and examples."
+    },
+    {
+      "group_id": "lexeme-7f9fd6f55e",
+      "member_ids": [
+        1584886454914,
+        1784075580640
+      ],
+      "survivor_id": 1584886454914,
+      "archive_ids": [],
+      "delete_ids": [
+        1784075580640
+      ],
+      "evidence_assessment": "Duden records lieb as one adjective and includes its inflected attributive uses; the trailing dash is source notation, not a separate lexeme."
+    },
+    {
+      "group_id": "lexeme-93d034b0e2",
+      "member_ids": [
+        1497484861859,
+        1584886455204
+      ],
+      "survivor_id": 1584886455204,
+      "archive_ids": [],
+      "delete_ids": [
+        1497484861859
+      ],
+      "evidence_assessment": "Duden lists wehtun as the recommended spelling and weh tun as an alternative spelling of the same verb."
+    },
+    {
+      "group_id": "lexeme-cbd48d12c4",
+      "member_ids": [
+        1584886455228,
+        1784075666586
+      ],
+      "survivor_id": 1584886455228,
+      "archive_ids": [],
+      "delete_ids": [
+        1784075666586
+      ],
+      "evidence_assessment": "Duden classifies willkommen as an adjective, including Herzlich willkommen!; the A1 interj. label and B1 adj., interj. label represent the same lexeme and sense."
+    }
+  ],
+  "archive_ids": [],
+  "delete_ids": [
+    1497484860819,
+    1497484860820,
+    1497484861859,
+    1784075521894,
+    1784075580640,
+    1784075666586
+  ],
+  "deleted_reviewed_history": [
+    {
+      "note_id": 1497484860819,
+      "card_ids": [
+        1497484862136,
+        1497484862137
+      ],
+      "reps": 2,
+      "review_entries": 2,
+      "preserved": false
+    }
+  ],
+  "retained_reviews_preserved": true,
+  "after_audit": {
+    "MERGE_PROPOSED": 0,
+    "REVIEW_REQUIRED": 0,
+    "KEEP_SEPARATE_HOMOGRAPH": 39,
+    "candidate_groups": 39
+  }
+}

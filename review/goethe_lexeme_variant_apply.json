@@ -1,0 +1,226 @@
+{
+  "schema_version": 1,
+  "applied_utc": "2026-07-16T08:23:28.923886+00:00",
+  "backup": "C:\\Users\\admin\\Downloads\\anki-deutsch\\tools\\.goethe_lexeme_duplicates\\Goethe_Institute_pre_lexeme_merge_20260716T082109307579Z.apkg",
+  "backup_sha256": "671dc146fbd2b2d003b59db996dd9818d1ab5be6cfbdccc3f603b3a8d0c5f504",
+  "snapshot": "C:\\Users\\admin\\Downloads\\anki-deutsch\\tools\\.goethe_lexeme_duplicates\\snapshot_Goethe_Institute_pre_lexeme_merge_20260716T082109307579Z.json",
+  "before": {
+    "notes": 3516,
+    "cards": 7032,
+    "inventory_signature": "53c9e78a282c314638d55de3ea0b22479f99ed62a7e4b43ee47533d9c36356cd"
+  },
+  "after": {
+    "notes": 3502,
+    "cards": 7004,
+    "inventory_signature": "0c56aa760af023a93525e29d58bbace35d01e7c0b4f8acc63c99bf46da54a848"
+  },
+  "groups": [
+    {
+      "group_id": "lexeme-dccc6d9a0b",
+      "member_ids": [
+        1784075508824,
+        1784075509014
+      ],
+      "survivor_id": 1784075508824,
+      "archive_ids": [],
+      "delete_ids": [
+        1784075509014
+      ],
+      "evidence_assessment": "Goethe lists Bancomat/Bankomat as one Austrian/Swiss entry for an ATM; Duden records the same sense and pronunciation."
+    },
+    {
+      "group_id": "lexeme-7659592038",
+      "member_ids": [
+        1784075521334,
+        1784075612245
+      ],
+      "survivor_id": 1784075521334,
+      "archive_ids": [],
+      "delete_ids": [
+        1784075612245
+      ],
+      "evidence_assessment": "Goethe lists chic/schick as one entry, and Duden accepts both spellings in the uninflected form."
+    },
+    {
+      "group_id": "lexeme-69cc9ac98a",
+      "member_ids": [
+        1584886454612,
+        1783863833286,
+        1784075524920
+      ],
+      "survivor_id": 1584886454612,
+      "archive_ids": [],
+      "delete_ids": [
+        1783863833286,
+        1784075524920
+      ],
+      "evidence_assessment": "Disco/Disko are spelling variants and Diskothek is the full form used by Goethe for the same venue sense."
+    },
+    {
+      "group_id": "lexeme-d650919ad6",
+      "member_ids": [
+        1784075541355,
+        1784075599727
+      ],
+      "survivor_id": 1784075541355,
+      "archive_ids": [],
+      "delete_ids": [
+        1784075599727
+      ],
+      "evidence_assessment": "Fantasie is the recommended spelling and Phantasie an alternative spelling of the same noun and sense."
+    },
+    {
+      "group_id": "lexeme-a106d23cb3",
+      "member_ids": [
+        1784075555490,
+        1784075555583
+      ],
+      "survivor_id": 1784075555490,
+      "archive_ids": [],
+      "delete_ids": [
+        1784075555583
+      ],
+      "evidence_assessment": "Goethe lists Glace/Glacé together for the Swiss ice-cream sense represented by both notes."
+    },
+    {
+      "group_id": "lexeme-b8dfb55bc6",
+      "member_ids": [
+        1584886454788,
+        1784075563308
+      ],
+      "survivor_id": 1584886454788,
+      "archive_ids": [],
+      "delete_ids": [
+        1784075563308
+      ],
+      "evidence_assessment": "Goethe groups Hähnchen/Hühnchen for the same German culinary chicken sense represented in this deck."
+    },
+    {
+      "group_id": "lexeme-cbb8692845",
+      "member_ids": [
+        1497484861364,
+        1784075584927
+      ],
+      "survivor_id": 1497484861364,
+      "archive_ids": [],
+      "delete_ids": [
+        1784075584927
+      ],
+      "evidence_assessment": "Goethe records meist(ens), and Duden directly equates the adverbial senses used by both notes."
+    },
+    {
+      "group_id": "lexeme-1a55e3be15",
+      "member_ids": [
+        1497484861396,
+        1584886454963
+      ],
+      "survivor_id": 1584886454963,
+      "archive_ids": [],
+      "delete_ids": [
+        1497484861396
+      ],
+      "evidence_assessment": "nächste is an inflected citation form of the adjective recorded as nächst- in the lower-level Goethe entry."
+    },
+    {
+      "group_id": "lexeme-35263975de",
+      "member_ids": [
+        1497484861476,
+        1784075600003
+      ],
+      "survivor_id": 1497484861476,
+      "archive_ids": [],
+      "delete_ids": [
+        1784075600003
+      ],
+      "evidence_assessment": "Pizzen is a plural form of Pizza, not a separate lexeme; Goethe records both in one noun entry."
+    },
+    {
+      "group_id": "lexeme-c7ffea1666",
+      "member_ids": [
+        1784075600940,
+        1784075601033
+      ],
+      "survivor_id": 1784075600940,
+      "archive_ids": [],
+      "delete_ids": [
+        1784075601033
+      ],
+      "evidence_assessment": "Duden lists Portmonee as an alternative spelling of Portemonnaie; both notes have the same wallet sense."
+    },
+    {
+      "group_id": "lexeme-8bfffba6b5",
+      "member_ids": [
+        1584886455036,
+        1784075605256
+      ],
+      "survivor_id": 1584886455036,
+      "archive_ids": [],
+      "delete_ids": [
+        1784075605256
+      ],
+      "evidence_assessment": "Goethe lists Rezeption/Reception as one hotel front-desk entry."
+    },
+    {
+      "group_id": "lexeme-485e84d938",
+      "member_ids": [
+        1784075611037,
+        1784075619811
+      ],
+      "survivor_id": 1784075611037,
+      "archive_ids": [],
+      "delete_ids": [
+        1784075619811
+      ],
+      "evidence_assessment": "Duden lists Sauce as an alternative spelling of Soße; Goethe presents them as one noun entry."
+    },
+    {
+      "group_id": "lexeme-01a2700fdd",
+      "member_ids": [
+        1497484861745,
+        1584886455149
+      ],
+      "survivor_id": 1584886455149,
+      "archive_ids": [],
+      "delete_ids": [
+        1497484861745
+      ],
+      "evidence_assessment": "tschüs and tschüss are accepted spellings of the same farewell interjection."
+    }
+  ],
+  "archive_ids": [],
+  "delete_ids": [
+    1497484861396,
+    1497484861745,
+    1783863833286,
+    1784075509014,
+    1784075524920,
+    1784075555583,
+    1784075563308,
+    1784075584927,
+    1784075599727,
+    1784075600003,
+    1784075601033,
+    1784075605256,
+    1784075612245,
+    1784075619811
+  ],
+  "deleted_reviewed_history": [
+    {
+      "note_id": 1497484861396,
+      "card_ids": [
+        1497484863290,
+        1497484863291
+      ],
+      "reps": 2,
+      "review_entries": 2,
+      "preserved": false
+    }
+  ],
+  "retained_reviews_preserved": true,
+  "after_audit": {
+    "MERGE_PROPOSED": 0,
+    "REVIEW_REQUIRED": 0,
+    "KEEP_SEPARATE_HOMOGRAPH": 38,
+    "candidate_groups": 38
+  }
+}

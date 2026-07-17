@@ -121,10 +121,28 @@ def test_manual_audio_converts_sound_tag_to_non_autoplay_html():
         gw.manual_audio("test.mp3")
 
 
+def test_parse_markdown_keeps_dialogue_reply_in_the_same_example(tmp_path):
+    source = tmp_path / "dialogue.md"
+    source.write_text(
+        "| **ander-** | det., pron. | | A1 | "
+        "Willst du diese Jacke?<br>– Nein, ich möchte die andere.<br>Ein weiterer Satz. | |\n",
+        encoding="utf-8",
+    )
+    assert gw.parse_markdown(source)[0]["examples"] == [
+        "Willst du diese Jacke?<br>– Nein, ich möchte die andere.",
+        "Ein weiterer Satz.",
+    ]
+
+
+def test_a1_achtung_is_one_pdf_faithful_example():
+    row = next(item for item in gw.parse_markdown(gw.SOURCE_A1) if item["word"] == "Achtung")
+    assert row["examples"] == ["Achtung! Das dürfen Sie nicht tun."]
+
+
 def test_card_flip_uses_staged_motion_with_reduced_motion_fallback():
     css = (gw.DESIGN / "styling.css").read_text(encoding="utf-8")
-    assert "@keyframes gw-answer-reveal" in css
-    assert ".gw-back > :not(.gw-answer-hero)" in css
+    assert "@keyframes gw-anchor-reveal" in css
+    assert ".gw-back > :not(.gw-answer-stage)" in css
     assert "@media (prefers-reduced-motion: reduce)" in css
 
 
@@ -162,12 +180,28 @@ def test_templates_do_not_leak_german_or_audio_on_production_front():
     assert "{{Example1DE}}" not in front
 
 
-def test_both_answer_templates_offer_headword_audio_replay():
-    for name in ("back_german.html", "back_english.html"):
+def test_headword_audio_is_hidden_and_bound_to_the_headword():
+    for name in ("front_german.html", "back_german.html", "back_english.html"):
         template = (gw.DESIGN / name).read_text(encoding="utf-8")
         assert template.count("{{WordAudio}}") == 1
-        assert '<div class="gw-answer-title">' in template
-        assert '{{#WordAudio}}<div class="gw-word-audio">' in template
+        assert '{{#WordAudio}}<span class="gw-word-audio" hidden>' in template
+        assert "{{WordAudioController}}" in template
+    css = (gw.DESIGN / "styling.css").read_text(encoding="utf-8")
+    assert ".gw-word-audio { display: none !important; }" in css
+    assert ".gw-word-playable:hover" in css
+    rendered = gw.templates()
+    assert "goetheWerkstattWordAudio" in rendered["German → English"]["Front"]
+    for card in rendered.values():
+        assert "goetheWerkstattWordAudio" in card["Back"]
+        assert "{{WordAudioController}}" not in card["Back"]
+
+
+def test_word_audio_controller_supports_click_enter_and_space_without_visible_button():
+    script = (gw.DESIGN / "word_audio.js").read_text(encoding="utf-8")
+    assert 'headword.addEventListener("click", replay)' in script
+    assert 'event.key === "Enter"' in script
+    assert 'event.key === " "' in script
+    assert 'container.querySelector(".replay-button, .soundLink, a, button")' in script
 
 
 def test_production_front_submits_once_on_enter_without_a_custom_button():
@@ -300,11 +334,16 @@ function grade(raw, lemma, acceptedAnswers, acceptedArticles, article) {
   const values = {
     "gw-source-id": "test", "gw-lemma": lemma,
     "gw-accepted-answers": acceptedAnswers, "gw-accepted-articles": acceptedArticles,
-    "gw-article": article || ""
+    "gw-accepted-full-answers": article ? article + " " + lemma : lemma,
+    "gw-production-enabled": "1", "gw-article": article || ""
   };
   const classes = new Set();
   const result = {
-    textContent: "", classList: { add: (value) => classes.add(value) },
+    textContent: "", dataset: {},
+    classList: {
+      add: (...values) => values.forEach((value) => classes.add(value)),
+      remove: (...values) => values.forEach((value) => classes.delete(value))
+    },
     appendChild: function () {}
   };
   const context = {
@@ -324,15 +363,17 @@ function grade(raw, lemma, acceptedAnswers, acceptedArticles, article) {
   "unterwegs sein", "verabredet sein", "verboten sein"
 ].forEach(function (answer) {
   const core = answer.replace(/ sein$/, "");
-  if (!grade(core, answer, answer, "", "")) throw new Error("bare state rejected: " + answer);
-  if (!grade(answer, answer, answer, "", "")) throw new Error("full state rejected: " + answer);
+      if (grade(core, answer, answer, "", "")) throw new Error("bare state marked exact: " + answer);
+      if (!grade(answer, answer, answer, "", "")) throw new Error("full state rejected: " + answer);
 });
-if (!grade("erkaeltet", "erkältet sein", "erkältet sein", "", "")) throw new Error("transliterated state rejected");
+    if (grade("erkaeltet", "erkältet sein", "erkältet sein", "", "")) throw new Error("transliterated state marked exact");
 ["an sein", "aus sein", "auf sein", "weg sein", "zu sein"].forEach(function (answer) {
   if (grade(answer.replace(/ sein$/, ""), answer, answer, "", "")) throw new Error("short particle accepted: " + answer);
 });
 if (!grade("Bett", "Bett", "Bett", "das", "das")) throw new Error("bare noun rejected");
+if (!grade("bett", "Bett", "Bett", "das", "das")) throw new Error("lowercase bare noun rejected");
 if (!grade("das Bett", "Bett", "Bett", "das", "das")) throw new Error("correct article rejected");
+if (!grade("das bett", "Bett", "Bett", "das", "das")) throw new Error("lowercase full noun rejected");
 if (grade("die Bett", "Bett", "Bett", "das", "das")) throw new Error("wrong article accepted");
 if (grade("", "erkältet sein", "erkältet sein", "", "")) throw new Error("blank accepted");
 '''.replace("CHECKER", json.dumps(checker))
@@ -357,11 +398,15 @@ function configure(values) {
   Object.assign(fields, values);
   return api.terms();
 }
-let terms = configure({"gw-lemma": "Apfel", "gw-noun-forms": "-Ä", "gw-pos": "n."});
+let terms = configure({"gw-lemma": "schaffen", "gw-verb-forms": "schafft, hat geschafft", "gw-pos": "v."});
+let source = "Kannst du mir bitte helfen? Ich schaffe das nicht alleine.";
+let found = api.matchRanges(source, terms).map((range) => source.slice(range[0], range[1]));
+if (found.join("|") !== "schaffe") throw new Error("missing regular first-person form: " + found.join("|"));
+terms = configure({"gw-lemma": "Apfel", "gw-noun-forms": "-Ä", "gw-pos": "n."});
 if (!terms.includes("Äpfel")) throw new Error("missing umlaut plural");
 terms = configure({"gw-lemma": "anfangen", "gw-verb-forms": "fängt an, hat angefangen", "gw-pos": "v."});
-let source = "Hier fängt die Straße an.";
-let found = api.matchRanges(source, terms).map((range) => source.slice(range[0], range[1]));
+source = "Hier fängt die Straße an.";
+found = api.matchRanges(source, terms).map((range) => source.slice(range[0], range[1]));
 if (!found.includes("fängt") || !found.includes("an")) throw new Error("missing separable verb parts");
 terms = configure({"gw-lemma": "abfahren", "gw-verb-forms": "fährt ab, ist abgefahren", "gw-pos": "v."});
 source = "Wir fahren um zwölf Uhr ab.";
@@ -395,8 +440,10 @@ if (found.length !== 1 || found[0] !== "an") throw new Error("short target match
 
 def test_field_contract_is_stable():
     assert gw.FIELDS[0] == "Lemma"
-    assert gw.FIELDS[-1] == "LegacyGUID"
-    assert len(gw.FIELDS) == 32
+    assert gw.FIELDS[gw.FIELDS.index("LegacyGUID") + 1:] == [
+        "AcceptedFullAnswersDE", "ProductionEnabled", "ProductionHint", "ExampleTargetSpansJSON",
+    ]
+    assert len(gw.FIELDS) == 36
     assert len(set(gw.FIELDS)) == len(gw.FIELDS)
     assert "MoreExamplesHTML" in gw.FIELDS
     assert "SourceRefs" in gw.FIELDS

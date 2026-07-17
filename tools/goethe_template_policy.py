@@ -411,6 +411,12 @@ def apply_policy(
     enabled_count = 0
     disabled_count = 0
     planned: list[tuple[MutableMapping[str, Any], dict[str, str]]] = []
+    review_overrides: dict[str, dict[str, Any]] = {}
+    try:
+        import goethe_review_policy
+        review_overrides = goethe_review_policy.load_policy().get("records", {})
+    except ImportError:
+        review_overrides = {}
     for index, fields in enumerate(fields_list):
         source_id = _text(fields.get("SourceID", ""), field="SourceID").strip()
         if not source_id:
@@ -427,6 +433,12 @@ def apply_policy(
         hint = rule["hint"]
         if enabled == ENABLED:
             override = normalised["answers"].get(source_id)
+            reviewed = review_overrides.get(source_id, {}).get("set", {})
+            if reviewed.get("AcceptedFullAnswersDE"):
+                override = reviewed["AcceptedFullAnswersDE"]
+            elif fields.get("Lemma", "").strip().startswith("sich "):
+                stem = fields["Lemma"].strip()[5:]
+                override = f"sich {stem}|s {stem}"
             full_answers = derive_full_answers(fields, override=override)
             enabled_count += 1
         else:

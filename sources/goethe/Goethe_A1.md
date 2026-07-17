@@ -13,7 +13,7 @@ This word list is derived from the alphabetical word list on pages 9–27 of the
 | **abgeben** | v. |  | A1 | Ich muss meine Schlüssel abgeben. |  |
 | **abholen** | v. |  | A1 | Wann kann ich den Schrank bei dir abholen?<br>Wir müssen noch meinen Bruder abholen. |  |
 | **Absender** | n. | m. | A1 | Da ist ein Brief für dich ohne Absender. | source: der Absender |
-| **Achtung** | interj. |  | A1 | Achtung!<br>Das dürfen Sie nicht tun. |  |
+| **Achtung** | interj. |  | A1 | Achtung! Das dürfen Sie nicht tun. |  |
 | **Adresse** | n. | f. | A1 | Können Sie mir seine Adresse sagen? | source: die Adresse, -en |
 | **all-** | det., pron. |  | A1 | Alles Gute!<br>Das ist alles.<br>Sind alle da?<br>Alle Freunde kommen.<br>Hast du alles? |  |
 | **allein** | adv. |  | A1 | Er kommt allein. |  |
@@ -23,7 +23,7 @@ This word list is derived from the alphabetical word list on pages 9–27 of the
 | **an** | prep. |  | A1 | Fahren Sie an der nächsten Straße nach rechts.<br>Wir treffen uns am Bahnhof.<br>Am nächsten Montag geht es leider nicht. |  |
 | **anbieten** | v. |  | A1 | Was darf ich dir anbieten? |  |
 | **Angebot** | n. | n. | A1 | Heute sind Sportschuhe im Angebot. | source: das Angebot, -e; derived from: anbieten |
-| **ander-** | det., pron. |  | A1 | WiIlst du diese Jacke?<br>– Nein, ich möchte die andere. |  |
+| **ander-** | det., pron. |  | A1 | Willst du diese Jacke?<br>– Nein, ich möchte die andere. |  |
 | **anfangen** | v. |  | A1 | Hier fängt die Bahnhofstraße an.<br>Der Unterricht fängt gleich an. |  |
 | **Anfang** | n. | m. | A1 | Sie wohnt am Anfang der Straße.<br>Wir machen Anfang Juli Urlaub. | source: der Anfang; derived from: anfangen |
 | **anklicken** | v. |  | A1 | Da musst du dieses Wort anklicken. |  |
@@ -467,9 +467,9 @@ This word list is derived from the alphabetical word list on pages 9–27 of the
 | **letzt-** | adj. |  | A1 | Morgen ist der letzte Kurstag. |  |
 | **Leute** | n. | pl. | A1 | In der Disko sind viele Leute. | source: die Leute (pl.) |
 | **Licht** | n. | n. | A1 | Wo macht man hier das Licht an? | source: das Licht |
-| **lieb-** | adj. |  | A1 | Liebe Susanne, lieber Hans, |  |
-| **lieben** | v. |  | A1 | Ich liebe dich! | derived from: lieb- |
-| **lieber** | adv. |  | A1 | Sie fährt lieber mit der Bahn. | derived from: lieb- |
+| **lieb** | adj. |  | A1 | Liebe Susanne, lieber Hans, |  |
+| **lieben** | v. |  | A1 | Ich liebe dich! | derived from: lieb |
+| **lieber** | adv. |  | A1 | Sie fährt lieber mit der Bahn. | derived from: lieb |
 | **Lieblings-** | adj. |  | A1 | Mein Lieblingsfilm ist „Schwarze Augen“. |  |
 | **Lied** | n. | n. | A1 | Welches ist dein Lieblingslied? | source: das Lied, -er |
 | **liegen** | v. |  | A1 | Um neun Uhr liegt Judith noch im Bett.<br>Frankfurt liegt am Main. |  |
@@ -754,7 +754,7 @@ This word list is derived from the alphabetical word list on pages 9–27 of the
 | **was für ein** | det. |  | A1 | Was für eine Farbe möchten Sie? |  |
 | **waschen** | v. |  | A1 | Wo kann ich mir die Hände waschen?<br>Ich muss morgen waschen. | source: (sich) waschen |
 | **Wasser** | n. | n. | A1 | Ein Glas Wasser, bitte. | source: das Wasser |
-| **weh tun** | v. |  | A1 | Ich muss zum Arzt.<br>Mein Bein tut weh. |  |
+| **wehtun** | v. |  | A1 | Ich muss zum Arzt.<br>Mein Bein tut weh. | also: weh tun |
 | **weiblich** | adj. |  | A1 | Kreuzen Sie bitte an: „weiblich“ oder „männlich“. |  |
 | **Wein** | n. | m. | A1 | Nein danke, ich möchte keinen Wein. | source: der Wein |
 | **weit** | adj. |  | A1 | Zum Bahnhof ist es nicht weit. |  |
@@ -771,7 +771,7 @@ This word list is derived from the alphabetical word list on pages 9–27 of the
 | **Wiederhören** | n. | n. | A1 | Wir müssen jetzt Schluss machen.<br>Also auf Wiederhören! | source: das Wiederhören |
 | **Wiedersehen** | n. | n. | A1 | Auf Wiedersehen! | source: das Wiedersehen |
 | **wie viel** | det. |  | A1 | Wie viel Milch nehmen Sie? |  |
-| **willkommen** | interj. |  | A1 | Herzlich willkommen! |  |
+| **willkommen** | adj. |  | A1 | Herzlich willkommen! |  |
 | **Wind** | n. | m. | A1 | Der Wind kommt aus Osten. | source: der Wind |
 | **wir** | pron. |  | A1 | Wir lernen Deutsch. |  |
 | **wissen** | v. |  | A1 | Weißt du, wie er heißt? |  |

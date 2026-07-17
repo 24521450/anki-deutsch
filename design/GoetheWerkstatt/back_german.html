@@ -1,38 +1,42 @@
-<main class="gw-card" data-level="{{CEFR}}">
+<main class="gw-card" data-level="{{CEFR}}" data-direction="de-en">
   <header class="gw-meta">
-    <span class="gw-brand">GOETHE</span>
+    <span class="gw-brand">GOETHE <span class="gw-direction" aria-label="German to English">DE → EN</span></span>
     <span class="gw-pos">{{POS}}</span>
     <span class="gw-level">{{CEFR}}</span>
   </header>
-  <section class="gw-back">
-    <div class="gw-answer-hero">
-      <span class="gw-label">German</span>
-      <div class="gw-answer-title">
-        <h1 class="gw-german-answer">{{#Article}}<span class="gw-article gw-article-{{Article}}">{{Article}}</span> {{/Article}}{{Lemma}}</h1>
-        {{#WordAudio}}<div class="gw-word-audio">{{WordAudio}}</div>{{/WordAudio}}
+  <section class="gw-back gw-back-recognition">
+    <div class="gw-answer-stage">
+      <div class="gw-answer-hero">
+        <span class="gw-label" lang="en">German headword</span>
+        <div class="gw-answer-title">
+          <h1 class="gw-german-answer" lang="de">{{#Article}}<span class="gw-article gw-article-{{Article}}">{{Article}}</span> {{/Article}}{{Lemma}}</h1>
+          {{#WordAudio}}<span class="gw-word-audio" hidden>{{WordAudio}}</span>{{/WordAudio}}
+        </div>
+        <p class="gw-meaning-secondary" lang="en">{{MeaningEN}}</p>
       </div>
-      <p class="gw-meaning-secondary">{{MeaningEN}}</p>
     </div>
 
-    {{#NounFormsRaw}}<div class="gw-grammar"><span>Plural: {{NounFormsRaw}}</span></div>{{/NounFormsRaw}}
-    {{#VerbFormsRaw}}<div class="gw-grammar"><span>{{VerbFormsRaw}}</span></div>{{/VerbFormsRaw}}
+    {{#NounFormsRaw}}<div class="gw-grammar"><span class="gw-grammar-label" lang="en">Noun forms</span><span class="gw-grammar-value" lang="de">{{NounFormsRaw}}</span></div>{{/NounFormsRaw}}
+    {{#VerbFormsRaw}}<div class="gw-grammar"><span class="gw-grammar-label" lang="en">Verb forms</span><span class="gw-grammar-value" lang="de">{{VerbFormsRaw}}</span></div>{{/VerbFormsRaw}}
     {{#FormOrVariantNote}}<div class="gw-form-note">{{FormOrVariantNote}}</div>{{/FormOrVariantNote}}
-    {{#RegionalVariants}}<div class="gw-regional">{{RegionalVariants}}</div>{{/RegionalVariants}}
+    {{#RegionalVariants}}<div class="gw-regional" lang="de">{{RegionalVariants}}</div>{{/RegionalVariants}}
 
     {{#Example1DE}}<section class="gw-section">
-      <article class="gw-example"><div class="gw-example-main gw-example-de">{{Example1DE}}</div><div class="gw-example-sub">{{Example1EN}}</div>{{#Example1Audio}}<div class="gw-example-audio">{{Example1Audio}}</div>{{/Example1Audio}}</article>
-      {{#Example2DE}}<article class="gw-example"><div class="gw-example-main gw-example-de">{{Example2DE}}</div><div class="gw-example-sub">{{Example2EN}}</div>{{#Example2Audio}}<div class="gw-example-audio">{{Example2Audio}}</div>{{/Example2Audio}}</article>{{/Example2DE}}
-      {{#Example3DE}}<details><summary>Show more examples</summary>
-        <article class="gw-example"><div class="gw-example-main gw-example-de">{{Example3DE}}</div><div class="gw-example-sub">{{Example3EN}}</div>{{#Example3Audio}}<div class="gw-example-audio">{{Example3Audio}}</div>{{/Example3Audio}}</article>
-        {{#Example4DE}}<article class="gw-example"><div class="gw-example-main gw-example-de">{{Example4DE}}</div><div class="gw-example-sub">{{Example4EN}}</div>{{#Example4Audio}}<div class="gw-example-audio">{{Example4Audio}}</div>{{/Example4Audio}}</article>{{/Example4DE}}
+      <article class="gw-example"><div class="gw-example-main gw-example-de" lang="de">{{Example1DE}}</div><div class="gw-example-sub" lang="en">{{Example1EN}}</div>{{#Example1Audio}}<div class="gw-example-audio">{{Example1Audio}}</div>{{/Example1Audio}}</article>
+      {{#Example2DE}}<article class="gw-example"><div class="gw-example-main gw-example-de" lang="de">{{Example2DE}}</div><div class="gw-example-sub" lang="en">{{Example2EN}}</div>{{#Example2Audio}}<div class="gw-example-audio">{{Example2Audio}}</div>{{/Example2Audio}}</article>{{/Example2DE}}
+      {{#Example3DE}}<details><summary lang="en">Show more examples</summary>
+        <article class="gw-example"><div class="gw-example-main gw-example-de" lang="de">{{Example3DE}}</div><div class="gw-example-sub" lang="en">{{Example3EN}}</div>{{#Example3Audio}}<div class="gw-example-audio">{{Example3Audio}}</div>{{/Example3Audio}}</article>
+        {{#Example4DE}}<article class="gw-example"><div class="gw-example-main gw-example-de" lang="de">{{Example4DE}}</div><div class="gw-example-sub" lang="en">{{Example4EN}}</div>{{#Example4Audio}}<div class="gw-example-audio">{{Example4Audio}}</div>{{/Example4Audio}}</article>{{/Example4DE}}
         {{#MoreExamplesHTML}}{{MoreExamplesHTML}}{{/MoreExamplesHTML}}
       </details>{{/Example3DE}}
     </section>{{/Example1DE}}
 
-    {{#UsageNoteEN}}<section class="gw-section"><h2>Usage note</h2><div class="gw-usage">{{UsageNoteEN}}</div></section>{{/UsageNoteEN}}
+    {{#UsageNoteEN}}<section class="gw-section"><h2 lang="en">Usage note</h2><div class="gw-usage" lang="en">{{UsageNoteEN}}</div></section>{{/UsageNoteEN}}
   </section>
   <span id="gw-lemma" hidden>{{Lemma}}</span>
   <span id="gw-accepted-answers" hidden>{{AcceptedAnswersDE}}</span>
+  <span id="gw-accepted-full-answers" hidden>{{AcceptedFullAnswersDE}}</span>
+  <span id="gw-example-target-spans" hidden>{{ExampleTargetSpansJSON}}</span>
   <span id="gw-noun-forms" hidden>{{NounFormsRaw}}</span>
   <span id="gw-verb-forms" hidden>{{VerbFormsRaw}}</span>
   <span id="gw-pos" hidden>{{POS}}</span>
@@ -42,4 +46,7 @@
 </script>
 <script>
 {{ExampleAudioController}}
+</script>
+<script>
+{{WordAudioController}}
 </script>

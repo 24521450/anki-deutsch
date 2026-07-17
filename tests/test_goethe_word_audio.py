@@ -22,8 +22,8 @@ def fields(**values):
     return base
 
 
-def item(level, row, word="Bahnhof", sha="same"):
-    return {"level": level, "row": row, "word": word, "pos": "n.", "gender": "m.", "status": "ok", "sha256": sha}
+def item(level, row, word="Bahnhof", sha="same", pos="n.", gender="m."):
+    return {"level": level, "row": row, "word": word, "pos": pos, "gender": gender, "status": "ok", "sha256": sha}
 
 
 def test_select_local_duden_prefers_a1_for_same_lexeme():
@@ -41,6 +41,17 @@ def test_select_local_duden_rejects_pos_conflict():
 def test_select_local_duden_does_not_casefold_homographs():
     lower = item("A1", 1, word="essen")
     assert gwa.select_local_duden(fields(Lemma="Essen", AcceptedAnswersDE="Essen"), {}, {"essen": [lower]}) is None
+
+
+def test_select_local_duden_does_not_use_bare_article_for_ordinal():
+    article = item("A1", 155, word="der", sha="article")
+    ordinal = fields(Lemma="dritte", POS="", Gender="", AcceptedAnswersDE="dritte|der/die dritte")
+    assert gwa.select_local_duden(ordinal, {}, {"der": [article], "dritte": []}) is None
+
+
+def test_select_local_duden_keeps_true_article_lemma():
+    article = item("A1", 155, word="der", pos="det.", sha="article")
+    assert gwa.select_local_duden(fields(Lemma="der", POS="det.", Gender="", AcceptedAnswersDE="der"), {}, {"der": [article]}) is article
 
 
 def test_spoken_text_requires_override_for_notation():

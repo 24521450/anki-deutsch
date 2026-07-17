@@ -3,14 +3,14 @@
 Workflow:
     python tools/a1_example_audio.py preflight   # parse + manifest only (no audio)
     python tools/a1_example_audio.py pilot       # generate 16 pilot entries; STOP for review
-    python tools/a1_example_audio.py full        # generate all 891 unique entries
+    python tools/a1_example_audio.py full        # generate all 890 unique entries
     python tools/a1_example_audio.py resume      # verify existing + generate the rest
 
 Source: column `Sentence` in sources/goethe/Goethe_A1.md
 Outputs:
-    audio/a1/examples_manifest.jsonl        — 910 occurrences, denormalized
+    audio/a1/examples_manifest.jsonl        — 909 occurrences, denormalized
     audio/a1/examples_manifest.meta.json     — meta + counts
-    audio/a1/examples_unique.jsonl           — 891 unique audios (status, voice, path)
+    audio/a1/examples_unique.jsonl           — 890 unique audios (status, voice, path)
     audio/a1/examples_staging/                — generated MP3s (transient)
     audio/a1/examples/                        — promoted MP3s (final, only on completion)
 
@@ -46,12 +46,12 @@ UNIQUE_INDEX = OUT_DIR / "examples_unique.jsonl"
 
 # === Plan constants ===================================================
 EXPECTED_ROWS = 685
-EXPECTED_OCCURRENCES = 910
-EXPECTED_UNIQUE = 891
+EXPECTED_OCCURRENCES = 909
+EXPECTED_UNIQUE = 890
 SEED = "goethe-a1-examples-v1"
 VOICE_TARGETS: dict[str, int] = {
     "German_SweetLady": 446,
-    "German_FriendlyMan": 445,
+    "German_FriendlyMan": 444,
 }
 TTS_PARAMS = {"speed": 1.0, "pitch": 0, "volume": 2, "emotion": "neutral"}
 MAX_RETRIES = 3
@@ -60,9 +60,8 @@ AUDIO_ID_LEN = 16
 DIALOGUE_PREFIXES = ("-", "–", "—")  # ASCII hyphen-minus, en-dash, em-dash
 
 
-# 13 manual overrides by (row, example_index) -> canonical spoken_text
+# 12 manual overrides by (row, example_index) -> canonical spoken_text
 OVERRIDES: dict[tuple[int, int], str] = {
-    (18, 1): "Willst du diese Jacke?",
     (23, 1): "Auf diesem Plan steht nur die Ankunftszeit der Züge.",
     (145, 1): "Damen.",
     (175, 1): "Das ist meine Ehefrau.",
@@ -255,7 +254,7 @@ def build_unique_view(occurrences: list[dict]) -> list[dict]:
 def _assign_voices(spoken_texts: list[str]) -> list[str]:
     """Deterministic voice assignment.
 
-    Build a pool of (sweet_lady * 446) + (friendly_man * 445) voices,
+    Build a pool of (sweet_lady * 446) + (friendly_man * 444) voices,
     shuffle by SEED, then map sorted unique-text slot -> pool[i].
 
     Same inputs + same seed => same output.
@@ -734,7 +733,7 @@ def run_resume() -> int:
 
 def try_promote(uniques: list[dict]) -> bool:
     """Promote staging -> live iff:
-        * 891 unique entries
+        * 890 unique entries
         * All have tts_status in {'ok','skipped_existing_valid'}
         * All files exist in staging
     """

@@ -167,3 +167,58 @@ def test_completion_uses_same_level_example_whitelist():
     ]
     assert gc.goethe_source_examples.filter_examples("A2", examples, allowed) == [examples[0]]
 
+
+def test_build_manifest_renders_filtered_examples_before_english_audit(monkeypatch):
+    record = gc.new_record("A1-TEST", "Bekannte", "A1", "n.", "m./f.")
+    record["fields"]["MeaningEN"] = "acquaintance"
+    record["examples"] = [
+        {"de": "Keep me.", "en": "Keep me.", "audio": "keep.mp3"},
+        {"de": "Drop me.", "en": "Drop me.", "audio": "drop.mp3"},
+    ]
+    gc.goethe_examples.render_fields(record["fields"], record["examples"])
+    assert record["fields"]["Example2DE"] == "Drop me."
+
+    monkeypatch.setattr(gc, "load_live", lambda: ({"1": record}, {}))
+    monkeypatch.setattr(gc, "load_redundancy_policy", lambda: {
+        "skip_wortgruppen": [],
+        "merge_wortgruppen": {},
+        "preserve_note_ids": [],
+        "source_targets": {},
+        "main_source_aliases": {},
+    })
+    monkeypatch.setattr(gc, "load_source_text_overrides", lambda: {"examples": {}})
+    monkeypatch.setattr(gc, "apply_headword_policy", lambda records, deletions: deletions)
+    monkeypatch.setattr(gc.gw, "parse_markdown", lambda path: [])
+    monkeypatch.setattr(gc, "parse_wortgruppen", lambda path: [])
+    monkeypatch.setattr(
+        gc.goethe_source_examples,
+        "allowed_examples_by_level",
+        lambda: {level: {} for level in gc.LEVELS},
+    )
+    monkeypatch.setattr(
+        gc.goethe_source_examples,
+        "filter_examples",
+        lambda level, examples, allowed: examples[:1],
+    )
+    monkeypatch.setattr(gc.english_audit, "validate_manifest", lambda manifest: None)
+    monkeypatch.setattr(gc.english_audit, "load_json", lambda path: {
+        "entries": {
+            "A1-TEST": {
+                "source_id": "A1-TEST",
+                "cefr": "A1",
+                "desired_examples": [],
+            },
+        },
+    })
+
+    def assert_filtered_fields(records, manifest, *, strict):
+        assert records["1"]["fields"]["Example1DE"] == "Keep me."
+        assert records["1"]["fields"]["Example2DE"] == ""
+
+    monkeypatch.setattr(gc.english_audit, "apply_manifest_to_records", assert_filtered_fields)
+    monkeypatch.setattr(gc, "apply_translation_cache", lambda records: None)
+    monkeypatch.setattr(gc, "apply_b1_english_overrides", lambda records: None)
+    monkeypatch.setattr(gc, "apply_b1_data_overrides", lambda records: None)
+    monkeypatch.setattr(gc, "finalize_template_fields", lambda records: None)
+
+    gc.build_manifest()

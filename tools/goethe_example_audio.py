@@ -30,8 +30,8 @@ MODEL = "Goethe Werkstatt"
 PARENT_DECK = "Goethe Institute"
 EXPECTED_NOTES = 1530
 EXPECTED_CARDS = 3060
-EXPECTED_OCCURRENCES = 2008
-EXPECTED_UNIQUE = 1918
+EXPECTED_OCCURRENCES = 2007
+EXPECTED_UNIQUE = 1917
 PILOT_SIZE = 20
 CONCURRENCY = 4
 AUDIO_FIELDS = tuple(f"Example{index}Audio" for index in range(1, 5)) + ("MoreExamplesHTML",)
@@ -65,6 +65,7 @@ def canonical_hash(value: Any) -> str:
 
 def spoken_text(value: str) -> str:
     text = unicodedata.normalize("NFC", html.unescape(str(value or "")))
+    text = re.sub(r"<br\s*/?>\s*[–—-]?\s*", " ", text, flags=re.I)
     text = re.sub(r"\s+", " ", text).strip()
     text = re.sub(r"^[-\u2013\u2014]\s*", "", text)
     return re.sub(r"\s+/\s+", " — ", text)

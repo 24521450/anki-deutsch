@@ -9,6 +9,22 @@ sys.path.insert(0, str(ROOT / "tools"))
 import goethe_examples as examples  # noqa: E402
 
 
+def test_merge_dialogue_replies_keeps_prompt_and_reply_in_one_example():
+    rows = [
+        {"de": "WiIlst du diese Jacke?", "en": "Do you want this jacket?", "audio": "old-1"},
+        {"de": "– Nein, ich möchte die andere.", "en": "– No, I want the other one.", "audio": "old-2"},
+        {"de": "Ein weiterer Satz.", "en": "Another sentence.", "audio": "old-3"},
+    ]
+    assert examples.merge_dialogue_replies(rows) == [
+        {
+            "de": "Willst du diese Jacke?<br>– Nein, ich möchte die andere.",
+            "en": "Do you want this jacket?<br>– No, I want the other one.",
+            "audio": "",
+        },
+        {"de": "Ein weiterer Satz.", "en": "Another sentence.", "audio": "old-3"},
+    ]
+
+
 def test_overflow_round_trip_preserves_optional_audio():
     rows = [
         {"de": "Grüße & mehr", "en": "greetings & more", "audio": ""},

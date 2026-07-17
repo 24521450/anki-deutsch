@@ -25,6 +25,9 @@ import goethe_werkstatt_migrate as gw
 import goethe_examples
 import goethe_english_audit as english_audit
 import goethe_source_examples
+import goethe_target_highlights as target_highlights
+import goethe_template_policy as production_policy
+import goethe_review_policy as review_policy
 
 ROOT = gw.ROOT
 STATE = ROOT / "tools" / ".goethe_completion"
@@ -617,6 +620,8 @@ def build_manifest() -> dict[str, Any]:
     apply_translation_cache(records)
     apply_b1_english_overrides(records)
     apply_b1_data_overrides(records)
+    review_policy.apply_all(records)
+    finalize_template_fields(records)
     manifest = {
         "version": 1, "records": records, "deletions": deletions,
         "source_counts": source_counts, "skipped_source_refs": sorted(skipped_source_refs),
@@ -756,12 +761,32 @@ def command_translate(_: argparse.Namespace) -> None:
         if changed:
             record["translated"] = True
             record["tags"] = sorted(set(record["tags"]) | {QUALITY_TRANSLATION, "goethe::quality::review_needed"})
+    finalize_template_fields(manifest["records"])
     save_manifest(manifest)
     print(f"translations={len(cache)} manifest updated")
 
 
 def render_examples(record: dict[str, Any]) -> None:
     goethe_examples.render_fields(record["fields"], record["examples"])
+    record["fields"]["ExampleTargetSpansJSON"] = target_highlights.build_target_spans(record["fields"])
+
+
+def finalize_template_fields(records: dict[str, dict[str, Any]]) -> None:
+    """Derive reviewed production fields and deterministic example spans.
+
+    This is the final build step, after source and translation overrides have
+    settled the examples and meanings.  The policy module is restricted to the
+    four appended template fields; spans are rebuilt after it so their offsets
+    always match the final rendered examples.
+    """
+    for record in records.values():
+        render_examples(record)
+    try:
+        production_policy.apply_policy(records, strict=True)
+    except production_policy.PolicyError as exc:
+        raise CompletionError(f"production template policy failed: {exc}") from exc
+    for record in records.values():
+        record["fields"]["ExampleTargetSpansJSON"] = target_highlights.build_target_spans(record["fields"])
 
 
 def validate_manifest(manifest: dict[str, Any]) -> dict[str, int]:
@@ -775,6 +800,17 @@ def validate_manifest(manifest: dict[str, Any]) -> dict[str, int]:
             raise CompletionError(f"level/deck mismatch: {fields['Lemma']}")
         if any(not item["en"] for item in record["examples"]):
             raise CompletionError(f"untranslated example: {fields['Lemma']}")
+        if fields.get("ProductionEnabled", "") not in {"", "1"}:
+            raise CompletionError(f"invalid production flag: {fields['Lemma']}")
+        if fields.get("ProductionEnabled") == "1" and not fields.get("AcceptedFullAnswersDE", "").strip():
+            raise CompletionError(f"enabled production answer missing: {fields['Lemma']}")
+        try:
+            target_highlights.parse_target_spans(
+                fields.get("ExampleTargetSpansJSON", ""),
+                target_highlights.example_texts(fields),
+            )
+        except target_highlights.HighlightError as exc:
+            raise CompletionError(f"invalid target spans: {fields['Lemma']}: {exc}") from exc
     refs = {ref for record in records for ref in record["source_refs"]}
     skipped_source_refs = set(manifest.get("skipped_source_refs", []))
     expected = sum(manifest["source_counts"].values()) - len(skipped_source_refs)
