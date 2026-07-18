@@ -37,3 +37,11 @@ tools/.*
 tools/__pycache__/
 tests/__pycache__/
 *.pyc
+
+# Understand Anything project configuration and local runtime
+.understand-anything/*
+!.understand-anything/.understandignore
+!.understand-anything/config.json
+
+# Local visual demos
+demo-template/
