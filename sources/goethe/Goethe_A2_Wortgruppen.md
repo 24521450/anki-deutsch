@@ -144,20 +144,20 @@ Structured transcription of the *Wortgruppen* on pages 5–7 of `Goethe-Zertifik
 | A2-WG-0096 | Klassenfahrt, -en |  | A2 | 6 |  | Schule | Klassenfahrt | n. | die | f. | -en |  |  | https://www.duden.de/rechtschreibung/Klassenfahrt |
 | A2-WG-0097 | Sekretariat, -e |  | A2 | 6 |  | Schule | Sekretariat | n. | das | n. | -e |  |  | https://www.duden.de/rechtschreibung/Sekretariat |
 | A2-WG-0098 | Stundenplan, ¨-e |  | A2 | 6 |  | Schule | Stundenplan | n. | der | m. | ¨-e |  |  | https://www.duden.de/rechtschreibung/Stundenplan |
-| A2-WG-0099 | Biologie |  | A2 | 6 |  | Schulfach | Biologie | n. |  | f. |  |  | Normally used without an article in this Goethe context. | https://www.duden.de/rechtschreibung/Biologie |
-| A2-WG-0100 | Chemie |  | A2 | 6 |  | Schulfach | Chemie | n. |  | f. |  |  | Normally used without an article in this Goethe context. | https://www.duden.de/rechtschreibung/Chemie |
-| A2-WG-0101 | Deutsch |  | A2 | 6 |  | Schulfach | Deutsch | n. |  | n. |  |  | Normally used without an article in this Goethe context. | https://www.duden.de/rechtschreibung/Deutsch |
-| A2-WG-0102 | Englisch |  | A2 | 6 |  | Schulfach | Englisch | n. |  | n. |  |  | Normally used without an article in this Goethe context. | https://www.duden.de/rechtschreibung/Englisch |
-| A2-WG-0103 | Französisch |  | A2 | 6 |  | Schulfach | Französisch | n. |  | n. |  |  | Normally used without an article in this Goethe context. | https://www.duden.de/rechtschreibung/Franzoesisch |
-| A2-WG-0104 | Geografie |  | A2 | 6 |  | Schulfach | Geografie | n. |  | f. |  |  | Normally used without an article in this Goethe context. | https://www.duden.de/rechtschreibung/Geografie |
+| A2-WG-0099 | Biologie |  | A2 | 6 |  | Schulfach | Biologie | n. | die | f. |  |  | Lexical article: die; school-subject use is commonly articleless. | https://www.duden.de/rechtschreibung/Biologie |
+| A2-WG-0100 | Chemie |  | A2 | 6 |  | Schulfach | Chemie | n. | die | f. |  |  | Lexical article: die; school-subject use is commonly articleless. | https://www.duden.de/rechtschreibung/Chemie |
+| A2-WG-0101 | Deutsch |  | A2 | 6 |  | Schulfach | Deutsch | n. | das | n. |  |  | Lexical article: das; school-subject use is commonly articleless. | https://www.duden.de/rechtschreibung/Deutsch |
+| A2-WG-0102 | Englisch |  | A2 | 6 |  | Schulfach | Englisch | n. | das | n. |  |  | Lexical article: das; school-subject use is commonly articleless. | https://www.duden.de/rechtschreibung/Englisch |
+| A2-WG-0103 | Französisch |  | A2 | 6 |  | Schulfach | Französisch | n. | das | n. |  |  | Lexical article: das; school-subject use is commonly articleless. | https://www.duden.de/rechtschreibung/Franzoesisch |
+| A2-WG-0104 | Geografie |  | A2 | 6 |  | Schulfach | Geografie | n. | die | f. |  |  | Lexical article: die; school-subject use is commonly articleless. | https://www.duden.de/rechtschreibung/Geografie |
 | A2-WG-0105 | Geschichte |  | A2 | 6 |  | Schulfach |  |  |  |  |  |  |  |  |
 | A2-WG-0106 | Kunst(erziehung) |  | A2 | 6 |  | Schulfach |  |  |  |  |  |  |  |  |
-| A2-WG-0107 | Latein |  | A2 | 6 |  | Schulfach | Latein | n. |  | n. |  |  | Normally used without an article in this Goethe context. | https://www.duden.de/rechtschreibung/Latein |
-| A2-WG-0108 | Mathematik |  | A2 | 6 |  | Schulfach | Mathematik | n. |  | f. |  |  | Normally used without an article in this Goethe context. | https://www.duden.de/rechtschreibung/Mathematik |
+| A2-WG-0107 | Latein |  | A2 | 6 |  | Schulfach | Latein | n. | das | n. |  |  | Lexical article: das; school-subject use is commonly articleless. | https://www.duden.de/rechtschreibung/Latein |
+| A2-WG-0108 | Mathematik |  | A2 | 6 |  | Schulfach | Mathematik | n. | die | f. |  |  | Lexical article: die; school-subject use is commonly articleless. | https://www.duden.de/rechtschreibung/Mathematik |
 | A2-WG-0109 | Musik |  | A2 | 6 | Musik | Schulfach |  |  |  |  |  |  |  |  |
-| A2-WG-0110 | Physik |  | A2 | 6 |  | Schulfach | Physik | n. |  | f. |  |  | Normally used without an article in this Goethe context. | https://www.duden.de/rechtschreibung/Physik |
-| A2-WG-0111 | Religion |  | A2 | 6 |  | Schulfach | Religion | n. |  | f. |  |  | Normally used without an article in this Goethe context. | https://www.duden.de/rechtschreibung/Religion |
-| A2-WG-0112 | Sozialkunde |  | A2 | 6 |  | Schulfach | Sozialkunde | n. |  | f. |  |  | Normally used without an article in this Goethe context. | https://www.duden.de/rechtschreibung/Sozialkunde |
+| A2-WG-0110 | Physik |  | A2 | 6 |  | Schulfach | Physik | n. | die | f. |  |  | Lexical article: die; school-subject use is commonly articleless. | https://www.duden.de/rechtschreibung/Physik |
+| A2-WG-0111 | Religion |  | A2 | 6 |  | Schulfach | Religion | n. | die | f. | -en |  | Lexical article: die; school-subject use is commonly articleless. | https://www.duden.de/rechtschreibung/Religion |
+| A2-WG-0112 | Sozialkunde |  | A2 | 6 |  | Schulfach | Sozialkunde | n. | die | f. |  |  | Lexical article: die; school-subject use is commonly articleless. | https://www.duden.de/rechtschreibung/Sozialkunde |
 | A2-WG-0113 | Sport |  | A2 | 6 | Sport | Schulfach |  |  |  |  |  |  |  |  |
 
 ## Währungen und Maße
@@ -190,9 +190,9 @@ Structured transcription of the *Wortgruppen* on pages 5–7 of `Goethe-Zertifik
 | ID | Entry | Detail | CEFR | Source Page | Alphabetical Match | Note | Canonical Lemma | POS | Article | Gender | Noun Forms | Accepted Variants | Grammar Note | Dictionary Sources |
 |---|---|---|:---:|:---:|---|---|---|---|---|---|---|---|---|---|
 | A2-WG-0127 | Karneval |  | A2 | 6 |  |  | Karneval | n. | der | m. |  |  |  | https://www.duden.de/rechtschreibung/Karneval |
-| A2-WG-0128 | Ostern |  | A2 | 6 |  |  | Ostern | n. |  | n. |  |  | Normally used without an article in this Goethe context. | https://www.duden.de/rechtschreibung/Ostern |
-| A2-WG-0129 | Weihnachten |  | A2 | 6 |  |  | Weihnachten | n. |  | n. |  |  | Normally used without an article in this Goethe context. | https://www.duden.de/rechtschreibung/Weihnachten |
-| A2-WG-0130 | Neujahr/Silvester |  | A2 | 6 |  |  | Neujahr/Silvester | n. |  | n. |  | Neujahr<br>Silvester | Normally used without an article in this Goethe context. Silvester is also masculine and is likewise usually articleless. | https://www.duden.de/rechtschreibung/Neujahr<br>https://www.duden.de/rechtschreibung/Silvester_Tag |
+| A2-WG-0128 | Ostern |  | A2 | 6 |  |  | Ostern | n. | das | n. |  |  | Lexical article: das; holiday-name use is commonly articleless. | https://www.duden.de/rechtschreibung/Ostern |
+| A2-WG-0129 | Weihnachten |  | A2 | 6 |  |  | Weihnachten | n. | das | n. |  |  | Lexical article: das; holiday-name use is commonly articleless. | https://www.duden.de/rechtschreibung/Weihnachten |
+| A2-WG-0130 | Neujahr/Silvester |  | A2 | 6 |  |  | Neujahr/Silvester | n. | das/der | n./m. |  | Neujahr<br>Silvester | Lexical mapping: das Neujahr; das/der Silvester. Holiday-name use is commonly articleless. | https://www.duden.de/rechtschreibung/Neujahr<br>https://www.duden.de/rechtschreibung/Silvester_Tag |
 
 ### Jahreszeiten
 

@@ -14,6 +14,40 @@ if str(TOOLS) not in sys.path:
 import goethe_completion as gc  # noqa: E402
 
 
+def noun_fields(**overrides):
+    fields = {name: "" for name in gc.gw.FIELDS}
+    fields.update({
+        "SourceID": "A2-WG-0111",
+        "Lemma": "Religion",
+        "POS": "n.",
+        "Article": "die",
+        "Gender": "f.",
+        "AcceptedArticlesDE": "die",
+        "AcceptedFullAnswersDE": "die Religion",
+        "ProductionEnabled": "1",
+    })
+    fields.update(overrides)
+    return fields
+
+
+def test_completion_noun_policy_requires_learner_facing_article_answers():
+    gc.validate_noun_fields(noun_fields())
+    with pytest.raises(gc.CompletionError, match="noun article policy failed"):
+        gc.validate_noun_fields(noun_fields(Article=""))
+    with pytest.raises(gc.CompletionError, match="AcceptedFullAnswersDE missing article"):
+        gc.validate_noun_fields(noun_fields(AcceptedFullAnswersDE="Religion"))
+
+    gc.validate_noun_fields(noun_fields(
+        SourceID="A1-WG-0105", Lemma="Deutschland", Article="",
+        Gender="n.", AcceptedArticlesDE="", AcceptedFullAnswersDE="Deutschland",
+    ))
+    gc.validate_noun_fields(noun_fields(
+        SourceID="B1-MAIN-1299", Lemma="Karotte", Article="die",
+        Gender="f.", AcceptedArticlesDE="die", AcceptedFullAnswersDE="",
+        ProductionEnabled="",
+    ))
+
+
 def test_lemma_identity_preserves_german_case_and_reflexive_variants():
     assert gc.lemma_key("der Arm") == "Arm"
     assert gc.lemma_key("arm") == "arm"
@@ -106,6 +140,121 @@ def test_reviewed_note_merge_fails_closed_on_wrong_identity():
             "duplicate": 2,
             "duplicate_source_ref": "B1-WG-0241",
         }])
+
+
+def reviewed_holiday_split() -> list[dict[str, object]]:
+    return [{
+        "source_ref": "A2-WG-0130",
+        "survivor_note_id": 1,
+        "expected_lemma": "Neujahr/Silvester",
+        "expected_source_refs": ["A2-WG-0130", "B1-WG-0299", "B1-WG-0304"],
+        "survivor": {
+            "source_id": "A2-WG-0130",
+            "source_refs": ["A2-WG-0130", "B1-WG-0304"],
+            "field_overrides": {
+                "Lemma": "Silvester",
+                "Article": "das/der",
+                "Gender": "n./m.",
+                "AcceptedAnswersDE": "Silvester",
+                "AcceptedArticlesDE": "das|der",
+                "WordAudio": "silvester.mp3",
+            },
+        },
+        "child": {
+            "source_id": "A2-WG-0130-NEUJAHR",
+            "coverage_ref": "A2-WG-0130",
+            "source_refs": ["A2-WG-0130-NEUJAHR", "B1-WG-0299"],
+            "cefr": "A2",
+            "field_overrides": {
+                "Lemma": "Neujahr",
+                "Article": "das",
+                "Gender": "n.",
+                "AcceptedAnswersDE": "Neujahr",
+                "AcceptedArticlesDE": "das",
+                "WordAudio": "neujahr.mp3",
+                "OriginalOrder": "A2-WG-0130",
+                "SourceNoteRaw": "A2-WG-0130 (Neujahr)",
+                "LegacyGUID": "goethe:A2-WG-0130-NEUJAHR",
+            },
+        },
+    }]
+
+
+def combined_holiday_record() -> dict[str, object]:
+    record = gc.new_record("A2-WG-0130", "Neujahr/Silvester", "A2", "n.", "n.")
+    record.update({"note_id": 1, "is_new": False, "cards": [{"reps": 3}]})
+    record["source_refs"] = ["A2-WG-0130", "B1-WG-0299", "B1-WG-0304"]
+    record["fields"]["MeaningEN"] = "New Year; New Year's Eve"
+    record["examples"] = [{
+        "de": "An Silvester feiern wir das neue Jahr.",
+        "en": "We celebrate the new year on New Year's Eve.",
+        "audio": "combined-example.mp3",
+    }]
+    gc.render_examples(record)
+    return record
+
+
+def test_reviewed_note_split_is_idempotent_before_and_after_apply():
+    records = {"1": combined_holiday_record()}
+    aliases = gc.apply_reviewed_note_splits(records, reviewed_holiday_split())
+
+    assert aliases == {"A2-WG-0130-NEUJAHR": "A2-WG-0130"}
+    assert records["1"]["fields"]["Lemma"] == "Silvester"
+    assert records["1"]["source_refs"] == ["A2-WG-0130", "B1-WG-0304"]
+    child_key = "new:A2-WG-0130-NEUJAHR"
+    child = records[child_key]
+    assert child["is_new"] is True
+    assert child["note_id"] is None
+    assert child["cards"] == []
+    assert child["fields"]["SourceID"] == "A2-WG-0130-NEUJAHR"
+    assert child["fields"]["LegacyGUID"] == "goethe:A2-WG-0130-NEUJAHR"
+    assert child["fields"]["Lemma"] == "Neujahr"
+    assert child["source_refs"] == ["A2-WG-0130-NEUJAHR", "B1-WG-0299"]
+    assert child["fields"]["MeaningEN"] == ""
+    assert child["examples"] == []
+    assert child["fields"]["Example1Audio"] == ""
+
+    assert gc.apply_reviewed_note_splits(records, reviewed_holiday_split()) == aliases
+    assert set(records) == {"1", child_key}
+
+    child = records.pop(child_key)
+    child.update({"note_id": 2, "is_new": False, "cards": [{"reps": 0}]})
+    records["2"] = child
+    assert gc.apply_reviewed_note_splits(records, reviewed_holiday_split()) == aliases
+    assert set(records) == {"1", "2"}
+
+
+@pytest.mark.parametrize("bad_field", ["expected_lemma", "expected_source_refs"])
+def test_reviewed_note_split_fails_closed_on_bad_combined_guard(bad_field):
+    split = reviewed_holiday_split()
+    if bad_field == "expected_lemma":
+        split[0][bad_field] = "Silvester"
+    else:
+        split[0][bad_field] = ["A2-WG-0130", "B1-WG-0304"]
+    with pytest.raises(gc.CompletionError, match="reviewed split combined identity mismatch"):
+        gc.apply_reviewed_note_splits({"1": combined_holiday_record()}, split)
+
+
+def test_reviewed_note_split_aliases_child_to_physical_source_coverage():
+    survivor = combined_holiday_record()
+    records = {"1": survivor}
+    aliases = gc.apply_reviewed_note_splits(records, reviewed_holiday_split())
+    for record in records.values():
+        record["fields"]["MeaningEN"] = "reviewed"
+        record["fields"]["SourceRefs"] = "|".join(record["source_refs"])
+        record["fields"]["AcceptedFullAnswersDE"] = (
+            "das Silvester|der Silvester"
+            if record["fields"]["Lemma"] == "Silvester"
+            else "das Neujahr"
+        )
+    manifest = {
+        "records": records,
+        "deletions": [],
+        "source_counts": {"A2_WG": 3},
+        "skipped_source_refs": [],
+        "source_coverage_aliases": aliases,
+    }
+    assert gc.validate_manifest(manifest)["source_refs"] == 3
 
 
 def test_reindex_record_discards_stale_lemma_after_canonicalisation():

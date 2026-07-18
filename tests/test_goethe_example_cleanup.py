@@ -86,8 +86,8 @@ def test_update_notes_sends_only_partial_example_fields(monkeypatch):
 def test_example_audio_baseline_matches_cleanup_projection():
     import goethe_example_audio
 
-    assert goethe_example_audio.EXPECTED_OCCURRENCES == 2007
-    assert goethe_example_audio.EXPECTED_UNIQUE == 1917
+    assert goethe_example_audio.EXPECTED_OCCURRENCES == 2009
+    assert goethe_example_audio.EXPECTED_UNIQUE == 1923
 
 
 def test_exported_examples_obey_the_level_source_policy():
@@ -98,5 +98,5 @@ def test_exported_examples_obey_the_level_source_policy():
     ]
     examples = [(row["cefr"], item["de"]) for row in rows for item in row["examples"]]
     assert len(rows) == note_export.EXPECTED_NOTES
-    assert len(examples) == 2008
+    assert len(examples) == 2009
     assert all(source_examples.sentence_key(sentence) in allowed[level] for level, sentence in examples)

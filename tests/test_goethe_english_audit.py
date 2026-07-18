@@ -19,10 +19,10 @@ def test_manifest_covers_every_current_note_with_a_decision_and_sources():
     manifest = audit.load_json(audit.MANIFEST)
     audit.validate_manifest(manifest)
     assert manifest["schema_version"] == 3
-    assert manifest["counts"]["notes"] == 1530
+    assert manifest["counts"]["notes"] == 1531
     assert manifest["counts"]["a1"] == 818
-    assert manifest["counts"]["a2"] == 712
-    assert manifest["counts"]["keep"] + manifest["counts"]["revise"] == 1530
+    assert manifest["counts"]["a2"] == 713
+    assert manifest["counts"]["keep"] + manifest["counts"]["revise"] == 1531
     assert manifest["counts"]["ambiguous_prompt_groups"] == 0
     assert sum(not entry["desired_examples"] for entry in manifest["entries"].values()) == 57
     assert all(entry["review_status"] == "reviewed" for entry in manifest["entries"].values())
@@ -31,6 +31,36 @@ def test_manifest_covers_every_current_note_with_a_decision_and_sources():
         not entry["difficult"] or len({item["url"].split("/")[2] for item in entry["evidence"]}) >= 2
         for entry in manifest["entries"].values()
     )
+
+
+def test_neujahr_and_silvester_have_distinct_reviewed_senses():
+    entries = audit.load_json(audit.MANIFEST)["entries"]
+    silvester = entries["A2-WG-0130"]
+    neujahr = entries["A2-WG-0130-NEUJAHR"]
+
+    assert silvester["lemma"] == "Silvester"
+    assert silvester["note_id_guard"] == 1783863836345
+    assert silvester["desired_meaning_en"] == "New Year's Eve"
+    assert neujahr["lemma"] == "Neujahr"
+    assert neujahr["note_id_guard"] == 1784375306336
+    assert neujahr["desired_meaning_en"] == "New Year's Day"
+    assert neujahr["desired_examples"] == [{
+        "de": "Neujahr fällt in diesem Jahr auf einen Mittwoch.",
+        "en": "New Year's Day falls on a Wednesday this year.",
+        "origin": "review-authored",
+    }]
+
+
+def test_identity_check_accepts_reviewed_canonical_inflection_overrides_only():
+    assert audit.identity_matches_reviewed_lemma({
+        "Lemma": "ander-", "AcceptedAnswersDE": "ander|anderen",
+    }, "anderen")
+    assert audit.identity_matches_reviewed_lemma({
+        "Lemma": "anziehen", "AcceptedAnswersDE": "sich anziehen",
+    }, "(sich) anziehen")
+    assert not audit.identity_matches_reviewed_lemma({
+        "Lemma": "Bahn", "AcceptedAnswersDE": "Bahn",
+    }, "Bus")
 
 
 def test_audited_glosses_have_no_dictionary_placeholders_or_spaced_slashes():
@@ -43,8 +73,8 @@ def test_audited_glosses_have_no_dictionary_placeholders_or_spaced_slashes():
 def test_every_retained_example_was_reaudited_with_explicit_origin():
     entries = audit.load_json(audit.MANIFEST)["entries"].values()
     examples = [example for entry in entries for example in entry["desired_examples"]]
-    assert len(examples) == 2034
-    assert sum(example["origin"] == "review-authored" for example in examples) == 148
+    assert len(examples) == 2035
+    assert sum(example["origin"] == "review-authored" for example in examples) == 149
     assert not any(" a author" in example["en"] for example in examples)
     assert not any(" a artist" in example["en"] for example in examples)
     assert not any(" a actor" in example["en"] for example in examples)

@@ -28,6 +28,7 @@ import goethe_source_examples
 import goethe_target_highlights as target_highlights
 import goethe_template_policy as production_policy
 import goethe_review_policy as review_policy
+import goethe_noun_policy as noun_policy
 
 ROOT = gw.ROOT
 STATE = ROOT / "tools" / ".goethe_completion"
@@ -50,6 +51,15 @@ LEVEL_DECK = {"A1": gw.A1_DECK, "A2": gw.A2_DECK, "B1": gw.B1_DECK}
 LEVEL_TAG = {level: f"goethe::level::{level.lower()}" for level in LEVELS}
 QUALITY_TRANSLATION = "goethe::quality::translation_review_needed"
 CONFIRMATION = "COMPLETE_GOETHE_A1_A2_B1"
+REVIEWED_SPLIT_FIELDS = frozenset({
+    "Lemma", "POS", "Article", "Gender", "NounFormsRaw",
+    "AcceptedAnswersDE", "AcceptedArticlesDE", "WordAudio", "FormOrVariantNote",
+})
+REVIEWED_SPLIT_CHILD_FIELDS = REVIEWED_SPLIT_FIELDS | {
+    "OriginalOrder", "SourceNoteRaw", "LegacyGUID",
+}
+PHYSICAL_SOURCE_REF = re.compile(r"(?:A1|A2|B1)-(?:MAIN|WG)-\d{4}\Z")
+SOURCE_REF_PREFIX = re.compile(r"(?:A1|A2|B1)-(?:MAIN|WG)-")
 
 
 class CompletionError(RuntimeError):
@@ -210,7 +220,8 @@ def load_redundancy_policy() -> dict[str, Any]:
     if not REDUNDANCY_POLICY.exists():
         return {
             "skip_wortgruppen": [], "merge_wortgruppen": {},
-            "reviewed_note_merges": [], "main_source_example_overrides": {},
+            "reviewed_note_merges": [], "reviewed_note_splits": [],
+            "main_source_example_overrides": {},
         }
     policy = json.loads(REDUNDANCY_POLICY.read_text(encoding="utf-8"))
     if policy.get("version") != 1:
@@ -524,6 +535,156 @@ def apply_reviewed_note_merges(
     return deletions
 
 
+def apply_reviewed_note_splits(
+    records: dict[str, dict[str, Any]],
+    groups: list[dict[str, Any]],
+) -> dict[str, str]:
+    """Apply guarded one-survivor/one-child splits after source routing.
+
+    Before the first apply, the reviewed combined identity is required and a
+    ``new:<SourceID>`` child is created. On later builds the child is located by
+    its SourceID, independent of the live Anki note ID.
+    """
+    coverage_aliases: dict[str, str] = {}
+    for group in groups:
+        try:
+            source_ref = group["source_ref"]
+            survivor_id = int(group["survivor_note_id"])
+            expected_lemma = group["expected_lemma"]
+            expected_refs = group["expected_source_refs"]
+            survivor_spec = group["survivor"]
+            child_spec = group["child"]
+            survivor_source_id = survivor_spec["source_id"]
+            survivor_refs = survivor_spec["source_refs"]
+            child_source_id = child_spec["source_id"]
+            child_coverage_ref = child_spec["coverage_ref"]
+            child_refs = child_spec["source_refs"]
+            child_cefr = child_spec["cefr"]
+        except (KeyError, TypeError, ValueError) as exc:
+            raise CompletionError(f"invalid reviewed split policy: {exc}") from exc
+
+        scalar_values = (
+            source_ref, expected_lemma, survivor_source_id,
+            child_source_id, child_coverage_ref, child_cefr,
+        )
+        if not all(isinstance(value, str) and value == clean(value) and value for value in scalar_values):
+            raise CompletionError("invalid reviewed split policy: blank or unnormalised identity")
+        if survivor_id <= 0 or child_cefr not in LEVEL_DECK:
+            raise CompletionError("invalid reviewed split policy: note ID or CEFR")
+
+        ref_lists = (expected_refs, survivor_refs, child_refs)
+        if any(
+            not isinstance(refs, list)
+            or not refs
+            or any(not isinstance(ref, str) or ref != clean(ref) or not ref for ref in refs)
+            or len(refs) != len(set(refs))
+            for refs in ref_lists
+        ):
+            raise CompletionError("invalid reviewed split policy: source refs")
+        if (
+            source_ref not in expected_refs
+            or survivor_source_id not in survivor_refs
+            or child_source_id not in child_refs
+            or child_coverage_ref != source_ref
+            or not PHYSICAL_SOURCE_REF.fullmatch(child_coverage_ref)
+            or not child_source_id.startswith(f"{child_coverage_ref}-")
+        ):
+            raise CompletionError("invalid reviewed split policy: source identity")
+        if child_source_id in coverage_aliases:
+            raise CompletionError(f"duplicate reviewed split child: {child_source_id}")
+        coverage_aliases[child_source_id] = child_coverage_ref
+
+        override_pairs = (
+            ("survivor", survivor_spec.get("field_overrides"), REVIEWED_SPLIT_FIELDS),
+            ("child", child_spec.get("field_overrides"), REVIEWED_SPLIT_CHILD_FIELDS),
+        )
+        for label, overrides, allowed_fields in override_pairs:
+            if not isinstance(overrides, dict) or not overrides.get("Lemma"):
+                raise CompletionError(f"invalid reviewed split {label} field overrides")
+            unsupported = set(overrides) - allowed_fields
+            if unsupported or any(not isinstance(value, str) for value in overrides.values()):
+                raise CompletionError(
+                    f"invalid reviewed split {label} field overrides: {sorted(unsupported)!r}"
+                )
+        child_overrides = child_spec["field_overrides"]
+        if (
+            child_overrides.get("LegacyGUID") != f"goethe:{child_source_id}"
+            or child_overrides.get("OriginalOrder") != child_coverage_ref
+            or not child_overrides.get("SourceNoteRaw", "").startswith(child_coverage_ref)
+        ):
+            raise CompletionError("invalid reviewed split child identity fields")
+
+        survivor = records.get(str(survivor_id))
+        if survivor is None or survivor.get("note_id") != survivor_id:
+            raise CompletionError(f"reviewed split survivor missing: {survivor_id}")
+
+        child_matches = [
+            (key, record) for key, record in records.items()
+            if record["fields"].get("SourceID") == child_source_id
+        ]
+        if len(child_matches) > 1:
+            raise CompletionError(f"reviewed split child identity is ambiguous: {child_source_id}")
+        if not child_matches:
+            if (
+                survivor["fields"].get("SourceID") != source_ref
+                or survivor["fields"].get("Lemma") != expected_lemma
+                or set(survivor["source_refs"]) != set(expected_refs)
+                or len(survivor["source_refs"]) != len(expected_refs)
+            ):
+                raise CompletionError(
+                    f"reviewed split combined identity mismatch: {survivor_id} {source_ref}"
+                )
+            child_key = f"new:{child_source_id}"
+            if child_key in records:
+                raise CompletionError(f"reviewed split child key conflicts: {child_key}")
+            child_overrides = child_spec["field_overrides"]
+            child = new_record(
+                child_source_id,
+                child_overrides["Lemma"],
+                child_cefr,
+                child_overrides.get("POS", ""),
+                child_overrides.get("Gender", ""),
+            )
+            child["source_refs"] = list(child_refs)
+            child["fields"]["SourceID"] = child_source_id
+            child["fields"]["SourceRefs"] = "|".join(child_refs)
+            child["fields"].update(child_overrides)
+            child["categories"] = list(survivor.get("categories", []))
+            child["tags"] = sorted(
+                (set(child["tags"]) | (set(survivor.get("tags", [])) - set(LEVEL_TAG.values())))
+                - set(LEVEL_TAG.values())
+                | {LEVEL_TAG[child_cefr], "goethe::migration::completed"}
+            )
+            records[child_key] = child
+        else:
+            _, child = child_matches[0]
+            if (
+                child.get("note_id") == survivor_id
+                or set(child["source_refs"]) != set(child_refs)
+                or len(child["source_refs"]) != len(child_refs)
+            ):
+                raise CompletionError(f"reviewed split child identity mismatch: {child_source_id}")
+            child["source_refs"] = list(child_refs)
+            child["fields"]["SourceRefs"] = "|".join(child_refs)
+            child["fields"]["CEFR"] = child_cefr
+            child["deck"] = LEVEL_DECK[child_cefr]
+            child["fields"].update(child_spec["field_overrides"])
+
+        if (
+            survivor["fields"].get("SourceID") not in {source_ref, survivor_source_id}
+            or (child_matches and (
+                set(survivor["source_refs"]) != set(survivor_refs)
+                or len(survivor["source_refs"]) != len(survivor_refs)
+            ))
+        ):
+            raise CompletionError(f"reviewed split survivor identity mismatch: {survivor_id}")
+        survivor["source_refs"] = list(survivor_refs)
+        survivor["fields"]["SourceID"] = survivor_source_id
+        survivor["fields"]["SourceRefs"] = "|".join(survivor_refs)
+        survivor["fields"].update(survivor_spec["field_overrides"])
+    return coverage_aliases
+
+
 def apply_headword_policy(records: dict[str, dict[str, Any]], deletions: list[dict[str, Any]]) -> list[dict[str, Any]]:
     if not HEADWORD_POLICY.exists():
         return deletions
@@ -568,6 +729,7 @@ def build_manifest() -> dict[str, Any]:
     skipped_source_refs = set(redundancy_policy.get("skip_wortgruppen", []))
     merge_wortgruppen = redundancy_policy.get("merge_wortgruppen", {})
     reviewed_note_merges = redundancy_policy.get("reviewed_note_merges", [])
+    reviewed_note_splits = redundancy_policy.get("reviewed_note_splits", [])
     preserve_note_ids = set(map(int, redundancy_policy.get("preserve_note_ids", [])))
     source_targets = {str(ref): str(note_id) for ref, note_id in redundancy_policy.get("source_targets", {}).items()}
     main_source_aliases = {
@@ -683,6 +845,7 @@ def build_manifest() -> dict[str, Any]:
                     record["fields"].get("FormOrVariantNote", "") + " | " + grammar_note
                 )
 
+    source_coverage_aliases = apply_reviewed_note_splits(records, reviewed_note_splits)
     deletions.extend(merge_exact_duplicates(records, preserve_note_ids))
     allowed_examples = goethe_source_examples.allowed_examples_by_level()
     audit_manifest = None
@@ -727,6 +890,7 @@ def build_manifest() -> dict[str, Any]:
     manifest = {
         "version": 1, "records": records, "deletions": deletions,
         "source_counts": source_counts, "skipped_source_refs": sorted(skipped_source_refs),
+        "source_coverage_aliases": source_coverage_aliases,
         "ambiguous": ambiguous,
     }
     return manifest
@@ -898,6 +1062,7 @@ def validate_manifest(manifest: dict[str, Any]) -> dict[str, int]:
         fields = record["fields"]
         if not fields.get("Lemma") or not fields.get("MeaningEN") or not fields.get("SourceRefs"):
             raise CompletionError(f"required fields missing: {record.get('note_id')} {fields.get('Lemma')}")
+        validate_noun_fields(fields)
         if fields["CEFR"] not in LEVEL_DECK or record["deck"] != LEVEL_DECK[fields["CEFR"]]:
             raise CompletionError(f"level/deck mismatch: {fields['Lemma']}")
         if any(not item["en"] for item in record["examples"]):
@@ -914,9 +1079,27 @@ def validate_manifest(manifest: dict[str, Any]) -> dict[str, int]:
         except target_highlights.HighlightError as exc:
             raise CompletionError(f"invalid target spans: {fields['Lemma']}: {exc}") from exc
     refs = {ref for record in records for ref in record["source_refs"]}
+    coverage_aliases = manifest.get("source_coverage_aliases", {})
+    if not isinstance(coverage_aliases, dict):
+        raise CompletionError("invalid source coverage aliases")
+    for derived_ref, physical_ref in coverage_aliases.items():
+        if (
+            not isinstance(derived_ref, str)
+            or derived_ref not in refs
+            or not isinstance(physical_ref, str)
+            or not PHYSICAL_SOURCE_REF.fullmatch(physical_ref)
+        ):
+            raise CompletionError(f"invalid source coverage alias: {derived_ref!r}")
     skipped_source_refs = set(manifest.get("skipped_source_refs", []))
     expected = sum(manifest["source_counts"].values()) - len(skipped_source_refs)
-    source_refs = {ref for ref in refs if re.match(r"(?:A1|A2|B1)-(?:MAIN|WG)-", ref)}
+    source_refs = set()
+    for ref in refs:
+        if not SOURCE_REF_PREFIX.match(ref):
+            continue
+        physical_ref = coverage_aliases.get(ref, ref)
+        if not PHYSICAL_SOURCE_REF.fullmatch(physical_ref):
+            raise CompletionError(f"unmapped derived source ref: {ref}")
+        source_refs.add(physical_ref)
     if source_refs & skipped_source_refs:
         raise CompletionError("skipped source ref was retained in the manifest")
     if len(source_refs) != expected:
@@ -932,6 +1115,38 @@ def validate_manifest(manifest: dict[str, Any]) -> dict[str, int]:
         "a2": sum(record["fields"]["CEFR"] == "A2" for record in records),
         "b1": sum(record["fields"]["CEFR"] == "B1" for record in records),
     }
+
+
+def validate_noun_fields(fields: dict[str, str]) -> None:
+    """Enforce the learner-facing article invariant for every noun record."""
+    if fields.get("POS", "").strip() != "n.":
+        return
+    try:
+        is_exception = noun_policy.validate_noun_article(
+            source_id=fields.get("SourceID", ""),
+            lemma=fields.get("Lemma", ""),
+            pos=fields.get("POS", ""),
+            article=fields.get("Article", ""),
+            gender=fields.get("Gender", ""),
+            require_complete_mapping=False,
+        )
+    except noun_policy.NounPolicyError as exc:
+        raise CompletionError(f"noun article policy failed for {fields.get('Lemma')!r}: {exc}") from exc
+
+    accepted_articles = split_answers(fields.get("AcceptedArticlesDE", ""))
+    full_answers = split_answers(fields.get("AcceptedFullAnswersDE", ""))
+    if is_exception:
+        if accepted_articles or any(re.match(r"^(?:der|die|das)\s+", value, flags=re.I) for value in full_answers):
+            raise CompletionError(
+                f"articleless exception has article-bearing answer metadata: {fields.get('Lemma')}"
+            )
+        return
+    if not accepted_articles:
+        raise CompletionError(f"noun AcceptedArticlesDE missing: {fields.get('Lemma')}")
+    if fields.get("ProductionEnabled") == "1" and (not full_answers or any(
+        not re.match(r"^(?:der|die|das)\s+\S", value, flags=re.I) for value in full_answers
+    )):
+        raise CompletionError(f"noun AcceptedFullAnswersDE missing article: {fields.get('Lemma')}")
 
 
 def command_dry_run(_: argparse.Namespace) -> None:

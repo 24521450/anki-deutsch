@@ -12,9 +12,9 @@ if str(TOOLS) not in sys.path:
 import export_goethe_notes_jsonl as export  # noqa: E402
 
 
-def test_export_contract_reflects_six_reviewed_a1_a2_duplicate_deletions():
-    assert export.EXPECTED_NOTES == 1524
-    assert export.EXPECTED_CARDS == 3048
+def test_export_contract_reflects_duplicate_merges_and_reviewed_holiday_split():
+    assert export.EXPECTED_NOTES == 1525
+    assert export.EXPECTED_CARDS == 3050
 
 
 def note():

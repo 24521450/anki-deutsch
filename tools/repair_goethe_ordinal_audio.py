@@ -157,7 +157,7 @@ def verify(assignments: dict[int, dict], snapshot: dict) -> None:
         raise RuntimeError("model/templates/styling changed")
     if audio.canonical_hash(reviews([int(card_id) for card_id in snapshot["cards"]])) != snapshot["all_reviews_sha256"]:
         raise RuntimeError("review history changed")
-    if len(notes) != 1524 or len(cards) != 3048:
+    if len(notes) != 1525 or len(cards) != 3050:
         raise RuntimeError(f"unexpected inventory: notes={len(notes)} cards={len(cards)}")
 
 

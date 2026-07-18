@@ -8,6 +8,8 @@ import unicodedata
 from dataclasses import dataclass
 from pathlib import Path
 
+import goethe_noun_policy as noun_policy
+
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_DIR = ROOT / "sources" / "goethe"
@@ -187,6 +189,7 @@ def validate_level(level: str) -> dict[str, object]:
     section_counts = {section: 0 for section in spec.sections}
     current_section = None
     row_sections: dict[str, str] = {}
+    articleless_exception_ids: set[str] = set()
     for line in text.splitlines():
         if line.startswith(("## ", "### ")):
             current_section = line.lstrip("#").strip()
@@ -220,7 +223,6 @@ def validate_level(level: str) -> dict[str, object]:
         pos = row["POS"]
         article = row["Article"]
         gender = row["Gender"]
-        grammar_note = row["Grammar Note"]
         sources = [item.strip() for item in row["Dictionary Sources"].split("<br>") if item.strip()]
         if pos not in ALLOWED_POS:
             errors.append(f"line {line}: unsupported enriched POS {pos!r}")
@@ -228,20 +230,21 @@ def validate_level(level: str) -> dict[str, object]:
             errors.append(f"line {line}: Dictionary Sources must contain HTTPS URLs")
         if pos != "n." and any((article, gender, row["Noun Forms"])):
             errors.append(f"line {line}: non-noun enrichment contains noun grammar")
-        if pos == "n." and not gender:
-            errors.append(f"line {line}: enriched noun is missing Gender")
-        expected = {"der": "m.", "die": "f.", "das": "n."}
-        articles = article.split("/") if article else []
-        genders = gender.split("/") if gender else []
-        valid_gender = gender == "pl." and articles == ["die"]
-        valid_gender = valid_gender or (
-            bool(articles) and len(articles) == len(genders)
-            and all(expected.get(item) == genders[index] for index, item in enumerate(articles))
+        try:
+            if noun_policy.validate_noun_article(
+                source_id=row["ID"], lemma=canonical, pos=pos,
+                article=article, gender=gender, dictionary_sources=sources,
+            ):
+                articleless_exception_ids.add(row["ID"])
+        except noun_policy.NounPolicyError as exc:
+            errors.append(f"line {line}: {exc}")
+
+    expected_exception_ids = noun_policy.exception_ids_for_level(level)
+    if articleless_exception_ids != expected_exception_ids:
+        errors.append(
+            "articleless noun exception registry is stale: "
+            f"expected {sorted(expected_exception_ids)}, got {sorted(articleless_exception_ids)}"
         )
-        if article and not valid_gender:
-            errors.append(f"line {line}: Article/Gender mismatch {article!r}/{gender!r}")
-        if pos == "n." and not article and "normally used without an article" not in grammar_note.casefold():
-            errors.append(f"line {line}: articleless noun needs an explicit usage note")
 
     if page_counts != spec.page_counts:
         errors.append(f"page counts changed: expected {spec.page_counts}, got {page_counts}")

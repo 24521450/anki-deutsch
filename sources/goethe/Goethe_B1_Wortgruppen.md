@@ -376,12 +376,12 @@ Structured transcription of the *Wortgruppen* on pages 8–15 of `Goethe-Zertifi
 
 | ID | Entry | Detail | CEFR | Source Page | Alphabetical Match | Note | Canonical Lemma | POS | Article | Gender | Noun Forms | Accepted Variants | Grammar Note | Dictionary Sources |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| B1-WG-0299 | Neujahr |  | B1 | 14 |  |  | Neujahr | phrase |  |  |  |  |  | https://www.duden.de/suchen/dudenonline/Neujahr |
+| B1-WG-0299 | Neujahr |  | B1 | 14 |  |  | Neujahr | n. | das | n. |  |  | Holiday-name use is commonly articleless. | https://www.duden.de/rechtschreibung/Neujahr |
 | B1-WG-0300 | Ostern |  | B1 | 14 |  |  | Ostern | phrase |  |  |  |  |  | https://www.duden.de/suchen/dudenonline/Ostern |
 | B1-WG-0301 | Pfingsten |  | B1 | 14 |  |  | Pfingsten | phrase |  |  |  |  |  | https://www.duden.de/suchen/dudenonline/Pfingsten |
 | B1-WG-0302 | Nationalfeiertag |  | B1 | 14 |  |  | Nationalfeiertag | phrase |  |  |  |  |  | https://www.duden.de/suchen/dudenonline/Nationalfeiertag |
 | B1-WG-0303 | Weihnachten |  | B1 | 14 |  |  | Weihnachten | phrase |  |  |  |  |  | https://www.duden.de/suchen/dudenonline/Weihnachten |
-| B1-WG-0304 | Silvester |  | B1 | 14 |  |  | Silvester | phrase |  |  |  |  |  | https://www.duden.de/suchen/dudenonline/Silvester |
+| B1-WG-0304 | Silvester |  | B1 | 14 |  |  | Silvester | n. | das/der | n./m. |  |  | Holiday-name use is commonly articleless. | https://www.duden.de/rechtschreibung/Silvester_Tag |
 
 ### 1.14.3 Jahreszeiten
 

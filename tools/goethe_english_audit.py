@@ -23,8 +23,9 @@ STATE = ROOT / "tools" / ".goethe_english_audit_v3"
 SNAPSHOT = STATE / "snapshot.json"
 MODEL = gw.MODEL
 PARENT_DECK = "Goethe Institute"
-EXPECTED_NOTES = 1530
-EXPECTED_CARDS = 3060
+EXPECTED_CATALOG_NOTES = 1531
+EXPECTED_LIVE_NOTES = 1525
+EXPECTED_LIVE_CARDS = 3050
 OLD_VERIFIED_TAG = "goethe::quality::english_verified::british"
 OLD_AUDITED_TAG = "goethe::quality::english_audited::british"
 AUDITED_TAG = "goethe::quality::english_audited::v3::british"
@@ -248,6 +249,10 @@ def live_records() -> dict[int, dict[str, Any]]:
     notes: list[dict[str, Any]] = []
     for batch in gw.chunks(ids):
         notes.extend(gw.anki("notesInfo", notes=batch))
+    notes = [
+        note for note in notes
+        if note.get("fields", {}).get("CEFR", {}).get("value", "") in {"A1", "A2"}
+    ]
     card_ids = [int(card_id) for note in notes for card_id in note.get("cards", [])]
     cards: list[dict[str, Any]] = []
     for batch in gw.chunks(card_ids, 20):
@@ -265,8 +270,10 @@ def live_records() -> dict[int, dict[str, Any]]:
             "cards": sorted(by_note.get(note_id, []), key=lambda card: int(card["cardId"])),
         }
     cards = sum(len(record["cards"]) for record in records.values())
-    if len(records) != EXPECTED_NOTES or cards != EXPECTED_CARDS:
-        raise AuditError(f"expected {EXPECTED_NOTES}/{EXPECTED_CARDS}, got {len(records)}/{cards}")
+    if len(records) != EXPECTED_LIVE_NOTES or cards != EXPECTED_LIVE_CARDS:
+        raise AuditError(
+            f"expected {EXPECTED_LIVE_NOTES}/{EXPECTED_LIVE_CARDS}, got {len(records)}/{cards}"
+        )
     return records
 
 
@@ -298,12 +305,12 @@ def anki_multi(actions: list[dict[str, Any]], size: int = 60) -> None:
 
 
 def validate_manifest(manifest: dict[str, Any]) -> None:
-    if manifest.get("schema_version") != 3 or len(manifest.get("entries", {})) != EXPECTED_NOTES:
+    if manifest.get("schema_version") != 3 or len(manifest.get("entries", {})) != EXPECTED_CATALOG_NOTES:
         raise AuditError("invalid or incomplete manifest")
     counts = manifest["counts"]
-    if counts["notes"] != EXPECTED_NOTES or counts["a1"] + counts["a2"] != EXPECTED_NOTES:
+    if counts["notes"] != EXPECTED_CATALOG_NOTES or counts["a1"] + counts["a2"] != EXPECTED_CATALOG_NOTES:
         raise AuditError("manifest counts are inconsistent")
-    if counts["keep"] + counts["revise"] != EXPECTED_NOTES:
+    if counts["keep"] + counts["revise"] != EXPECTED_CATALOG_NOTES:
         raise AuditError("not every note has an audit decision")
     if counts["ambiguous_prompt_groups"]:
         raise AuditError("ambiguous English prompts remain")
@@ -331,6 +338,19 @@ def validate_manifest(manifest: dict[str, Any]) -> None:
                 raise AuditError(f"invalid audited example: {entry['source_id']}")
 
 
+def identity_matches_reviewed_lemma(fields: dict[str, str], audited_lemma: str) -> bool:
+    """Accept reviewed inflected/reflexive source labels carried by a canonical note."""
+    if audited_lemma == fields.get("Lemma", ""):
+        return True
+    accepted = {
+        item.strip() for item in str(fields.get("AcceptedAnswersDE", "")).split("|") if item.strip()
+    }
+    if audited_lemma in accepted:
+        return True
+    normalized = audited_lemma.removeprefix("(sich) ").removeprefix("sich ").strip()
+    return normalized == fields.get("Lemma", "").strip()
+
+
 def validate_records(records: dict[int, dict[str, Any]], manifest: dict[str, Any]) -> dict[int, dict[str, Any]]:
     validate_manifest(manifest)
     resolved: dict[int, dict[str, Any]] = {}
@@ -341,7 +361,10 @@ def validate_records(records: dict[int, dict[str, Any]], manifest: dict[str, Any
             raise AuditError(f"live note not covered by audit: {note_id}")
         if entry["note_id_guard"] != note_id:
             raise AuditError(f"note ID guard changed: {entry['source_id']} {note_id}")
-        if entry["lemma"] != record["fields"]["Lemma"] or entry["cefr"] != record["fields"]["CEFR"]:
+        if (
+            not identity_matches_reviewed_lemma(record["fields"], entry["lemma"])
+            or entry["cefr"] != record["fields"]["CEFR"]
+        ):
             raise AuditError(f"identity drift: {entry['source_id']}")
         desired_fields(record["fields"], entry)
         resolved[note_id] = entry

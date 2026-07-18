@@ -81,6 +81,59 @@
     "A2-WG-0162",
     "A2-WG-0212"
   ],
+  "reviewed_note_splits": [
+    {
+      "source_ref": "A2-WG-0130",
+      "survivor_note_id": 1783863836345,
+      "expected_lemma": "Neujahr/Silvester",
+      "expected_source_refs": [
+        "A2-WG-0130",
+        "B1-WG-0299",
+        "B1-WG-0304"
+      ],
+      "survivor": {
+        "source_id": "A2-WG-0130",
+        "source_refs": [
+          "A2-WG-0130",
+          "B1-WG-0304"
+        ],
+        "field_overrides": {
+          "Lemma": "Silvester",
+          "POS": "n.",
+          "Article": "das/der",
+          "Gender": "n./m.",
+          "NounFormsRaw": "",
+          "FormOrVariantNote": "Silvester | Lexical article: das/der; holiday-name use is commonly articleless.",
+          "AcceptedAnswersDE": "Silvester",
+          "AcceptedArticlesDE": "das|der",
+          "WordAudio": ""
+        }
+      },
+      "child": {
+        "source_id": "A2-WG-0130-NEUJAHR",
+        "coverage_ref": "A2-WG-0130",
+        "source_refs": [
+          "A2-WG-0130-NEUJAHR",
+          "B1-WG-0299"
+        ],
+        "cefr": "A2",
+        "field_overrides": {
+          "Lemma": "Neujahr",
+          "POS": "n.",
+          "Article": "das",
+          "Gender": "n.",
+          "NounFormsRaw": "",
+          "FormOrVariantNote": "Neujahr | Lexical article: das; holiday-name use is commonly articleless.",
+          "AcceptedAnswersDE": "Neujahr",
+          "AcceptedArticlesDE": "das",
+          "WordAudio": "",
+          "OriginalOrder": "A2-WG-0130",
+          "SourceNoteRaw": "A2-WG-0130 (Neujahr)",
+          "LegacyGUID": "goethe:A2-WG-0130-NEUJAHR"
+        }
+      }
+    }
+  ],
   "merge_wortgruppen": {
     "A1-WG-0040": {
       "target": "ein halb; halb",

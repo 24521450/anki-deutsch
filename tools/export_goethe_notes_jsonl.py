@@ -11,10 +11,10 @@ import goethe_target_highlights
 
 ROOT = gw.ROOT
 OUTPUT = ROOT / "data" / "build" / "anki_notes.jsonl"
-# The two reviewed lexeme-merge runs removed six redundant A1/A2 notes while
-# retaining their source provenance on the lower-level survivors.
-EXPECTED_NOTES = 1524
-EXPECTED_CARDS = 3048
+# Six reviewed duplicate notes were removed, then the combined Goethe holiday
+# row was split into distinct Neujahr and Silvester learner notes.
+EXPECTED_NOTES = 1525
+EXPECTED_CARDS = 3050
 
 
 class ExportError(RuntimeError):

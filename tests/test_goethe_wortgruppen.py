@@ -64,8 +64,9 @@ def test_a1_a2_enrichment_covers_all_wortgruppen_only_notes() -> None:
         for line in (ROOT / "data" / "build" / "anki_notes.jsonl").read_text(encoding="utf-8").splitlines()
         if line
     ]
+    coverage_aliases = {"A2-WG-0130-NEUJAHR": "A2-WG-0130"}
     expected = {
-        row["source_id"]
+        coverage_aliases.get(row["source_id"], row["source_id"])
         for row in rows
         if row["source_id"].startswith(("A1-WG-", "A2-WG-"))
         and all("-WG-" in ref for ref in row["source_refs"])
