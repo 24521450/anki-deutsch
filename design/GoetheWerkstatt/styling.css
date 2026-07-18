@@ -1,6 +1,6 @@
 @keyframes gw-anchor-reveal {
-  from { opacity: .35; transform: scale(.985); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from { opacity: .55; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 @keyframes gw-details-reveal {
   from { opacity: 0; transform: translateY(6px); }
@@ -101,17 +101,15 @@
   text-transform: uppercase;
 }
 .gw-brand { color: var(--gw-strong); font-size: 11px; font-weight: 800; white-space: nowrap; }
-.gw-direction { margin-left: 7px; padding-left: 7px; border-left: 1px solid var(--gw-border); color: var(--gw-dim); font-size: 10px; letter-spacing: .07em; }
 .gw-pos { min-width: 0; overflow: hidden; color: var(--gw-dim); font-size: 11px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
 .gw-level { color: var(--level); font-size: 12px; font-weight: 800; }
 .gw-front, .gw-production-front { min-height: clamp(280px, 60vh, 390px); min-height: clamp(280px, 60dvh, 390px); display: grid; place-content: center; justify-items: center; padding: 36px 22px; text-align: center; }
-.gw-headword { max-width: 100%; margin: 0; color: var(--gw-strong); font-size: clamp(38px, 10vw, 60px); line-height: 1.08; letter-spacing: -.04em; overflow-wrap: anywhere; }
+.gw-headword { max-width: 100%; margin: 0; color: var(--gw-strong); font-size: clamp(36px, 9vw, 56px); line-height: 1.08; letter-spacing: -.04em; overflow-wrap: anywhere; }
 .gw-back { display: flex; flex-direction: column; gap: 14px; padding: 23px 18px 20px; }
-.gw-answer-stage { min-height: clamp(280px, 60vh, 390px); min-height: clamp(280px, 60dvh, 390px); display: grid; place-items: center; padding: 36px 4px; text-align: center; }
+.gw-answer-stage { text-align: center; }
 .gw-answer-stage > .gw-answer-hero {
   width: 100%;
   animation: gw-anchor-reveal 180ms ease-out both;
-  transform-origin: center;
 }
 .gw-back > :not(.gw-answer-stage) {
   animation: gw-details-reveal 180ms ease-out 60ms both;
@@ -120,9 +118,9 @@
 .gw-answer-title { display: flex; align-items: center; justify-content: center; gap: 12px; }
 .gw-answer-title .gw-german-answer { min-width: 0; }
 .gw-label, .gw-section h2 { display: block; margin: 0 0 8px; color: var(--gw-dim); font-size: 11px; font-weight: 750; }
-.gw-meaning, .gw-german-answer, .gw-production-meaning { margin: 0; color: var(--gw-strong); font-size: clamp(29px, 8vw, 43px); line-height: 1.12; letter-spacing: -.025em; overflow-wrap: anywhere; }
-.gw-german-answer { font-weight: 820; }
-.gw-meaning-secondary { margin: 10px 0 0; color: var(--gw-muted); font-size: 18px; font-weight: 560; line-height: 1.45; }
+.gw-meaning, .gw-german-answer, .gw-production-meaning { margin: 0; color: var(--gw-strong); font-size: clamp(28px, 7vw, 40px); line-height: 1.12; letter-spacing: -.025em; overflow-wrap: anywhere; }
+.gw-german-answer { font-size: clamp(36px, 9vw, 56px); font-weight: 820; }
+.gw-meaning-secondary { margin: 10px 0 0; color: var(--gw-muted); font-size: clamp(20px, 4.5vw, 24px); font-weight: 560; line-height: 1.45; }
 .gw-production-meaning { text-align: center; }
 .gw-production-cue { display: grid; justify-items: center; }
 .gw-production-gender { display: inline-block; margin-top: 10px; color: var(--gw-dim); font: 700 12px "JetBrains Mono", "Cascadia Mono", monospace; letter-spacing: .08em; text-transform: uppercase; }
@@ -166,7 +164,6 @@ summary { display: inline-flex; align-items: center; width: fit-content; min-hei
 .gw-word-playable:focus-visible { outline: 2px solid var(--level); outline-offset: 3px; }
 .gw-word-playing { color: var(--level); }
 .gw-typebox { width: min(430px, 100%); margin-top: 20px; }
-.gw-typebox-label { display: block; margin-bottom: 8px; color: var(--gw-dim); font: 750 11px "JetBrains Mono", "Cascadia Mono", monospace; letter-spacing: .09em; text-transform: uppercase; }
 #typeans {
   width: 100% !important;
   padding: 12px 14px !important;

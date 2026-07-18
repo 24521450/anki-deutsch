@@ -303,7 +303,7 @@ Structured transcription of the *Wortgruppen* on pages 8–15 of `Goethe-Zertifi
 | B1-WG-0240 | 1 Rp. | 1 Rappen, - | B1 | 13 |  |  | 1 Rp. | phrase |  |  |  |  | Expansion/context: 1 Rappen, - | https://www.duden.de/suchen/dudenonline/1%20Rp. |
 | B1-WG-0241 | 1 m | ein Meter | B1 | 13 |  |  | 1 m | phrase |  |  |  |  | Expansion/context: ein Meter | https://www.duden.de/suchen/dudenonline/1%20m |
 | B1-WG-0242 | 1 cm | ein Zentimeter | B1 | 13 |  |  | 1 cm | phrase |  |  |  |  | Expansion/context: ein Zentimeter | https://www.duden.de/suchen/dudenonline/1%20cm |
-| B1-WG-0243 | 1,15 m | ein Meter fünfzehn | B1 | 13 |  |  | 1 | phrase |  |  |  |  | Expansion/context: ein Meter fünfzehn | https://www.duden.de/suchen/dudenonline/1 |
+| B1-WG-0243 | 1,15 m | ein Meter fünfzehn | B1 | 13 |  |  | 1,15 m | phrase |  |  |  |  | Expansion/context: ein Meter fünfzehn | https://www.duden.de/suchen/dudenonline/1%2C15%20m |
 | B1-WG-0244 | 200 km | zweihundert Kilometer | B1 | 13 |  |  | 200 km | phrase |  |  |  |  | Expansion/context: zweihundert Kilometer | https://www.duden.de/suchen/dudenonline/200%20km |
 | B1-WG-0245 | 1 m² | ein Quadratmeter | B1 | 13 |  |  | 1 m² | phrase |  |  |  |  | Expansion/context: ein Quadratmeter | https://www.duden.de/suchen/dudenonline/1%20m%C2%B2 |
 | B1-WG-0246 | −1 °C | ein Grad unter Null/minus ein Grad | B1 | 13 |  |  | −1 °C | phrase |  |  |  |  | Expansion/context: ein Grad unter Null/minus ein Grad | https://www.duden.de/suchen/dudenonline/%E2%88%921%20%C2%B0C |
@@ -314,7 +314,7 @@ Structured transcription of the *Wortgruppen* on pages 8–15 of `Goethe-Zertifi
 | B1-WG-0251 | 500 g | ein Pfund/ein halbes Kilo | B1 | 13 |  |  | 500 g | phrase |  |  |  |  | Expansion/context: ein Pfund/ein halbes Kilo | https://www.duden.de/suchen/dudenonline/500%20g |
 | B1-WG-0252 | 1 kg | ein Kilo(gramm) | B1 | 13 |  |  | 1 kg | phrase |  |  |  |  | Expansion/context: ein Kilo(gramm) | https://www.duden.de/suchen/dudenonline/1%20kg |
 | B1-WG-0253 | 1 dkg oder dag (= 10 g) | ein Deka(gramm) (A) | B1 | 13 |  |  | 1 dkg oder dag (= 10 g) | phrase |  |  |  |  | Expansion/context: ein Deka(gramm) (A) | https://www.duden.de/suchen/dudenonline/1%20dkg%20oder%20dag%20%28%3D%2010%20g%29 |
-| B1-WG-0254 | 1 km/h | ein Kilometer pro Stunde | B1 | 13 |  |  | 1 km | phrase |  |  |  | h | Expansion/context: ein Kilometer pro Stunde | https://www.duden.de/suchen/dudenonline/1%20km |
+| B1-WG-0254 | 1 km/h | ein Kilometer pro Stunde | B1 | 13 |  |  | 1 km/h | phrase |  |  |  |  | Expansion/context: ein Kilometer pro Stunde | https://www.duden.de/suchen/dudenonline/1%20km%2Fh |
 
 ## 1.13 Zahlen, Bruchzahlen
 

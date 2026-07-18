@@ -143,18 +143,18 @@ Structured transcription of the *Inventare* on pages 6–8 of `A1_SD1_Wortliste_
 
 | ID | Entry | Detail | CEFR | Source Page | Alphabetical Match | Note | Canonical Lemma | POS | Article | Gender | Noun Forms | Accepted Variants | Grammar Note | Dictionary Sources |
 |---|---|---|:---:|:---:|---|---|---|---|---|---|---|---|---|---|
-| A1-WG-0093 | ein Meter | 1 m | A1 | 8 |  |  |  |  |  |  |  |  |  |  |
-| A1-WG-0094 | ein Zentimeter | 1 cm | A1 | 8 |  |  |  |  |  |  |  |  |  |  |
-| A1-WG-0095 | ein Meter fünfzehn | 1,15 m | A1 | 8 |  |  |  |  |  |  |  |  |  |  |
-| A1-WG-0096 | zweihundert Kilometer | 200 km | A1 | 8 |  |  |  |  |  |  |  |  |  |  |
-| A1-WG-0097 | ein Quadratmeter | 1 m² | A1 | 8 |  |  |  |  |  |  |  |  |  |  |
-| A1-WG-0098 | ein Grad unter Null/minus ein Grad | −1° | A1 | 8 |  |  |  |  |  |  |  |  |  |  |
-| A1-WG-0099 | vier Grad über Null/plus vier Grad | +4° | A1 | 8 |  |  |  |  |  |  |  |  |  |  |
-| A1-WG-0100 | ein Prozent | 1% | A1 | 8 |  |  |  |  |  |  |  |  |  |  |
-| A1-WG-0101 | ein Liter | 1 l | A1 | 8 |  |  |  |  |  |  |  |  |  |  |
-| A1-WG-0102 | ein Gramm | 1 g | A1 | 8 |  |  |  |  |  |  |  |  |  |  |
-| A1-WG-0103 | ein Pfund | 500 g | A1 | 8 |  |  |  |  |  |  |  |  |  |  |
-| A1-WG-0104 | ein Kilo(gramm) | 1 kg | A1 | 8 |  |  |  |  |  |  |  |  |  |  |
+| A1-WG-0093 | ein Meter | 1 m | A1 | 8 |  |  | Meter | n. | der | m. | - |  |  | https://www.duden.de/rechtschreibung/Meter |
+| A1-WG-0094 | ein Zentimeter | 1 cm | A1 | 8 |  |  | Zentimeter | n. | der | m. | - |  |  | https://www.duden.de/rechtschreibung/Zentimeter |
+| A1-WG-0095 | ein Meter fünfzehn | 1,15 m | A1 | 8 |  |  | ein Meter fünfzehn | phrase |  |  |  |  | Spoken measurement expression; retain as a phrase. | https://www.duden.de/rechtschreibung/Meter |
+| A1-WG-0096 | zweihundert Kilometer | 200 km | A1 | 8 |  |  | Kilometer | n. | der | m. | - |  |  | https://www.duden.de/rechtschreibung/Kilometer |
+| A1-WG-0097 | ein Quadratmeter | 1 m² | A1 | 8 |  |  | Quadratmeter | n. | der | m. | - |  |  | https://www.duden.de/rechtschreibung/Quadratmeter |
+| A1-WG-0098 | ein Grad unter Null/minus ein Grad | −1° | A1 | 8 |  |  | ein Grad unter Null/minus ein Grad | phrase |  |  |  | ein Grad unter Null<br>minus ein Grad | Temperature expression; retain as a phrase. | https://www.duden.de/rechtschreibung/Grad |
+| A1-WG-0099 | vier Grad über Null/plus vier Grad | +4° | A1 | 8 |  |  | vier Grad über Null/plus vier Grad | phrase |  |  |  | vier Grad über Null<br>plus vier Grad | Temperature expression; retain as a phrase. | https://www.duden.de/rechtschreibung/Grad |
+| A1-WG-0100 | ein Prozent | 1% | A1 | 8 |  |  | Prozent | n. | das | n. | -e |  | Unchanged after numerals: fünf Prozent. | https://www.duden.de/rechtschreibung/Prozent |
+| A1-WG-0101 | ein Liter | 1 l | A1 | 8 |  |  | Liter | n. | der/das | m./n. | - |  | Both articles are standard; in Switzerland only der Liter is used. | https://www.duden.de/rechtschreibung/Liter |
+| A1-WG-0102 | ein Gramm | 1 g | A1 | 8 |  |  | Gramm | n. | das | n. | -e |  | Unchanged after numerals: zwei Gramm. | https://www.duden.de/rechtschreibung/Gramm |
+| A1-WG-0103 | ein Pfund | 500 g | A1 | 8 |  |  | Pfund | n. | das | n. | -e |  | Unchanged after numerals: fünf Pfund. | https://www.duden.de/rechtschreibung/Pfund |
+| A1-WG-0104 | ein Kilo(gramm) | 1 kg | A1 | 8 |  |  | Kilogramm | n. | das | n. | -/-e | Kilo | Short form: Kilo. | https://www.duden.de/rechtschreibung/Kilogramm |
 
 ## Länder/Ländernamen/Nationalitäten
 

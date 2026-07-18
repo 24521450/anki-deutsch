@@ -24,7 +24,7 @@ def test_manifest_covers_every_current_note_with_a_decision_and_sources():
     assert manifest["counts"]["a2"] == 712
     assert manifest["counts"]["keep"] + manifest["counts"]["revise"] == 1530
     assert manifest["counts"]["ambiguous_prompt_groups"] == 0
-    assert sum(not entry["desired_examples"] for entry in manifest["entries"].values()) == 66
+    assert sum(not entry["desired_examples"] for entry in manifest["entries"].values()) == 57
     assert all(entry["review_status"] == "reviewed" for entry in manifest["entries"].values())
     assert all(entry["evidence"] for entry in manifest["entries"].values())
     assert all(
@@ -43,8 +43,8 @@ def test_audited_glosses_have_no_dictionary_placeholders_or_spaced_slashes():
 def test_every_retained_example_was_reaudited_with_explicit_origin():
     entries = audit.load_json(audit.MANIFEST)["entries"].values()
     examples = [example for entry in entries for example in entry["desired_examples"]]
-    assert len(examples) == 2007
-    assert sum(example["origin"] == "review-authored" for example in examples) == 139
+    assert len(examples) == 2034
+    assert sum(example["origin"] == "review-authored" for example in examples) == 148
     assert not any(" a author" in example["en"] for example in examples)
     assert not any(" a artist" in example["en"] for example in examples)
     assert not any(" a actor" in example["en"] for example in examples)
@@ -106,6 +106,56 @@ def test_desired_fields_is_idempotent_and_preserves_audio():
     downstream_audio = copy.deepcopy(desired)
     downstream_audio["Example1Audio"] = "[sound:edge.mp3]"
     assert audit.audit_projection(downstream_audio) == audit.audit_projection(desired)
+
+
+def test_pair_state_ignores_untranslated_duplicate_of_a_merged_dialogue():
+    entry = audit.load_json(audit.MANIFEST)["entries"]["A1-84886454639"]
+    current = copy.deepcopy(entry["expected_examples"])
+    current.append({
+        "de": "Hin und zurück?<br>– Nein, bitte nur einfach.",
+        "en": "",
+        "origin": "goethe",
+    })
+
+    assert audit.pair_state(current, entry) == "expected"
+
+
+def test_audit_tracks_reviewed_canonical_merge_glosses_and_lieblings_example():
+    entries = audit.load_json(audit.MANIFEST)["entries"]
+    assert {
+        source_id: entries[source_id]["desired_meaning_en"]
+        for source_id in (
+            "A1-84886454612", "A1-84886454914",
+            "A1-84886455036", "A2-MAIN-0202",
+        )
+    } == {
+        "A1-84886454612": "disco; discotheque",
+        "A1-84886454914": "dear; kind",
+        "A1-84886455036": "reception; front desk",
+        "A2-MAIN-0202": "with you; present or included; while doing so",
+    }
+    assert entries["A1-84886454917"]["desired_examples"][-1] == {
+        "de": "Meine Lieblingsfarbe ist Blau.",
+        "en": "My favourite colour is blue.",
+        "origin": "goethe",
+    }
+
+    retained_merge_examples = {
+        "A1-84886454531": "Eine Bekannte von mir wohnt in Köln.",
+        "A1-84886454612": "Wir gehen heute Abend in die Disko(thek).",
+        "A1-84886454788": "Zum Mittagessen gibt es Hühnchen mit Reis.",
+        "A1-84886454914": "Liebe Frau Meier!",
+        "A1-84886454963": "Bis nächstes Mal!",
+        "A1-84886455036": "Geben Sie bitte den Schlüssel an der Rezeption ab.",
+        "A1-84886455149": "Tschüs, bis morgen!",
+        "A1-84886455204": "Ich will dir nicht wehtun.",
+        "A1-84886455228": "Herzlich willkommen in Köln.",
+        "A2-0647": "Seid ihr am Wochenende zu Hause? – Ja, meistens.",
+        "A2-0759": "Lass uns eine Pizza bestellen!",
+        "A2-MAIN-0202": "Was hast du dir dabei gedacht?",
+    }
+    for source_id, german in retained_merge_examples.items():
+        assert german in {item["de"] for item in entries[source_id]["desired_examples"]}
 
 
 def test_uncovered_record_is_marked_for_review_not_verified():

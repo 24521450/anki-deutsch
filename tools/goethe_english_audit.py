@@ -131,10 +131,24 @@ def load_json(path: Path) -> dict[str, Any]:
 
 
 def example_pairs(examples: list[dict[str, Any]]) -> list[dict[str, str]]:
-    return [
-        {"de": item["de"], "en": item["en"]}
-        for item in goethe_examples.merge_dialogue_replies(examples)
-    ]
+    pairs: list[dict[str, str]] = []
+    by_german: dict[str, int] = {}
+    for item in goethe_examples.merge_dialogue_replies(examples):
+        pair = {"de": item["de"], "en": item["en"]}
+        key = pair["de"].strip()
+        previous_index = by_german.get(key)
+        if previous_index is None:
+            by_german[key] = len(pairs)
+            pairs.append(pair)
+            continue
+        previous = pairs[previous_index]
+        if previous == pair or (previous["en"] and not pair["en"]):
+            continue
+        if pair["en"] and not previous["en"]:
+            pairs[previous_index] = pair
+            continue
+        pairs.append(pair)
+    return pairs
 
 
 def normalize_meaning(value: str) -> str:
@@ -172,7 +186,14 @@ def pair_state(current: list[dict[str, str]], entry: dict[str, Any]) -> str:
         return "expected"
     if pairs == example_pairs(entry.get("previous_examples", [])):
         return "previous"
-    if pairs == example_pairs(entry["desired_examples"]):
+    desired = example_pairs(entry["desired_examples"])
+    if pairs == desired:
+        return "desired"
+    if len(pairs) == len(desired) and all(
+        current_pair["de"] == desired_pair["de"]
+        and current_pair["en"] in {"", desired_pair["en"]}
+        for current_pair, desired_pair in zip(pairs, desired)
+    ):
         return "desired"
     return "drift"
 

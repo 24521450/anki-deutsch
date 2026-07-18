@@ -141,7 +141,8 @@ async def prepare_words(records: dict[int, dict[str, Any]]) -> dict[str, Any]:
         notes[str(note_id)] = note
     fake_duden = {"items": {key: {"status": "unresolved"} for key in groups}}
     commons = await word_audio.prepare_commons(groups, fake_duden)
-    edge = await word_audio.prepare_edge(groups, fake_duden, commons)
+    wiktionary = await word_audio.prepare_wiktionary(groups, fake_duden, commons)
+    edge = await word_audio.prepare_edge(groups, fake_duden, commons, wiktionary)
     for note in notes.values():
         if note.get("assignment"):
             continue
@@ -150,6 +151,10 @@ async def prepare_words(records: dict[int, dict[str, Any]]) -> dict[str, Any]:
         if common.get("status") == "ok":
             note["assignment"] = word_audio.assignment("commons", Path(common["path"]), detail=common)
             counts["commons"] += 1
+        elif wiktionary["items"].get(key, {}).get("status") == "ok":
+            item = wiktionary["items"][key]
+            note["assignment"] = word_audio.assignment("wiktionary", Path(item["path"]), detail=item)
+            counts["wiktionary"] += 1
         else:
             item = edge["items"].get(word_audio.edge_audio_id(note["spoken_text"]), {})
             if item.get("status") != "ok":

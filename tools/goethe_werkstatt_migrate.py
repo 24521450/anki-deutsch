@@ -95,11 +95,11 @@ class MigrationError(RuntimeError):
     pass
 
 
-def anki(action: str, **params: Any) -> Any:
+def anki(action: str, *, request_timeout: float = 30, **params: Any) -> Any:
     payload = json.dumps({"action": action, "version": 6, "params": params}).encode("utf-8")
     request = urllib.request.Request(ANKI_URL, data=payload, headers={"Content-Type": "application/json"})
     try:
-        with urllib.request.urlopen(request, timeout=30) as response:
+        with urllib.request.urlopen(request, timeout=request_timeout) as response:
             result = json.loads(response.read().decode("utf-8"))
     except (urllib.error.URLError, TimeoutError) as exc:
         raise MigrationError(f"AnkiConnect unavailable: {exc}") from exc

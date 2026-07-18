@@ -11,6 +11,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 import goethe_example_cleanup as cleanup  # noqa: E402
 import goethe_examples  # noqa: E402
 import goethe_source_examples as source_examples  # noqa: E402
+import export_goethe_notes_jsonl as note_export  # noqa: E402
 
 
 def fields(level: str, rows: list[dict[str, str]]) -> dict[str, str]:
@@ -96,6 +97,6 @@ def test_exported_examples_obey_the_level_source_policy():
         for line in (ROOT / "data" / "build" / "anki_notes.jsonl").read_text(encoding="utf-8").splitlines()
     ]
     examples = [(row["cefr"], item["de"]) for row in rows for item in row["examples"]]
-    assert len(rows) == cleanup.EXPECTED_NOTES
-    assert len(examples) == cleanup.EXPECTED_REMAINING
+    assert len(rows) == note_export.EXPECTED_NOTES
+    assert len(examples) == 2008
     assert all(source_examples.sentence_key(sentence) in allowed[level] for level, sentence in examples)

@@ -14,7 +14,7 @@ def read(name: str) -> str:
     return (DESIGN / name).read_text(encoding="utf-8")
 
 
-def test_direction_labels_and_direction_specific_answer_hierarchy() -> None:
+def test_direction_metadata_is_hidden_and_answer_hierarchy_is_minimal() -> None:
     front_de = read("front_german.html")
     back_de = read("back_german.html")
     front_en = read("front_english.html")
@@ -22,16 +22,17 @@ def test_direction_labels_and_direction_specific_answer_hierarchy() -> None:
 
     assert 'data-direction="de-en"' in front_de
     assert 'data-direction="de-en"' in back_de
-    assert 'DE → EN' in front_de and 'DE → EN' in back_de
     assert 'data-direction="en-de"' in front_en
     assert 'data-direction="en-de"' in back_en
-    assert 'EN → DE' in front_en and 'EN → DE' in back_en
+
+    combined = "\n".join((front_de, back_de, front_en, back_en))
+    assert 'class="gw-direction"' not in combined
+    for visible_label in (">DE → EN<", ">EN → DE<", ">German headword<", ">German answer<", ">English cue<"):
+        assert visible_label not in combined
 
     # Both backs keep the German headword primary and the English meaning secondary.
     assert back_de.index('class="gw-german-answer"') < back_de.index('class="gw-meaning-secondary"')
-    assert 'German headword' in back_de
     assert back_en.index('class="gw-german-answer"') < back_en.index('class="gw-meaning-secondary"')
-    assert 'German answer' in back_en
 
 
 def test_back_templates_keep_the_headword_in_a_stable_answer_stage() -> None:
@@ -42,7 +43,14 @@ def test_back_templates_keep_the_headword_in_a_stable_answer_stage() -> None:
 
     css = read("styling.css")
     assert ".gw-answer-stage" in css
-    assert "min-height: clamp(280px, 60dvh, 390px)" in css
+    answer_stage_rule = css.split(".gw-answer-stage {", 1)[1].split("}", 1)[0]
+    assert "min-height" not in answer_stage_rule
+    assert "text-align: center" in answer_stage_rule
+    assert "justify-content: center" in css
+    assert ".gw-headword { max-width: 100%; margin: 0; color: var(--gw-strong); font-size: clamp(36px, 9vw, 56px);" in css
+    assert ".gw-meaning, .gw-german-answer, .gw-production-meaning { margin: 0; color: var(--gw-strong); font-size: clamp(28px, 7vw, 40px);" in css
+    assert ".gw-german-answer { font-size: clamp(36px, 9vw, 56px);" in css
+    assert ".gw-meaning-secondary { margin: 10px 0 0; color: var(--gw-muted); font-size: clamp(20px, 4.5vw, 24px);" in css
     assert "@keyframes gw-anchor-reveal" in css
     assert "translateY(72px)" not in css
     assert "prefers-reduced-motion: reduce" in css
@@ -73,10 +81,8 @@ def test_production_prompt_has_accessible_enabled_and_disabled_branches() -> Non
     assert "{{#ProductionEnabled}}" in template
     assert "{{^ProductionEnabled}}" in template
     assert "gw-production-disabled" in template
-    assert 'for="typeans"' in template
-    assert 'id="gw-typebox-label"' in template
-    assert 'class="gw-typebox-label"' in template
-    assert 'input.setAttribute("aria-labelledby", "gw-typebox-label")' in template
+    assert 'class="gw-typebox-label"' not in template
+    assert 'input.setAttribute("aria-label", "German answer")' in template
     assert 'input.setAttribute("lang", "de")' in template
 
 

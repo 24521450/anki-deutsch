@@ -12,6 +12,11 @@ if str(TOOLS) not in sys.path:
 import export_goethe_notes_jsonl as export  # noqa: E402
 
 
+def test_export_contract_reflects_six_reviewed_a1_a2_duplicate_deletions():
+    assert export.EXPECTED_NOTES == 1524
+    assert export.EXPECTED_CARDS == 3048
+
+
 def note():
     values = {name: "" for name in export.gw.FIELDS}
     values.update({
@@ -65,3 +70,33 @@ def test_overflow_examples_are_exposed_without_requiring_html_parsing():
     assert export.overflow_examples(raw) == [{
         "de": "Grüße aus Köln.", "en": "Greetings from Cologne.", "audio": "",
     }]
+
+
+def test_load_live_rows_filters_b1_before_fetching_cards(monkeypatch):
+    a1 = note()
+    b1 = note()
+    b1["noteId"] = 11
+    b1["fields"]["CEFR"]["value"] = "B1"
+    b1["fields"]["SourceID"]["value"] = "B1-X"
+    a1["cards"] = [20, 21]
+    b1["cards"] = [22, 23]
+    calls = []
+
+    def fake_anki(action, **params):
+        calls.append((action, params))
+        if action == "findNotes":
+            return [10, 11]
+        if action == "notesInfo":
+            return [a1, b1]
+        if action == "cardsInfo":
+            assert params["cards"] == [20, 21]
+            return cards()
+        raise AssertionError(action)
+
+    monkeypatch.setattr(export.gw, "anki", fake_anki)
+    monkeypatch.setattr(export, "validate_rows", lambda rows: None)
+
+    rows = export.load_live_rows()
+
+    assert [row["cefr"] for row in rows] == ["A1"]
+    assert [action for action, _ in calls] == ["findNotes", "notesInfo", "cardsInfo"]

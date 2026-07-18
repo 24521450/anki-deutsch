@@ -250,10 +250,10 @@ def build_preview() -> str:
         for name in gw.FIELDS
     }
     labels = {
-        "front-de": ("Front", "German → English"),
-        "back-de": ("Back", "German headword"),
-        "front-en": ("Front", "English → German"),
-        "back-en": ("Back", "German answer"),
+        "front-de": ("Front", "Recognition"),
+        "back-de": ("Back", "Recognition"),
+        "front-en": ("Front", "Production"),
+        "back-en": ("Back", "Production"),
     }
     variant_json = _js_json(variants)
     fields_json = _js_json(field_values)

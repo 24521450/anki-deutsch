@@ -1,7 +1,8 @@
 """Prepare and safely wire Goethe A1/A2 word audio into Anki.
 
 Source precedence is validated Duden (A1 before A2), newly resolved exact
-Duden audio, exact Wikimedia Commons pronunciation, then Edge TTS.  The only
+Duden audio, exact Wikimedia Commons pronunciation, Wiktionary pronunciation,
+then Edge TTS.  The only
 Anki note field this tool writes is ``WordAudio``.
 """
 from __future__ import annotations
@@ -25,6 +26,7 @@ from pathlib import Path
 from typing import Any
 
 import aiohttp
+from lxml import html as lxml_html
 
 import download_duden_a1_audio as duden
 import goethe_completion as completion
@@ -37,10 +39,12 @@ WORK_AUDIO = ROOT / "audio" / "goethe_word_audio"
 DUDEN_EXTRA_DIR = WORK_AUDIO / "duden"
 EDGE_DIR = WORK_AUDIO / "edge"
 COMMONS_DIR = WORK_AUDIO / "commons"
+WIKTIONARY_DIR = WORK_AUDIO / "wiktionary"
 MANIFEST_PATH = STATE / "manifest.json"
 DUDEN_EXTRA_INDEX = STATE / "duden_extra.json"
 EDGE_INDEX = STATE / "edge.json"
 COMMONS_INDEX = STATE / "commons.json"
+WIKTIONARY_INDEX = STATE / "wiktionary.json"
 SNAPSHOT_PATH = STATE / "snapshot.json"
 OVERRIDES_PATH = ROOT / "review" / "goethe_word_audio_overrides.json"
 COMMONS_ATTRIBUTION_PATH = ROOT / "review" / "wikimedia_commons_audio_attribution.json"
@@ -66,6 +70,12 @@ COMMONS_CONFIG = {
     "maxlag": 5,
     "licenses": ["CC0", "Public domain", "CC BY", "CC BY-SA"],
     "human_standard_german_only": True,
+    "config_version": 1,
+}
+WIKTIONARY_CONFIG = {
+    "api": "https://en.wiktionary.org/w/api.php",
+    "user_agent": "anki-deutsch-word-audio/1.0 (https://github.com/24521450/anki-deutsch)",
+    "language_section": "German",
     "config_version": 1,
 }
 SOURCE_FIELDS = ("Lemma", "POS", "Gender", "AcceptedAnswersDE", "SourceRefs", "CEFR")
@@ -363,7 +373,7 @@ def build_audit() -> dict[str, Any]:
         "created_utc": now_utc(),
         "edge_config": EDGE_CONFIG,
         "commons_config": COMMONS_CONFIG,
-        "source_order": ["duden_local", "duden_extra", "commons", "edge"],
+        "source_order": ["duden_local", "duden_extra", "commons", "wiktionary", "edge"],
         "note_count": len(notes),
         "counts": dict(counts),
         "missing_overrides": missing_overrides,
@@ -611,14 +621,16 @@ async def download_commons(session: aiohttp.ClientSession, item: dict[str, Any],
 def write_commons_attribution(index: dict[str, Any]) -> None:
     selected = []
     seen: set[str] = set()
-    for item in index.get("items", {}).values():
-        if item.get("status") != "ok" or item.get("sha256") in seen:
-            continue
-        seen.add(item["sha256"])
-        selected.append({key: item.get(key) for key in (
-            "sha256", "spoken_text", "title", "description_url", "original_url", "artist", "credit",
-            "attribution", "license_short_name", "license_url", "usage_terms", "checked_utc",
-        )})
+    attribution_indexes = [index, load_json(WIKTIONARY_INDEX, {"items": {}})]
+    for source_index in attribution_indexes:
+        for item in source_index.get("items", {}).values():
+            if item.get("status") != "ok" or item.get("sha256") in seen:
+                continue
+            seen.add(item["sha256"])
+            selected.append({key: item.get(key) for key in (
+                "sha256", "spoken_text", "title", "description_url", "original_url", "artist", "credit",
+                "attribution", "license_short_name", "license_url", "usage_terms", "checked_utc",
+            )})
     atomic_json(COMMONS_ATTRIBUTION_PATH, {
         "schema_version": 1,
         "generated_utc": now_utc(),
@@ -682,11 +694,117 @@ async def prepare_commons(groups: dict[str, dict[str, Any]], duden_index: dict[s
     return index
 
 
+async def wiktionary_parse(session: aiohttp.ClientSession, lemma: str) -> dict[str, Any]:
+    params = {
+        "action": "parse", "page": lemma, "prop": "text|revid", "format": "json",
+        "formatversion": "2", "redirects": "1",
+    }
+    headers = {"User-Agent": WIKTIONARY_CONFIG["user_agent"]}
+    async with session.get(WIKTIONARY_CONFIG["api"], params=params, headers=headers) as response:
+        if response.status != 200:
+            raise WordAudioError(f"Wiktionary API HTTP {response.status}")
+        payload = await response.json()
+    if payload.get("error"):
+        raise WordAudioError(f"Wiktionary API error: {payload['error']}")
+    return payload.get("parse", {})
+
+
+def wiktionary_audio_candidates(parse: dict[str, Any], lemma: str) -> list[dict[str, Any]]:
+    raw_text = parse.get("text") or ""
+    html_text = raw_text.get("*") if isinstance(raw_text, dict) else raw_text
+    if not html_text:
+        return []
+    root = lxml_html.fromstring(html_text)
+    german = root.xpath("//h2[@id='German'] | //h2[.//span[@id='German']]")
+    if not german:
+        return []
+    section = german[0].getparent()
+    candidates: list[dict[str, Any]] = []
+    for node in section.itersiblings():
+        if node.xpath(".//h2"):
+            break
+        for audio_node in node.xpath(".//audio[@data-mwtitle]"):
+            title = clean("File:" + audio_node.get("data-mwtitle", ""))
+            if not re.match(r"^File:De-[^/]+\.(?:ogg|oga|wav|mp3)$", title, flags=re.I):
+                continue
+            context_node = next((ancestor for ancestor in audio_node.iterancestors() if ancestor.tag in {"li", "table"}), node)
+            context = clean(context_node.text_content()).casefold()
+            rank = 0 if "germany" in context or "berlin" in context else 1
+            candidates.append({"title": title, "rank": rank, "lemma": lemma})
+    dedup: dict[str, dict[str, Any]] = {}
+    for candidate in candidates:
+        old = dedup.get(candidate["title"])
+        if old is None or candidate["rank"] < old["rank"]:
+            dedup[candidate["title"]] = candidate
+    return sorted(dedup.values(), key=lambda item: (item["rank"], item["title"].casefold()))
+
+
+async def prepare_wiktionary(groups: dict[str, dict[str, Any]], duden_index: dict[str, Any], commons_index: dict[str, Any]) -> dict[str, Any]:
+    index = load_json(WIKTIONARY_INDEX, {"schema_version": 1, "config": WIKTIONARY_CONFIG, "items": {}})
+    if index.get("config") != WIKTIONARY_CONFIG:
+        raise WordAudioError("existing Wiktionary index uses a different configuration")
+    items = index.setdefault("items", {})
+    pending = {
+        key: group for key, group in groups.items()
+        if duden_index["items"].get(key, {}).get("status") != "ok"
+        and commons_index["items"].get(key, {}).get("status") != "ok"
+        and items.get(key, {}).get("status") not in {"ok", "unresolved", "ambiguous"}
+    }
+    timeout = aiohttp.ClientTimeout(total=90)
+    async with aiohttp.ClientSession(timeout=timeout) as session:
+        for number, (key, group) in enumerate(sorted(pending.items()), 1):
+            try:
+                parsed = await wiktionary_parse(session, group["spoken_text"])
+                candidates = wiktionary_audio_candidates(parsed, group["spoken_text"])
+                if not candidates:
+                    result = {"status": "unresolved", "request_key": key, "spoken_text": group["spoken_text"], "reason": "no German pronunciation audio", "checked_utc": now_utc()}
+                else:
+                    pages = await commons_query(session, [item["title"] for item in candidates])
+                    by_title = {clean(page.get("title", "")): page for page in pages if not page.get("missing")}
+                    accepted = []
+                    rejected = []
+                    for candidate in candidates:
+                        page = by_title.get(candidate["title"])
+                        if not page:
+                            rejected.append(f"{candidate['title']}: missing Commons page")
+                            continue
+                        accepted_page, reason = evaluate_commons_page(page, group)
+                        if accepted_page:
+                            accepted_page["wiktionary_page"] = f"https://en.wiktionary.org/wiki/{group['spoken_text']}"
+                            accepted_page["wiktionary_revision"] = parsed.get("revid")
+                            accepted_page["wiktionary_rank"] = candidate["rank"]
+                            accepted.append(accepted_page)
+                        else:
+                            rejected.append(f"{candidate['title']}: {reason}")
+                    if not accepted:
+                        result = {"status": "unresolved", "request_key": key, "spoken_text": group["spoken_text"], "reason": "; ".join(rejected[:5]) or "no valid Wiktionary audio", "checked_utc": now_utc()}
+                    else:
+                        best_rank = accepted[0]["wiktionary_rank"]
+                        tied = [item for item in accepted if item["wiktionary_rank"] == best_rank]
+                        if len(tied) > 1:
+                            result = {"status": "ambiguous", "request_key": key, "spoken_text": group["spoken_text"], "candidates": [item["title"] for item in tied], "reason": "multiple equally ranked Wiktionary recordings", "checked_utc": now_utc()}
+                        else:
+                            result = tied[0]
+                            target = WIKTIONARY_DIR / f"{key}.mp3"
+                            size, sha256 = await download_commons(session, result, target)
+                            result.update({"status": "ok", "path": str(target), "size": size, "sha256": sha256})
+            except (aiohttp.ClientError, WordAudioError) as exc:
+                result = {"status": "unresolved", "request_key": key, "spoken_text": group["spoken_text"], "reason": str(exc), "checked_utc": now_utc()}
+            items[key] = result
+            atomic_json(WIKTIONARY_INDEX, index)
+            print(f"wiktionary {number}/{len(pending)} {group['spoken_text']!r}: {result['status']}")
+    for item in items.values():
+        if item.get("status") == "ok":
+            validate_audio(Path(item["path"]), item.get("sha256"), item.get("size"))
+    return index
+
+
 def edge_audio_id(text: str) -> str:
     return canonical_hash({"spoken_text": text, **EDGE_CONFIG})
 
 
-async def prepare_edge(groups: dict[str, dict[str, Any]], duden_index: dict[str, Any], commons_index: dict[str, Any]) -> dict[str, Any]:
+async def prepare_edge(groups: dict[str, dict[str, Any]], duden_index: dict[str, Any], commons_index: dict[str, Any], wiktionary_index: dict[str, Any] | None = None) -> dict[str, Any]:
+    wiktionary_index = wiktionary_index or {"items": {}}
     try:
         import edge_tts
         from importlib.metadata import version
@@ -706,6 +824,7 @@ async def prepare_edge(groups: dict[str, dict[str, Any]], duden_index: dict[str,
         group for key, group in sorted(groups.items())
         if duden_index["items"].get(key, {}).get("status") != "ok"
         and commons_index["items"].get(key, {}).get("status") != "ok"
+        and wiktionary_index["items"].get(key, {}).get("status") != "ok"
     ]
     for number, group in enumerate(needed, 1):
         audio_id = edge_audio_id(group["spoken_text"])
@@ -749,7 +868,8 @@ async def prepare_edge(groups: dict[str, dict[str, Any]], duden_index: dict[str,
     return index
 
 
-def finalize_manifest(manifest: dict[str, Any], duden_index: dict[str, Any], commons_index: dict[str, Any], edge_index: dict[str, Any]) -> dict[str, Any]:
+def finalize_manifest(manifest: dict[str, Any], duden_index: dict[str, Any], commons_index: dict[str, Any], edge_index: dict[str, Any], wiktionary_index: dict[str, Any] | None = None) -> dict[str, Any]:
+    wiktionary_index = wiktionary_index or {"items": {}}
     counts: Counter[str] = Counter()
     for item in manifest["notes"].values():
         if item.get("assignment"):
@@ -762,6 +882,9 @@ def finalize_manifest(manifest: dict[str, Any], duden_index: dict[str, Any], com
         elif commons_index["items"].get(key, {}).get("status") == "ok":
             commons = commons_index["items"][key]
             item["assignment"] = assignment("commons", Path(commons["path"]), detail=commons)
+        elif wiktionary_index["items"].get(key, {}).get("status") == "ok":
+            wiktionary = wiktionary_index["items"][key]
+            item["assignment"] = assignment("wiktionary", Path(wiktionary["path"]), detail=wiktionary)
         else:
             edge_id = edge_audio_id(item["spoken_text"])
             edge = edge_index["items"].get(edge_id)
@@ -790,8 +913,9 @@ async def command_prepare(_: argparse.Namespace) -> None:
     groups = request_groups(manifest)
     duden_index = await prepare_duden(groups)
     commons_index = await prepare_commons(groups, duden_index)
-    edge_index = await prepare_edge(groups, duden_index, commons_index)
-    final = finalize_manifest(manifest, duden_index, commons_index, edge_index)
+    wiktionary_index = await prepare_wiktionary(groups, duden_index, commons_index)
+    edge_index = await prepare_edge(groups, duden_index, commons_index, wiktionary_index)
+    final = finalize_manifest(manifest, duden_index, commons_index, edge_index, wiktionary_index)
     print(json.dumps({"notes": final["note_count"], "counts": final["counts"]}, ensure_ascii=False, indent=2))
 
 

@@ -208,11 +208,32 @@ def load_live() -> tuple[dict[str, dict[str, Any]], dict[int, list[dict[str, Any
 
 def load_redundancy_policy() -> dict[str, Any]:
     if not REDUNDANCY_POLICY.exists():
-        return {"skip_wortgruppen": [], "merge_wortgruppen": {}}
+        return {
+            "skip_wortgruppen": [], "merge_wortgruppen": {},
+            "reviewed_note_merges": [], "main_source_example_overrides": {},
+        }
     policy = json.loads(REDUNDANCY_POLICY.read_text(encoding="utf-8"))
     if policy.get("version") != 1:
         raise CompletionError("unsupported redundancy policy version")
     return policy
+
+
+def configured_wortgruppe_key(
+    ref: str,
+    merge_spec: dict[str, Any],
+    by_source_ref: dict[str, str],
+) -> str | None:
+    """Resolve an explicitly reviewed Wortgruppe route by source identity."""
+    current = by_source_ref.get(ref)
+    target_ref = clean(merge_spec.get("target_source_ref", ""))
+    if not target_ref:
+        return current
+    target = by_source_ref.get(target_ref)
+    if target is None:
+        raise CompletionError(f"Wortgruppe source target missing: {ref} -> {target_ref}")
+    if current is not None and current != target:
+        raise CompletionError(f"Wortgruppe source route conflicts: {ref} -> {target_ref}")
+    return target
 
 
 def configured_main_source_key(
@@ -242,6 +263,21 @@ def configured_main_source_key(
     return by_source_ref.get(ref)
 
 
+def main_source_examples(
+    ref: str,
+    row: dict[str, Any],
+    source_text_overrides: dict[str, list[str]],
+    reviewed_overrides: dict[str, list[str]],
+) -> list[str]:
+    """Return reviewed per-note examples without narrowing the source whitelist."""
+    values = reviewed_overrides.get(
+        ref, source_text_overrides.get(ref, row["examples"]),
+    )
+    if not isinstance(values, list) or not all(isinstance(value, str) for value in values):
+        raise CompletionError(f"invalid main-source example override: {ref}")
+    return values
+
+
 def load_source_text_overrides() -> dict[str, Any]:
     if not SOURCE_TEXT_OVERRIDES.exists():
         return {"examples": {}}
@@ -269,6 +305,15 @@ def index_record(index: dict[str, set[str]], key: str, record: dict[str, Any]) -
     for variant in record_variants(record):
         index[variant].add(key)
         index["~" + variant.casefold()].add(key)
+
+
+def reindex_record(index: dict[str, set[str]], key: str, record: dict[str, Any]) -> None:
+    """Replace a record's index entries after its canonical fields change."""
+    for variant, keys in list(index.items()):
+        keys.discard(key)
+        if not keys:
+            del index[variant]
+    index_record(index, key, record)
 
 
 def find_record(
@@ -428,6 +473,57 @@ def merge_exact_duplicates(records: dict[str, dict[str, Any]], preserve_note_ids
     return deletions
 
 
+def apply_reviewed_note_merges(
+    records: dict[str, dict[str, Any]],
+    deletions: list[dict[str, Any]],
+    groups: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Schedule guarded note-ID merges before source rows are routed.
+
+    Missing duplicates are accepted so rebuilding after an apply is
+    idempotent. A duplicate that is still present must match both reviewed
+    note ID and source identity, and its survivor must do the same.
+    """
+    scheduled = {int(item["note_id"]): int(item["survivor"]) for item in deletions}
+    for group in groups:
+        survivor_id = int(group["survivor"])
+        duplicate_id = int(group["duplicate"])
+        survivor_key, duplicate_key = str(survivor_id), str(duplicate_id)
+        survivor = records.get(survivor_key)
+        if survivor is None:
+            raise CompletionError(
+                f"reviewed merge survivor missing: {duplicate_id} -> {survivor_id}"
+            )
+        survivor_ref = str(group["survivor_source_ref"])
+        if survivor.get("note_id") != survivor_id or survivor_ref not in survivor["source_refs"]:
+            raise CompletionError(
+                f"reviewed merge survivor identity mismatch: {survivor_id} {survivor_ref}"
+            )
+        if duplicate_id in scheduled and scheduled[duplicate_id] != survivor_id:
+            raise CompletionError(
+                f"reviewed merge deletion conflicts: {duplicate_id} -> {scheduled[duplicate_id]}"
+            )
+        duplicate = records.get(duplicate_key)
+        if duplicate is None:
+            continue
+        duplicate_ref = str(group["duplicate_source_ref"])
+        if duplicate.get("note_id") != duplicate_id or duplicate_ref not in duplicate["source_refs"]:
+            raise CompletionError(
+                f"reviewed merge duplicate identity mismatch: {duplicate_id} {duplicate_ref}"
+            )
+        if duplicate_id not in scheduled:
+            deletions.append({
+                "note_id": duplicate_id,
+                "survivor": survivor_id,
+                "cards": duplicate["cards"],
+                "fields": duplicate["fields"],
+                "tags": duplicate["tags"],
+            })
+            scheduled[duplicate_id] = survivor_id
+        del records[duplicate_key]
+    return deletions
+
+
 def apply_headword_policy(records: dict[str, dict[str, Any]], deletions: list[dict[str, Any]]) -> list[dict[str, Any]]:
     if not HEADWORD_POLICY.exists():
         return deletions
@@ -471,12 +567,15 @@ def build_manifest() -> dict[str, Any]:
     source_text_overrides = load_source_text_overrides()
     skipped_source_refs = set(redundancy_policy.get("skip_wortgruppen", []))
     merge_wortgruppen = redundancy_policy.get("merge_wortgruppen", {})
+    reviewed_note_merges = redundancy_policy.get("reviewed_note_merges", [])
     preserve_note_ids = set(map(int, redundancy_policy.get("preserve_note_ids", [])))
     source_targets = {str(ref): str(note_id) for ref, note_id in redundancy_policy.get("source_targets", {}).items()}
     main_source_aliases = {
         str(ref): str(target) for ref, target in redundancy_policy.get("main_source_aliases", {}).items()
     }
+    main_source_example_overrides = redundancy_policy.get("main_source_example_overrides", {})
     deletions = merge_exact_duplicates(records, preserve_note_ids)
+    deletions = apply_reviewed_note_merges(records, deletions, reviewed_note_merges)
     # Stored merge-policy snapshots are an A1/A2 baseline. Apply them before
     # adding B1 provenance so they cannot erase freshly attached B1 refs.
     deletions = apply_headword_policy(records, deletions)
@@ -527,7 +626,9 @@ def build_manifest() -> dict[str, Any]:
                 record["fields"]["SourceNoteRaw"] = clean(record["fields"].get("SourceNoteRaw", "") + " | " + row["note"])
             if level == "B1":
                 apply_main_grammar(record, row)
-            examples = source_text_overrides["examples"].get(ref, row["examples"])
+            examples = main_source_examples(
+                ref, row, source_text_overrides["examples"], main_source_example_overrides,
+            )
             for example in examples:
                 add_example(record, example)
 
@@ -538,7 +639,7 @@ def build_manifest() -> dict[str, Any]:
                 continue
             lemma = wg_lemma(row)
             merge_spec = merge_wortgruppen.get(row["id"], {})
-            key = by_source_ref.get(row["id"]) or find_record(
+            key = configured_wortgruppe_key(row["id"], merge_spec, by_source_ref) or find_record(
                 records, index, merge_spec.get("target") or row["match"] or lemma,
             )
             if key is None:
@@ -565,6 +666,7 @@ def build_manifest() -> dict[str, Any]:
                 fields["AcceptedAnswersDE"] = "|".join(wg_answers(row))
                 fields["AcceptedArticlesDE"] = "|".join(row["article"].split("/"))
                 record["tags"] = sorted(set(record["tags"]) | {"goethe::quality::grammar_audited"})
+                reindex_record(index, key, record)
             if merge_spec.get("as_example"):
                 add_example(record, lemma)
             accepted = split_answers(record["fields"].get("AcceptedAnswersDE", ""))

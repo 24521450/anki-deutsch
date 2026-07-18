@@ -11,8 +11,10 @@ import goethe_target_highlights
 
 ROOT = gw.ROOT
 OUTPUT = ROOT / "data" / "build" / "anki_notes.jsonl"
-EXPECTED_NOTES = 1530
-EXPECTED_CARDS = 3060
+# The two reviewed lexeme-merge runs removed six redundant A1/A2 notes while
+# retaining their source provenance on the lower-level survivors.
+EXPECTED_NOTES = 1524
+EXPECTED_CARDS = 3048
 
 
 class ExportError(RuntimeError):
@@ -116,6 +118,10 @@ def load_live_rows() -> list[dict[str, Any]]:
     notes: list[dict[str, Any]] = []
     for batch in gw.chunks(note_ids):
         notes.extend(gw.anki("notesInfo", notes=batch))
+    # The agent-readable contract is intentionally the completed A1/A2 corpus.
+    # B1 uses the same notetype during its rollout and must not leak into this
+    # stable post-merge A1/A2 export.
+    notes = [note for note in notes if field(note, "CEFR") in {"A1", "A2"}]
     card_ids = [int(card_id) for note in notes for card_id in note.get("cards", [])]
     cards: list[dict[str, Any]] = []
     for batch in gw.chunks(card_ids):

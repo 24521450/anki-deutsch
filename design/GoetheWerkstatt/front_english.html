@@ -1,12 +1,11 @@
 <main class="gw-card" data-level="{{CEFR}}" data-direction="en-de">
   <header class="gw-meta">
-    <span class="gw-brand">GOETHE <span class="gw-direction" aria-label="English to German">EN → DE</span></span>
+    <span class="gw-brand">GOETHE</span>
     <span class="gw-pos">{{POS}}</span>
     <span class="gw-level">{{CEFR}}</span>
   </header>
   <section class="gw-production-front">
     <div class="gw-production-cue">
-      <span class="gw-label" lang="en">English cue</span>
       <h1 class="gw-production-meaning" lang="en">{{MeaningEN}}</h1>
       {{#Gender}}<span class="gw-production-gender" lang="de">{{Gender}}</span>{{/Gender}}
       {{#ProductionHint}}<p class="gw-production-hint" lang="en">{{ProductionHint}}</p>{{/ProductionHint}}
@@ -14,7 +13,6 @@
     </div>
     {{#ProductionEnabled}}
     <div class="gw-typebox">
-      <label id="gw-typebox-label" class="gw-typebox-label" for="typeans" lang="en">German answer</label>
       {{type:Lemma}}
     </div>
     {{/ProductionEnabled}}
@@ -50,7 +48,7 @@
     input.setAttribute("autocomplete", "off");
     input.setAttribute("autocapitalize", "off");
     input.setAttribute("lang", "de");
-    input.setAttribute("aria-labelledby", "gw-typebox-label");
+    input.setAttribute("aria-label", "German answer");
     input.setAttribute("spellcheck", "false");
     input.addEventListener("input", function () { save(input.value); });
     input.addEventListener("change", function () { save(input.value); });

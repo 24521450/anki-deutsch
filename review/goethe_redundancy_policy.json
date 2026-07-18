@@ -12,6 +12,7 @@
   "source_targets": {
     "A1-MAIN-0658": 1584886455225,
     "A1-MAIN-0659": 1584886455226,
+    "A2-MAIN-0201": 1497484860928,
     "A2-MAIN-1117": 1584886455225,
     "A2-MAIN-1118": 1584886455226
   },
@@ -32,6 +33,25 @@
     "B1-MAIN-1201": "A1-MAIN-0301",
     "B1-MAIN-1855": "A2-MAIN-0734"
   },
+  "main_source_example_overrides": {
+    "A2-MAIN-0201": [
+      "Darauf fällt mir keine Antwort ein."
+    ]
+  },
+  "reviewed_note_merges": [
+    {"survivor": 1584887177249, "survivor_source_ref": "A1-WG-0093", "duplicate": 1784075689145, "duplicate_source_ref": "B1-WG-0241"},
+    {"survivor": 1584887177250, "survivor_source_ref": "A1-WG-0094", "duplicate": 1784075689238, "duplicate_source_ref": "B1-WG-0242"},
+    {"survivor": 1584887177251, "survivor_source_ref": "A1-WG-0095", "duplicate": 1784075689331, "duplicate_source_ref": "B1-WG-0243"},
+    {"survivor": 1584887177252, "survivor_source_ref": "A1-WG-0096", "duplicate": 1784075689425, "duplicate_source_ref": "B1-WG-0244"},
+    {"survivor": 1584887177253, "survivor_source_ref": "A1-WG-0097", "duplicate": 1784075689517, "duplicate_source_ref": "B1-WG-0245"},
+    {"survivor": 1584887177254, "survivor_source_ref": "A1-WG-0098", "duplicate": 1784075689611, "duplicate_source_ref": "B1-WG-0246"},
+    {"survivor": 1584887177255, "survivor_source_ref": "A1-WG-0099", "duplicate": 1784075689705, "duplicate_source_ref": "B1-WG-0247"},
+    {"survivor": 1584887177256, "survivor_source_ref": "A1-WG-0100", "duplicate": 1784075689797, "duplicate_source_ref": "B1-WG-0248"},
+    {"survivor": 1584887177257, "survivor_source_ref": "A1-WG-0101", "duplicate": 1784075689892, "duplicate_source_ref": "B1-WG-0249"},
+    {"survivor": 1584887177258, "survivor_source_ref": "A1-WG-0102", "duplicate": 1784075689985, "duplicate_source_ref": "B1-WG-0250"},
+    {"survivor": 1584887177259, "survivor_source_ref": "A1-WG-0103", "duplicate": 1784075690077, "duplicate_source_ref": "B1-WG-0251"},
+    {"survivor": 1584887177260, "survivor_source_ref": "A1-WG-0104", "duplicate": 1784075690172, "duplicate_source_ref": "B1-WG-0252"}
+  ],
   "skip_wortgruppen": [
     "A1-WG-0044",
     "A1-WG-0045",
@@ -77,6 +97,19 @@
     "A2-WG-0164": {
       "target": "Viertel vor/nach zwei",
       "as_example": true
-    }
+    },
+    "B1-WG-0241": {"target_source_ref": "A1-WG-0093"},
+    "B1-WG-0242": {"target_source_ref": "A1-WG-0094"},
+    "B1-WG-0243": {"target_source_ref": "A1-WG-0095"},
+    "B1-WG-0244": {"target_source_ref": "A1-WG-0096"},
+    "B1-WG-0245": {"target_source_ref": "A1-WG-0097"},
+    "B1-WG-0246": {"target_source_ref": "A1-WG-0098"},
+    "B1-WG-0247": {"target_source_ref": "A1-WG-0099"},
+    "B1-WG-0248": {"target_source_ref": "A1-WG-0100"},
+    "B1-WG-0249": {"target_source_ref": "A1-WG-0101"},
+    "B1-WG-0250": {"target_source_ref": "A1-WG-0102"},
+    "B1-WG-0251": {"target_source_ref": "A1-WG-0103"},
+    "B1-WG-0252": {"target_source_ref": "A1-WG-0104"},
+    "B1-WG-0255": {"target_source_ref": "A1-WG-0001"}
   }
 }

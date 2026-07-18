@@ -18,6 +18,11 @@ This repository is a German Anki resource project split out from the IELTS deck 
 
 Word audio:
 
+The Goethe word-audio fallback order is validated Duden, exact Wikimedia
+Commons pronunciation, Wiktionary German pronunciation audio, then Edge TTS.
+Only the `WordAudio` field is updated by the Anki workflow; scheduling and
+review history are snapshotted and verified before/after an apply.
+
 ```powershell
 python tools/a1_preflight.py
 python tools/a1_generate.py --pilot-only

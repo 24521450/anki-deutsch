@@ -28,8 +28,8 @@ def test_preview_contains_both_directions_themes_and_current_field_contract() ->
     assert "de-en" in rendered
     assert "en-de" in rendered
     assert "nightMode" in rendered
-    assert "DE → EN" in rendered
-    assert "EN → DE" in rendered
+    assert "Recognition" in rendered
+    assert "Production" in rendered
     assert "[sound:" not in rendered
     assert "{{" not in rendered
     for field in gw.FIELDS:

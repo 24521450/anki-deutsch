@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -35,6 +36,99 @@ def test_wortgruppen_parser_preserves_all_rows_and_categories():
 def test_numeric_wortgruppe_uses_spoken_german_as_lemma():
     row = {"entry": "1", "detail": "eins", "match": ""}
     assert gc.wg_lemma(row) == "eins"
+
+
+def test_reviewed_measure_merges_delete_exact_b1_notes_and_route_collision():
+    policy = gc.load_redundancy_policy()
+    groups = policy["reviewed_note_merges"]
+    expected = {
+        1784075689145: 1584887177249,
+        1784075689238: 1584887177250,
+        1784075689331: 1584887177251,
+        1784075689425: 1584887177252,
+        1784075689517: 1584887177253,
+        1784075689611: 1584887177254,
+        1784075689705: 1584887177255,
+        1784075689797: 1584887177256,
+        1784075689892: 1584887177257,
+        1784075689985: 1584887177258,
+        1784075690077: 1584887177259,
+        1784075690172: 1584887177260,
+    }
+    assert {item["duplicate"]: item["survivor"] for item in groups} == expected
+    merges = policy["merge_wortgruppen"]
+    assert {
+        item["duplicate_source_ref"]: merges[item["duplicate_source_ref"]]["target_source_ref"]
+        for item in groups
+    } == {
+        item["duplicate_source_ref"]: item["survivor_source_ref"] for item in groups
+    }
+
+    records = {}
+    for item in groups:
+        survivor = gc.new_record(item["survivor_source_ref"], "survivor", "A1")
+        survivor.update({"note_id": item["survivor"], "is_new": False, "cards": []})
+        records[str(item["survivor"])] = survivor
+        duplicate = gc.new_record(item["duplicate_source_ref"], "duplicate", "B1")
+        duplicate.update({"note_id": item["duplicate"], "is_new": False, "cards": []})
+        if item["duplicate_source_ref"] == "B1-WG-0243":
+            duplicate["source_refs"].append("B1-WG-0255")
+        records[str(item["duplicate"])] = duplicate
+    eins = gc.new_record("A1-WG-0001", "eins", "A1")
+    eins.update({"note_id": 1584887177160, "is_new": False, "cards": []})
+    records["1584887177160"] = eins
+
+    deletions = gc.apply_reviewed_note_merges(records, [], groups)
+    assert {item["note_id"]: item["survivor"] for item in deletions} == expected
+    assert not ({str(note_id) for note_id in expected} & set(records))
+    assert gc.apply_reviewed_note_merges(records, deletions, groups) == deletions
+
+    by_source_ref = {
+        ref: key for key, record in records.items() for ref in record["source_refs"]
+    }
+    assert gc.configured_wortgruppe_key(
+        "B1-WG-0243", merges["B1-WG-0243"], by_source_ref,
+    ) == "1584887177251"
+    assert gc.configured_wortgruppe_key(
+        "B1-WG-0255", merges["B1-WG-0255"], by_source_ref,
+    ) == "1584887177160"
+
+
+def test_reviewed_note_merge_fails_closed_on_wrong_identity():
+    survivor = gc.new_record("A1-WG-WRONG", "wrong", "A1")
+    survivor.update({"note_id": 1, "is_new": False, "cards": []})
+    duplicate = gc.new_record("B1-WG-0241", "1 m", "B1")
+    duplicate.update({"note_id": 2, "is_new": False, "cards": []})
+    with pytest.raises(gc.CompletionError, match="reviewed merge survivor identity mismatch"):
+        gc.apply_reviewed_note_merges({"1": survivor, "2": duplicate}, [], [{
+            "survivor": 1,
+            "survivor_source_ref": "A1-WG-0093",
+            "duplicate": 2,
+            "duplicate_source_ref": "B1-WG-0241",
+        }])
+
+
+def test_reindex_record_discards_stale_lemma_after_canonicalisation():
+    record = gc.new_record("A1-WG-0102", "ein Gramm", "A1")
+    records = {"1": record}
+    index = gc.variant_index(records)
+    record["fields"]["Lemma"] = "Gramm"
+    record["fields"]["AcceptedAnswersDE"] = "Gramm"
+    gc.reindex_record(index, "1", record)
+    assert gc.find_record(records, index, "Gramm") == "1"
+    assert gc.find_record(records, index, "ein Gramm") is None
+
+
+def test_b1_speed_unit_keeps_full_lemma_and_reviewed_translation():
+    row = next(
+        item for item in gc.parse_wortgruppen(gc.WG_FILES["B1"])
+        if item["id"] == "B1-WG-0254"
+    )
+    assert (gc.wg_lemma(row), gc.wg_answers(row), row["variants"]) == (
+        "1 km/h", ["1 km/h"], "",
+    )
+    overrides = json.loads(gc.B1_ENGLISH_OVERRIDES.read_text(encoding="utf-8"))
+    assert overrides["B1-WG-0254"]["meaning_en"] == "one kilometre per hour"
 
 
 def test_wortgruppe_gender_variants_become_accepted_answers():
@@ -124,6 +218,24 @@ def test_source_text_overrides_join_pdf_line_wrap_and_fix_display_typo():
     assert overrides["A1-MAIN-0363"][-1] == "Im Zug fahre ich immer 2. Klasse."
     assert overrides["A2-MAIN-0855"][-1] == "Ich finde den Film schrecklich. Er macht mir Angst."
     assert overrides["A2-MAIN-0617"] == ["Sag mal, wie gefällt dir mein neues Kleid?"]
+
+
+def test_shared_da_source_routes_only_darauf_example_to_darauf_note():
+    policy = gc.load_redundancy_policy()
+    source_overrides = gc.load_source_text_overrides()["examples"]
+    row = {
+        "examples": [
+            "Darauf fällt mir keine Antwort ein.",
+            "Darüber spreche ich nicht gern.",
+        ],
+    }
+
+    assert policy["source_targets"]["A2-MAIN-0201"] == 1497484860928
+    assert "A2-MAIN-0201" not in source_overrides
+    assert gc.main_source_examples(
+        "A2-MAIN-0201", row, source_overrides,
+        policy["main_source_example_overrides"],
+    ) == ["Darauf fällt mir keine Antwort ein."]
 
 
 def test_redundancy_policy_preserves_reviewed_content_twins_and_routes_phrases():

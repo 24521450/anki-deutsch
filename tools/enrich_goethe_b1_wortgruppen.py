@@ -25,6 +25,7 @@ EXTRA_HEADERS = (
 )
 ARTICLES = {"der": "m.", "die": "f.", "das": "n."}
 ADJECTIVE_SECTIONS = {"1.7 Farben"}
+NUMERIC_PHRASE_START = re.compile(r"^(?:\(\+\)\s*|[+\-−]?\s*)\d")
 
 
 class EnrichmentError(RuntimeError):
@@ -77,10 +78,12 @@ def noun_data(head: str) -> tuple[str, str, str, list[str]] | None:
 
 
 def base_lemma(entry: str) -> str:
-    return strip_region(entry.split(",", 1)[0]).strip()
+    # A comma followed by a digit is decimal punctuation, not the separator
+    # before an inflection such as ``1 Euro, -s``.
+    return strip_region(re.split(r",(?!\d)", entry, maxsplit=1)[0]).strip()
 
 
-def classify(entry: str, section: str) -> tuple[str, str, str, str, str, str]:
+def classify(entry: str, section: str) -> tuple[str, str, str, str, str, str, str]:
     noun = noun_data(entry)
     if noun:
         canonical, article, gender, variants = noun
@@ -93,6 +96,8 @@ def classify(entry: str, section: str) -> tuple[str, str, str, str, str, str]:
     lemma = base_lemma(entry)
     if not lemma:
         raise EnrichmentError(f"cannot derive lemma from {entry!r}")
+    if NUMERIC_PHRASE_START.match(lemma):
+        return lemma, "phrase", "", "", "", "", ""
     variants = [clean(item) for item in lemma.split("/") if clean(item)]
     canonical = variants[0]
     accepted = "<br>".join(variants[1:])

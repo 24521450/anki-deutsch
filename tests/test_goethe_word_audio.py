@@ -136,3 +136,23 @@ def test_commons_candidate_rejects_pos_and_license_conflicts():
 def test_commons_media_name_and_title_are_deterministic():
     assert gwa.commons_title("StraÃŸe", "ogg") == "File:De-StraÃŸe.ogg"
     assert gwa.media_name("commons", "a" * 64) == f"_goethe_word_commons_{'a' * 64}.mp3"
+
+
+def test_wiktionary_audio_candidates_use_german_section_and_prefer_germany():
+    parsed = {"revid": 123, "text": {"*": """
+        <div class='mw-heading'><h2 id='German'>German</h2></div>
+        <h3 id='Pronunciation'>Pronunciation</h3>
+        <ul>
+          <li>Audio:<audio data-mwtitle='De-dritte.ogg'></audio></li>
+          <li>Audio (Germany):<audio data-mwtitle='De-dritte2.ogg'></audio></li>
+        </ul>
+        <div class='mw-heading'><h2 id='Italian'>Italian</h2></div>
+        <audio data-mwtitle='De-italian.ogg'></audio>
+    """}}
+    candidates = gwa.wiktionary_audio_candidates(parsed, "dritte")
+    assert [item["title"] for item in candidates] == ["File:De-dritte2.ogg", "File:De-dritte.ogg"]
+
+
+def test_wiktionary_audio_candidates_require_german_section():
+    parsed = {"text": {"*": "<div class='mw-heading'><h2 id='Italian'>Italian</h2></div><audio data-mwtitle='De-test.ogg'></audio>"}}
+    assert gwa.wiktionary_audio_candidates(parsed, "test") == []

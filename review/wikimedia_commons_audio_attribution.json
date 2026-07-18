@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_utc": "2026-07-15T00:56:01.462215+00:00",
+  "generated_utc": "2026-07-18T06:29:08.561346+00:00",
   "notice": "This file must accompany any redistributed APKG containing the referenced Wikimedia Commons audio.",
   "items": [
     {
@@ -970,6 +970,20 @@
       "checked_utc": "2026-07-13T00:59:24.005153+00:00"
     },
     {
+      "sha256": "84c803f92d603c22d3dd5bb0094d7c46a303d1a6ba21c158255d5aa3195aaaec",
+      "spoken_text": "dritte",
+      "title": "File:De-dritte.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-dritte.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/3/37/De-dritte.ogg",
+      "artist": "Kampy",
+      "credit": "Own work",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 3.0",
+      "checked_utc": "2026-07-17T13:29:36.631974+00:00"
+    },
+    {
       "sha256": "9a6f3e31723cc264fe3da98a124812d56c5648dbdf2490f4e8e0f14ad18f69d1",
       "spoken_text": "drittens",
       "title": "File:De-drittens.ogg",
@@ -1194,6 +1208,20 @@
       "checked_utc": "2026-07-15T00:52:27.638953+00:00"
     },
     {
+      "sha256": "df0e81c9f5c1868ef603906500265e0c7d77699096a271a805d1ec02f9f09399",
+      "spoken_text": "eins",
+      "title": "File:De-eins2.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-eins2.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/f/fd/De-eins2.ogg",
+      "artist": "Jeuwre",
+      "credit": "Own work , recorded with Røde NT-USB and Audacity , converted with SoX (Sound eXchange audio editing software)",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
+      "checked_utc": "2026-07-17T13:48:11.092580+00:00"
+    },
+    {
       "sha256": "ca97e12c8ea8f66336a5ebcb89c7288f9214dab550a7ed70d0c5461df63aee11",
       "spoken_text": "eintausend",
       "title": "File:De-eintausend.ogg",
@@ -1332,6 +1360,20 @@
       "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
       "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
       "checked_utc": "2026-07-13T01:01:27.521765+00:00"
+    },
+    {
+      "sha256": "2231adf81400fdda857c17f3381e1aa243de1503eb4156b1cec48067995893f0",
+      "spoken_text": "erste",
+      "title": "File:De-erste.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-erste.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/7/72/De-erste.ogg",
+      "artist": "Kampy",
+      "credit": "Own work",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 3.0",
+      "checked_utc": "2026-07-17T13:29:40.082917+00:00"
     },
     {
       "sha256": "f367c2687a0e8aea2ea4e2f8051e42ba5308365511a465beb894cccdbb16024d",
@@ -1696,6 +1738,20 @@
       "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
       "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
       "checked_utc": "2026-07-15T00:52:46.299443+00:00"
+    },
+    {
+      "sha256": "27c988e1002644f4469870c8a6a41f386530bab7291749cc9befdffbcb794f71",
+      "spoken_text": "Gramm",
+      "title": "File:De-Gramm.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-Gramm.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/f/f0/De-Gramm.ogg",
+      "artist": "Jeuwre",
+      "credit": "Own work",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
+      "checked_utc": "2026-07-18T06:25:47.975738+00:00"
     },
     {
       "sha256": "571560523ee67638bb5af0beb2bdb18992c9a4d0b6893acd00d48fa8f5b4ddbe",
@@ -2118,6 +2174,20 @@
       "checked_utc": "2026-07-13T01:00:03.304926+00:00"
     },
     {
+      "sha256": "a389421ab9dd35b73d5dfc26585d25e032f147339afe7d5c9fb709dbc2eefbf3",
+      "spoken_text": "Kaufmann",
+      "title": "File:De-Kaufmann.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-Kaufmann.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/b/bf/De-Kaufmann.ogg",
+      "artist": "Jeuwre",
+      "credit": "Own work , recorded with Rode NT-USB, converted with Audacity",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
+      "checked_utc": "2026-07-17T13:48:07.700890+00:00"
+    },
+    {
       "sha256": "353df0958d0d7a3b04ec7937c42abf0e59826efa11f671ad5dab087fa371bd4e",
       "spoken_text": "Ketchup",
       "title": "File:De-Ketchup.ogg",
@@ -2144,6 +2214,34 @@
       "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
       "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
       "checked_utc": "2026-07-15T00:55:29.638976+00:00"
+    },
+    {
+      "sha256": "3b094c80afa509ed8ea6c187e57f34d65876560563661bc4b1508d485c80255b",
+      "spoken_text": "Kilogramm",
+      "title": "File:De-Kilogramm.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-Kilogramm.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/9/92/De-Kilogramm.ogg",
+      "artist": "Jeuwre",
+      "credit": "Own work , recorded with Rode NT-USB, converted with Audacity",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
+      "checked_utc": "2026-07-18T06:25:56.645692+00:00"
+    },
+    {
+      "sha256": "8fc39f3ed3ca4cc52459280e1d1c925e02a225ba647d4b31b3a744ace1e38727",
+      "spoken_text": "Kilometer",
+      "title": "File:De-Kilometer.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-Kilometer.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/4/48/De-Kilometer.ogg",
+      "artist": "Jeuwre",
+      "credit": "Own work",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
+      "checked_utc": "2026-07-18T06:25:46.613026+00:00"
     },
     {
       "sha256": "b3ac5f4b4297ca2b2a454c8f4246868401a4eefd9a54b15468d8a0fd95b095f3",
@@ -2398,6 +2496,20 @@
       "checked_utc": "2026-07-13T00:59:43.642757+00:00"
     },
     {
+      "sha256": "582348a64335f20caa568acfbbe51d892962afe7d8c6d367238bc5618bef6e7f",
+      "spoken_text": "Liter",
+      "title": "File:De-Liter.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-Liter.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/a/a6/De-Liter.ogg",
+      "artist": "Jeuwre",
+      "credit": "Own work , recorded with Rode NT-USB, converted with Audacity",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
+      "checked_utc": "2026-07-18T06:25:53.919054+00:00"
+    },
+    {
       "sha256": "f11a52e47fa6122d841f7b6929a5308614c891d0e8647be1655b96178ce7b578",
       "spoken_text": "live",
       "title": "File:De-live.ogg",
@@ -2578,6 +2690,20 @@
       "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
       "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
       "checked_utc": "2026-07-13T00:58:52.945303+00:00"
+    },
+    {
+      "sha256": "f0658809a3aed6f5a0da92da7a1df7d3dab6837f1e8927f1aacfa62029399b0c",
+      "spoken_text": "Meter",
+      "title": "File:De-Meter.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-Meter.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/c/c4/De-Meter.ogg",
+      "artist": "Jeuwre",
+      "credit": "Own work",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
+      "checked_utc": "2026-07-18T06:25:44.913048+00:00"
     },
     {
       "sha256": "10a82f9259d9002c303a37642536bdb2fe5ee24704d57f1d926eaf096a26a25f",
@@ -3028,6 +3154,20 @@
       "checked_utc": "2026-07-15T00:54:31.243357+00:00"
     },
     {
+      "sha256": "bf27ed64fdaf96a233ae92a7b3f989e1d3021d9bad6d82425ea1176bd718f705",
+      "spoken_text": "Pfund",
+      "title": "File:De-Pfund.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-Pfund.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/b/b6/De-Pfund.ogg",
+      "artist": "Jeuwre",
+      "credit": "Own work",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
+      "checked_utc": "2026-07-18T06:25:49.550442+00:00"
+    },
+    {
       "sha256": "c470c79ca34ca065ac93e3eacf8378c54557a6ec1b1449e4560146b17763c85a",
       "spoken_text": "Phantasie",
       "title": "File:De-Phantasie.ogg",
@@ -3168,6 +3308,20 @@
       "checked_utc": "2026-07-15T00:51:03.406074+00:00"
     },
     {
+      "sha256": "e65217cada53417aa3b1f6ba7027799ee2dee1c3ca1e8579fed3d5c4bb7e3dbd",
+      "spoken_text": "Prozent",
+      "title": "File:De-Prozent.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-Prozent.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/2/27/De-Prozent.ogg",
+      "artist": "Jeuwre",
+      "credit": "Own work",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
+      "checked_utc": "2026-07-18T06:25:55.270037+00:00"
+    },
+    {
       "sha256": "c5a8adb5b7764ec8e264fd4c91e7aa092f2471daae493a592bd60c05c046b539",
       "spoken_text": "Prüfer",
       "title": "File:De-Prüfer.ogg",
@@ -3194,6 +3348,20 @@
       "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
       "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
       "checked_utc": "2026-07-15T00:54:50.251514+00:00"
+    },
+    {
+      "sha256": "7d6f4c0d3e45808afea2660fea2084ab64bd6fd1cb53de8cb3c990169620184b",
+      "spoken_text": "Quadratmeter",
+      "title": "File:De-Quadratmeter.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-Quadratmeter.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/0/07/De-Quadratmeter.ogg",
+      "artist": "Jeuwre",
+      "credit": "Own work , recorded with Røde NT-USB and Audacity , converted with SoX (Sound eXchange audio editing software)",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
+      "checked_utc": "2026-07-18T06:25:51.137532+00:00"
     },
     {
       "sha256": "83cdcbe78ed449be91d5f1f41e0243c3ff1a4cafda09db63073f0ee8a855ce2b",
@@ -3376,6 +3544,20 @@
       "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
       "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
       "checked_utc": "2026-07-15T00:51:14.749278+00:00"
+    },
+    {
+      "sha256": "e46213a8bff6d0a702018d68e58beada3d274e2fada1c6de1a1341801de97b44",
+      "spoken_text": "Schweiz",
+      "title": "File:De-Schweiz2.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-Schweiz2.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/3/3c/De-Schweiz2.ogg",
+      "artist": "Jeuwre",
+      "credit": "Own work , recorded with Røde NT-USB and Audacity , converted with SoX (Sound eXchange audio editing software)",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
+      "checked_utc": "2026-07-17T13:48:09.623530+00:00"
     },
     {
       "sha256": "8f2f57538b589d27444d77bec9f5815f5386eab56d462514ae2a428ca4688b65",
@@ -4260,6 +4442,20 @@
       "checked_utc": "2026-07-13T00:59:04.271862+00:00"
     },
     {
+      "sha256": "35bfc1b7a0f104874ad30c91ded9b8e701e933b010e8e4eb0428ba5ff22f87a6",
+      "spoken_text": "vierte",
+      "title": "File:De-vierte.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-vierte.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/2/2d/De-vierte.ogg",
+      "artist": "Kampy",
+      "credit": "Own work",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 3.0",
+      "checked_utc": "2026-07-17T13:29:37.903576+00:00"
+    },
+    {
       "sha256": "2268327073e288dcefb6d7bd7b68a79e3f0be6834121a29187001b92232ad703",
       "spoken_text": "viertens",
       "title": "File:De-viertens.ogg",
@@ -4512,6 +4708,20 @@
       "checked_utc": "2026-07-15T00:53:48.200922+00:00"
     },
     {
+      "sha256": "4945fbbb833444e8ca7bde2c316423e72cc91a44f59605fce5b7b1cb03d43157",
+      "spoken_text": "Zentimeter",
+      "title": "File:De-Zentimeter.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-Zentimeter.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/2/24/De-Zentimeter.ogg",
+      "artist": "Jeuwre",
+      "credit": "Own work",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
+      "checked_utc": "2026-07-18T06:25:52.542203+00:00"
+    },
+    {
       "sha256": "d605ee464c1962b34048e9df68608230ff65caa74acb76dd56930dc9812b0f88",
       "spoken_text": "Zivilstand",
       "title": "File:De-Zivilstand.ogg",
@@ -4622,6 +4832,20 @@
       "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
       "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
       "checked_utc": "2026-07-13T01:01:16.170645+00:00"
+    },
+    {
+      "sha256": "9f24ed28a478b2c086a348a6cba979c824210730576d16c8dddda154d9e078fa",
+      "spoken_text": "zweite",
+      "title": "File:De-zweite.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-zweite.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/0/04/De-zweite.ogg",
+      "artist": "Kampy",
+      "credit": "Own work",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 3.0",
+      "checked_utc": "2026-07-17T13:29:38.993391+00:00"
     },
     {
       "sha256": "42ffc6b7543ff4cd8c07590a0cef947afb34ead5cd9a5b85dfe5876013acafe9",

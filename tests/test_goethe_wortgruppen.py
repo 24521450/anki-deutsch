@@ -76,7 +76,9 @@ def test_a1_a2_enrichment_covers_all_wortgruppen_only_notes() -> None:
             validator.SOURCE_DIR / f"Goethe_{level}_Wortgruppen.md", level,
         )
         actual.update(row["ID"] for row in inventory if row["Canonical Lemma"])
-    assert actual == expected
+    # Enrichment is required for every note whose provenance is exclusively a
+    # Wortgruppe row. Reviewed merges may also enrich mixed-source survivors.
+    assert expected <= actual
 
 
 def test_stundenplan_enrichment_is_complete() -> None:

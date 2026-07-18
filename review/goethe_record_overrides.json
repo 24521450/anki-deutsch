@@ -19,6 +19,19 @@
     "A1-84887177194": {"set": {"FormOrVariantNote": "ordinal number", "AcceptedAnswersDE": "erste", "AcceptedFullAnswersDE": "erste"}},
     "A1-84887177195": {"set": {"FormOrVariantNote": "ordinal number", "AcceptedAnswersDE": "zweite", "AcceptedFullAnswersDE": "zweite"}},
     "A1-84887177196": {"set": {"FormOrVariantNote": "ordinal number", "AcceptedAnswersDE": "dritte", "AcceptedFullAnswersDE": "dritte"}},
-    "A1-84887177197": {"set": {"FormOrVariantNote": "ordinal number", "AcceptedAnswersDE": "vierte", "AcceptedFullAnswersDE": "vierte"}}
+    "A1-84887177197": {"set": {"FormOrVariantNote": "ordinal number", "AcceptedAnswersDE": "vierte", "AcceptedFullAnswersDE": "vierte"}},
+    "A1-84887177259": {
+      "expected": {"MeaningEN": "one pound"},
+      "set": {
+        "MeaningEN": "pound",
+        "UsageNoteEN": "In German weight usage, one Pfund equals 500 grams."
+      }
+    },
+    "A1-84887177260": {
+      "set": {
+        "AcceptedAnswersDE": "Kilogramm|Kilo",
+        "AcceptedFullAnswersDE": "das Kilogramm|das Kilo"
+      }
+    }
   }
 }
