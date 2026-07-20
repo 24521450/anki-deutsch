@@ -321,7 +321,7 @@ def test_production_card_omits_redundant_instruction_labels():
         assert label not in back
 
 
-def test_english_back_runtime_grades_optional_sein_and_articles():
+def test_english_back_runtime_grades_terminal_sein_and_articles():
     node = shutil.which("node")
     if not node:
         pytest.skip("Node.js is required for the typed-answer JavaScript regression test")
@@ -330,7 +330,7 @@ def test_english_back_runtime_grades_optional_sein_and_articles():
     harness = r'''
 const vm = require("vm");
 const checker = CHECKER;
-function grade(raw, lemma, acceptedAnswers, acceptedArticles, article) {
+function gradeState(raw, lemma, acceptedAnswers, acceptedArticles, article) {
   const values = {
     "gw-source-id": "test", "gw-lemma": lemma,
     "gw-accepted-answers": acceptedAnswers, "gw-accepted-articles": acceptedArticles,
@@ -355,7 +355,10 @@ function grade(raw, lemma, acceptedAnswers, acceptedArticles, article) {
   };
   context.globalThis = context;
   vm.runInNewContext(checker, context);
-  return classes.has("gw-correct");
+  return result.dataset.resultState;
+}
+function grade(raw, lemma, acceptedAnswers, acceptedArticles, article) {
+  return gradeState(raw, lemma, acceptedAnswers, acceptedArticles, article) === "correct";
 }
 [
   "dabei sein", "dagegen sein", "dafür sein", "einverstanden sein",
@@ -363,13 +366,33 @@ function grade(raw, lemma, acceptedAnswers, acceptedArticles, article) {
   "unterwegs sein", "verabredet sein", "verboten sein"
 ].forEach(function (answer) {
   const core = answer.replace(/ sein$/, "");
-      if (grade(core, answer, answer, "", "")) throw new Error("bare state marked exact: " + answer);
-      if (!grade(answer, answer, answer, "", "")) throw new Error("full state rejected: " + answer);
+  if (gradeState(core, answer, answer, "", "") !== "partial") throw new Error("bare state not amber: " + answer);
+  if (!grade(answer, answer, answer, "", "")) throw new Error("full state rejected: " + answer);
+  if (!grade(core + " s", answer, answer, "", "")) throw new Error("abbreviated state rejected: " + answer);
 });
-    if (grade("erkaeltet", "erkältet sein", "erkältet sein", "", "")) throw new Error("transliterated state marked exact");
+if (!grade("erkaeltet sein", "erkältet sein", "erkältet sein", "", "")) throw new Error("full transliterated state rejected");
+if (!grade("erkaeltet s", "erkältet sein", "erkältet sein", "", "")) throw new Error("abbreviated transliterated state rejected");
+if (gradeState("erkaeltet", "erkältet sein", "erkältet sein", "", "") !== "partial") throw new Error("bare transliterated state not amber");
+[
+  ["fussball", "Fußball"], ["aepfel", "Äpfel"], ["schoen", "schön"],
+  ["fuer", "für"], ["gruessen", "grüßen"]
+].forEach(function (pair) {
+  if (!grade(pair[0], pair[1], pair[1], "", "")) throw new Error("German ASCII equivalent rejected: " + pair.join(" / "));
+});
+if (grade("fur", "für", "für", "", "")) throw new Error("missing transliteration letter accepted");
+["unser-", "unser", "unsere", "unserer", "unseres", "unserem", "unseren", "unsers"].forEach(function (answer) {
+  if (!grade(answer, "unser-", "unser-", "", "")) throw new Error("trailing-hyphen form rejected: " + answer);
+});
+["unserxyz", "unser-foo"].forEach(function (answer) {
+  if (grade(answer, "unser-", "unser-", "", "")) throw new Error("arbitrary trailing-hyphen continuation accepted: " + answer);
+});
+if (!grade("naechsten", "nächst-", "nächst-", "", "")) throw new Error("ASCII trailing-hyphen form rejected");
 ["an sein", "aus sein", "auf sein", "weg sein", "zu sein"].forEach(function (answer) {
-  if (grade(answer.replace(/ sein$/, ""), answer, answer, "", "")) throw new Error("short particle accepted: " + answer);
+  const core = answer.replace(/ sein$/, "");
+  if (!grade(core + " s", answer, answer, "", "")) throw new Error("short sein abbreviation rejected: " + answer);
+  if (gradeState(core, answer, answer, "", "") !== "partial") throw new Error("bare short sein phrase not amber: " + answer);
 });
+if (grade("s", "sein", "sein", "", "")) throw new Error("standalone sein incorrectly accepted as s");
 if (!grade("Bett", "Bett", "Bett", "das", "das")) throw new Error("bare noun rejected");
 if (!grade("bett", "Bett", "Bett", "das", "das")) throw new Error("lowercase bare noun rejected");
 if (!grade("das Bett", "Bett", "Bett", "das", "das")) throw new Error("correct article rejected");

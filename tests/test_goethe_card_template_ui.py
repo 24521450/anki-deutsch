@@ -217,9 +217,83 @@ let value = run(base, 'die Fahrrad');
 if (value.state !== 'partial') throw Error('wrong article not amber');
 value = run(base, 'die Katze');
 if (value.state !== 'incorrect' || !value.classes.includes('gw-result--incorrect')) throw Error('wrong lexeme not red');
-const state = Object.assign({{}}, base, {{ 'gw-lemma': 'erkältet sein', 'gw-accepted-answers': 'erkältet sein', 'gw-accepted-full-answers': 'erkältet sein', 'gw-accepted-articles': '', 'gw-article': '' }});
-value = run(state, 'erkaeltet');
-if (value.state !== 'partial') throw Error('optional sein/transliteration not amber');
+for (const [canonical, typed] of [
+  ['Fußball', 'fussball'], ['Äpfel', 'aepfel'], ['schön', 'schoen'],
+  ['für', 'fuer'], ['grüßen', 'gruessen']
+]) {{
+  const fields = Object.assign({{}}, base, {{
+    'gw-lemma': canonical, 'gw-accepted-answers': canonical,
+    'gw-accepted-full-answers': canonical, 'gw-accepted-articles': '', 'gw-article': ''
+  }});
+  value = run(fields, typed);
+  if (value.state !== 'correct' || value.title !== '✓ Correct' || value.classes.includes('gw-result--partial')) {{
+    throw Error('German ASCII equivalent not green: ' + canonical + ' / ' + typed);
+  }}
+}}
+for (const [canonical, typed] of [['für', 'fur'], ['grüßen', 'grussen']]) {{
+  const fields = Object.assign({{}}, base, {{
+    'gw-lemma': canonical, 'gw-accepted-answers': canonical,
+    'gw-accepted-full-answers': canonical, 'gw-accepted-articles': '', 'gw-article': ''
+  }});
+  value = run(fields, typed);
+  if (value.state !== 'incorrect') throw Error('missing transliteration letter accepted: ' + typed);
+}}
+const trailingHyphen = Object.assign({{}}, base, {{
+  'gw-lemma': 'unser-', 'gw-accepted-answers': 'unser-',
+  'gw-accepted-full-answers': 'unser-', 'gw-accepted-articles': '', 'gw-article': ''
+}});
+for (const answer of ['unser-', 'unser', 'unsere', 'unserer', 'unseres', 'unserem', 'unseren', 'unsers']) {{
+  value = run(trailingHyphen, answer);
+  if (value.state !== 'correct' || value.title !== '✓ Correct' || value.classes.includes('gw-result--partial')) {{
+    throw Error('trailing-hyphen form not green: ' + answer);
+  }}
+}}
+for (const answer of ['unserxyz', 'unser-foo']) {{
+  value = run(trailingHyphen, answer);
+  if (value.state !== 'incorrect') throw Error('arbitrary trailing-hyphen continuation accepted: ' + answer);
+}}
+const internalHyphen = Object.assign({{}}, base, {{
+  'gw-lemma': 'E-Mail', 'gw-accepted-answers': 'E-Mail',
+  'gw-accepted-full-answers': 'E-Mail', 'gw-accepted-articles': '', 'gw-article': ''
+}});
+value = run(internalHyphen, 'Email');
+if (value.state !== 'incorrect') throw Error('internal hyphen was treated as optional');
+const authoritativeTrailingHyphen = Object.assign({{}}, trailingHyphen, {{
+  'gw-lemma': 'ander-', 'gw-accepted-answers': 'ander|anderen',
+  'gw-accepted-full-answers': 'ander|anderen'
+}});
+for (const answer of ['ander', 'andere', 'anderen']) {{
+  value = run(authoritativeTrailingHyphen, answer);
+  if (value.state !== 'correct') throw Error('authoritative trailing-hyphen form not green: ' + answer);
+}}
+const umlautTrailingHyphen = Object.assign({{}}, trailingHyphen, {{
+  'gw-lemma': 'nächst-', 'gw-accepted-answers': 'nächst-',
+  'gw-accepted-full-answers': 'nächst-'
+}});
+value = run(umlautTrailingHyphen, 'naechsten');
+if (value.state !== 'correct') throw Error('ASCII trailing-hyphen form not green');
+for (const [canonical, correctAnswers, partialAnswers] of [
+  ['erkältet sein', ['erkältet sein', 'erkältet s', 'erkaeltet sein', 'erkaeltet s'], ['erkältet', 'erkaeltet']],
+  ['an sein', ['an sein', 'an s'], ['an']]
+]) {{
+  const fields = Object.assign({{}}, base, {{
+    'gw-lemma': canonical, 'gw-accepted-answers': canonical,
+    'gw-accepted-full-answers': canonical, 'gw-accepted-articles': '', 'gw-article': ''
+  }});
+  for (const answer of correctAnswers) {{
+    value = run(fields, answer);
+    if (value.state !== 'correct' || value.title !== '✓ Correct') throw Error('terminal sein answer not green: ' + answer);
+  }}
+  for (const answer of partialAnswers) {{
+    value = run(fields, answer);
+    if (value.state !== 'partial' || value.title !== '△ Check') throw Error('missing terminal sein not amber: ' + answer);
+  }}
+}}
+const standaloneSein = Object.assign({{}}, base, {{ 'gw-lemma': 'sein', 'gw-accepted-answers': 'sein', 'gw-accepted-full-answers': 'sein', 'gw-accepted-articles': '', 'gw-article': '' }});
+value = run(standaloneSein, 's');
+if (value.state !== 'incorrect') throw Error('standalone sein incorrectly accepted as s');
+value = run(Object.assign({{}}, standaloneSein, {{ 'gw-lemma': 'erkältet sein', 'gw-accepted-answers': 'erkältet sein', 'gw-accepted-full-answers': 'erkältet sein' }}), 'erkältet ss');
+if (value.state !== 'incorrect') throw Error('invalid terminal sein abbreviation accepted');
 const phrase = Object.assign({{}}, base, {{ 'gw-lemma': 'Das macht nichts.', 'gw-accepted-answers': 'Das macht nichts.', 'gw-accepted-full-answers': 'Das macht nichts.', 'gw-accepted-articles': '', 'gw-article': '' }});
 value = run(phrase, 'der macht nichts');
 if (value.state !== 'incorrect') throw Error('fixed phrase treated as article-bearing');

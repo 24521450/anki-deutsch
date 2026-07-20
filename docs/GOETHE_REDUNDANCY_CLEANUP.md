@@ -41,6 +41,8 @@ SHA-256:
 ## Open items
 
 - Generated audio belonging exclusively to deleted mechanical drills remains ordinary orphan-media cleanup work; it was not deleted during this note/card cleanup.
-- B1 was outside this audit and cleanup.
+- B1 was outside this historical audit and cleanup. The artifact is retained
+  for provenance only; the active A1-A2-B1 completion pipeline applies the
+  lowest-level survivor policy and its guarded B1 release gate.
 
 All destructive operations were performed through AnkiConnect; `collection.anki2` was not edited.

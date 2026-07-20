@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -11,6 +12,7 @@ if str(TOOLS) not in sys.path:
     sys.path.insert(0, str(TOOLS))
 
 import goethe_word_audio as gwa  # noqa: E402
+import goethe_b1_media as b1_media  # noqa: E402
 
 
 def fields(**values):
@@ -27,10 +29,16 @@ def item(level, row, word="Bahnhof", sha="same", pos="n.", gender="m."):
 
 
 def test_select_local_duden_prefers_a1_for_same_lexeme():
-    a1, a2 = item("A1", 80), item("A2", 99)
-    by_ref = {("A1", 80): a1, ("A2", 99): a2}
-    index = {"Bahnhof": [a2, a1]}
+    a1, a2, b1 = item("A1", 80), item("A2", 99), item("B1", 120)
+    by_ref = {("A1", 80): a1, ("A2", 99): a2, ("B1", 120): b1}
+    index = {"Bahnhof": [b1, a2, a1]}
     assert gwa.select_local_duden(fields(), by_ref, index) is a1
+
+
+def test_select_local_duden_supports_b1_main_refs_and_three_level_precedence():
+    a2, b1 = item("A2", 99), item("B1", 120)
+    target = fields(SourceRefs="B1-MAIN-0120|A2-MAIN-0099", CEFR="B1")
+    assert gwa.select_local_duden(target, {("A2", 99): a2, ("B1", 120): b1}, {}) is a2
 
 
 def test_select_local_duden_rejects_pos_conflict():
@@ -63,6 +71,35 @@ def test_spoken_text_requires_override_for_notation():
 def test_edge_audio_id_is_deterministic_and_case_sensitive():
     assert gwa.edge_audio_id("Bahnhof") == gwa.edge_audio_id("Bahnhof")
     assert gwa.edge_audio_id("Bahnhof") != gwa.edge_audio_id("bahnhof")
+
+
+def test_console_text_escapes_unicode_that_windows_cp1252_cannot_encode():
+    assert gwa.console_text("one third: ⅓", "cp1252") == "one third: \\u2153"
+
+
+def test_b1_spoken_overrides_cover_reviewed_notation_by_source_id():
+    overrides = gwa.load_overrides()
+    assert gwa.spoken_text(
+        fields(
+            Lemma="1 dkg oder dag (= 10 g)", CEFR="B1",
+            SourceRefs="B1-WG-0253",
+        ),
+        "1 dkg oder dag (= 10 g)",
+        overrides,
+    ) == "ein Dekagramm oder zehn Gramm"
+    assert overrides["B1-MAIN-1742"] == "Nordsee, Ostsee"
+    assert overrides["B1-WG-0161"] == "hell, dunkel"
+
+
+def test_every_current_b1_unsafe_spoken_form_has_a_source_override():
+    overrides = gwa.load_overrides()
+    rows = [
+        json.loads(line)
+        for line in (ROOT / "review" / "goethe_english_audit_v4.jsonl").read_text(encoding="utf-8").splitlines()
+    ]
+    unsafe = [row["source_id"] for row in rows if row["cefr"] == "B1" and gwa.UNSAFE_SPOKEN_RE.search(row["lemma"])]
+    assert unsafe
+    assert set(unsafe) <= set(overrides)
 
 
 def test_update_word_audio_only_writes_word_audio(monkeypatch):
@@ -156,3 +193,38 @@ def test_wiktionary_audio_candidates_use_german_section_and_prefer_germany():
 def test_wiktionary_audio_candidates_require_german_section():
     parsed = {"text": {"*": "<div class='mw-heading'><h2 id='Italian'>Italian</h2></div><audio data-mwtitle='De-test.ogg'></audio>"}}
     assert gwa.wiktionary_audio_candidates(parsed, "test") == []
+
+
+def test_duden_manifest_validator_requires_strict_duden_schema(monkeypatch):
+    monkeypatch.setitem(gwa.scope.DUDEN_ROWS, "B1", 1)
+    row = {
+        "row": 1, "word": "Bahnhof", "pos": "n.", "gender": "m.",
+        "output_filename": "0001_bahnhof.mp3", "source": "duden", "status": "unresolved",
+    }
+    gwa.validate_duden_rows("B1", [row])
+    with pytest.raises(gwa.WordAudioError, match="incompatible schema"):
+        gwa.validate_duden_rows("B1", [{key: value for key, value in row.items() if key != "source"}])
+
+
+def test_word_manifest_rejects_pre_b1_schema():
+    with pytest.raises(gwa.WordAudioError, match="schema is stale"):
+        gwa.validate_manifest({"schema_version": 2})
+
+
+def test_word_pilot_covers_all_levels():
+    notes = {}
+    note_id = 1
+    for level in gwa.scope.LEVELS:
+        for source in ("duden_local", "edge", "commons", "wiktionary"):
+            notes[str(note_id)] = {
+                "note_id": note_id, "level": level, "old_word_audio": "",
+                "assignment": {"source": source},
+            }
+            note_id += 1
+    selected = set(gwa.pilot_ids({"notes": notes}))
+    assert {notes[str(note_id)]["level"] for note_id in selected} == set(gwa.scope.LEVELS)
+
+
+def test_b1_media_shim_fails_fast_with_exactly_two_workflows(capsys):
+    assert b1_media.main([]) == 2
+    assert capsys.readouterr().err.splitlines() == [b1_media.WORD_WORKFLOW, b1_media.EXAMPLE_WORKFLOW]

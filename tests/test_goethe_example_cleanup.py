@@ -11,7 +11,6 @@ sys.path.insert(0, str(ROOT / "tools"))
 import goethe_example_cleanup as cleanup  # noqa: E402
 import goethe_examples  # noqa: E402
 import goethe_source_examples as source_examples  # noqa: E402
-import export_goethe_notes_jsonl as note_export  # noqa: E402
 
 
 def fields(level: str, rows: list[dict[str, str]]) -> dict[str, str]:
@@ -24,6 +23,7 @@ def test_reviewed_overrides_define_canonical_level_whitelists():
     allowed = source_examples.allowed_examples_by_level()
     assert len(allowed["A1"]) == 872
     assert len(allowed["A2"]) == 1835
+    assert len(allowed["B1"]) == 4554
     assert source_examples.sentence_key("Im Zug fahre ich immer 2. Klasse.") in allowed["A1"]
     assert source_examples.sentence_key("Im Zug fahre ich immer 2.") not in allowed["A1"]
     assert source_examples.sentence_key("Ich finde den Film schrecklich. Er macht mir Angst.") in allowed["A2"]
@@ -86,8 +86,19 @@ def test_update_notes_sends_only_partial_example_fields(monkeypatch):
 def test_example_audio_baseline_matches_cleanup_projection():
     import goethe_example_audio
 
-    assert goethe_example_audio.EXPECTED_OCCURRENCES == 2009
-    assert goethe_example_audio.EXPECTED_UNIQUE == 1923
+    assert (
+        goethe_example_audio.EXPECTED_OCCURRENCES
+        == cleanup.EXPECTED_REMAINING
+        == cleanup.scope.EXPECTED_EXAMPLE_OCCURRENCES
+        == 4318
+    )
+    assert (
+        goethe_example_audio.EXPECTED_UNIQUE
+        == cleanup.scope.EXPECTED_UNIQUE_EXAMPLE_AUDIO
+        == 4153
+    )
+    assert cleanup.EXPECTED_EMPTY_BY_LEVEL == cleanup.scope.EXPECTED_EMPTY_NOTES_BY_LEVEL
+    assert cleanup.EXPECTED_EMPTY_BY_LEVEL["B1"] == 199
 
 
 def test_exported_examples_obey_the_level_source_policy():
@@ -97,6 +108,7 @@ def test_exported_examples_obey_the_level_source_policy():
         for line in (ROOT / "data" / "build" / "anki_notes.jsonl").read_text(encoding="utf-8").splitlines()
     ]
     examples = [(row["cefr"], item["de"]) for row in rows for item in row["examples"]]
-    assert len(rows) == note_export.EXPECTED_NOTES
-    assert len(examples) == 2009
+    assert len(rows) == cleanup.scope.EXPECTED_NOTES
+    assert {row["cefr"] for row in rows} == set(cleanup.scope.LEVELS)
+    assert len(examples) == cleanup.EXPECTED_REMAINING
     assert all(source_examples.sentence_key(sentence) in allowed[level] for level, sentence in examples)

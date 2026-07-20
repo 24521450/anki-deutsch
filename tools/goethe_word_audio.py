@@ -1,6 +1,6 @@
-"""Prepare and safely wire Goethe A1/A2 word audio into Anki.
+"""Prepare and safely wire Goethe A1-B1 word audio into Anki.
 
-Source precedence is validated Duden (A1 before A2), newly resolved exact
+Source precedence is validated Duden (A1 before A2 before B1), newly resolved exact
 Duden audio, exact Wikimedia Commons pronunciation, Wiktionary pronunciation,
 then Edge TTS.  The only
 Anki note field this tool writes is ``WordAudio``.
@@ -30,6 +30,8 @@ from lxml import html as lxml_html
 
 import download_duden_a1_audio as duden
 import goethe_completion as completion
+import goethe_apkg as apkg
+import goethe_scope as scope
 import goethe_werkstatt_migrate as gw
 
 
@@ -50,7 +52,8 @@ OVERRIDES_PATH = ROOT / "review" / "goethe_word_audio_overrides.json"
 COMMONS_ATTRIBUTION_PATH = ROOT / "review" / "wikimedia_commons_audio_attribution.json"
 MODEL = "Goethe Werkstatt"
 PARENT_DECK = "Goethe Institute"
-LEVEL_DECKS = {"A1": gw.A1_DECK, "A2": gw.A2_DECK}
+LEVEL_DECKS = scope.LEVEL_DECK
+MANIFEST_SCHEMA_VERSION = 3
 APPLY_CONFIRMATION = "APPLY_GOETHE_WORD_AUDIO"
 ROLLBACK_CONFIRMATION = "ROLLBACK_GOETHE_WORD_AUDIO"
 EDGE_CONFIG = {
@@ -80,6 +83,10 @@ WIKTIONARY_CONFIG = {
 }
 SOURCE_FIELDS = ("Lemma", "POS", "Gender", "AcceptedAnswersDE", "SourceRefs", "CEFR")
 PILOT_SIZE = 12
+DUDEN_REQUIRED_FIELDS = frozenset({
+    "row", "word", "pos", "gender", "output_filename", "source", "status",
+})
+DUDEN_STABLE_STATUSES = frozenset({"ok", "unresolved"})
 
 
 class WordAudioError(RuntimeError):
@@ -92,6 +99,12 @@ def now_utc() -> str:
 
 def clean(value: Any) -> str:
     return unicodedata.normalize("NFC", re.sub(r"\s+", " ", html.unescape(str(value or ""))).strip())
+
+
+def console_text(value: Any, encoding: str | None = None) -> str:
+    """Return progress text that cannot crash on a legacy Windows console."""
+    target = encoding or getattr(sys.stdout, "encoding", None) or "utf-8"
+    return str(value).encode(target, errors="backslashreplace").decode(target)
 
 
 def canonical_hash(value: Any) -> str:
@@ -147,10 +160,10 @@ def live_records() -> dict[int, dict[str, Any]]:
         note_id = int(note["noteId"])
         level = field(note, "CEFR")
         if level not in LEVEL_DECKS:
-            continue
+            raise WordAudioError(f"Goethe note has unsupported CEFR: {note_id}={level!r}")
         note_cards = by_note.get(note_id, [])
         if not note_cards:
-            raise WordAudioError(f"target note has no A1/A2 cards: {note_id}")
+            raise WordAudioError(f"target note has no A1-B1 cards: {note_id}")
         if any(card["deckName"] != LEVEL_DECKS[level] for card in note_cards):
             raise WordAudioError(f"target note is in unexpected deck: {note_id}")
         records[note_id] = {
@@ -162,6 +175,14 @@ def live_records() -> dict[int, dict[str, Any]]:
         }
     if any(len(item["cards"]) != 2 for item in records.values()):
         raise WordAudioError("every target note must have exactly two cards")
+    note_counts = Counter(item["fields"]["CEFR"] for item in records.values())
+    card_counts = Counter(
+        item["fields"]["CEFR"] for item in records.values() for _ in item["cards"]
+    )
+    if dict(note_counts) != scope.EXPECTED_NOTES_BY_LEVEL:
+        raise WordAudioError(f"Goethe note baseline drift: {dict(note_counts)}")
+    if dict(card_counts) != scope.EXPECTED_CARDS_BY_LEVEL:
+        raise WordAudioError(f"Goethe card baseline drift: {dict(card_counts)}")
     return records
 
 
@@ -209,16 +230,38 @@ def validate_audio(path: Path, sha256: str | None = None, size: int | None = Non
     return actual_size, actual_hash
 
 
+def validate_duden_rows(level: str, rows: list[dict[str, Any]]) -> None:
+    expected = scope.DUDEN_ROWS[level]
+    if len(rows) != expected:
+        raise WordAudioError(f"{level} Duden manifest row count mismatch: {len(rows)} != {expected}")
+    for expected_row, item in enumerate(rows, 1):
+        if not isinstance(item, dict) or not DUDEN_REQUIRED_FIELDS.issubset(item):
+            raise WordAudioError(f"{level} Duden manifest row {expected_row} has an incompatible schema")
+        if item.get("row") != expected_row:
+            raise WordAudioError(f"{level} Duden manifest row sequence mismatch at {expected_row}")
+        if not all(isinstance(item.get(name), str) for name in ("word", "pos", "gender", "output_filename", "source", "status")):
+            raise WordAudioError(f"{level} Duden manifest row {expected_row} has invalid field types")
+        if not clean(item["word"]) or item["source"].casefold() != "duden":
+            raise WordAudioError(f"{level} Duden manifest row {expected_row} is not a Duden source row")
+        if item["status"] not in DUDEN_STABLE_STATUSES:
+            raise WordAudioError(f"{level} Duden manifest row {expected_row} has invalid status")
+        if not item["output_filename"].endswith(".mp3"):
+            raise WordAudioError(f"{level} Duden manifest row {expected_row} has invalid output filename")
+        if item["status"] == "ok":
+            if not isinstance(item.get("size"), int) or item["size"] <= 0:
+                raise WordAudioError(f"{level} Duden manifest row {expected_row} has invalid audio size")
+            if not re.fullmatch(r"[0-9a-f]{64}", str(item.get("sha256") or "")):
+                raise WordAudioError(f"{level} Duden manifest row {expected_row} has invalid audio hash")
+
+
 def load_duden_catalog() -> tuple[dict[tuple[str, int], dict[str, Any]], dict[str, list[dict[str, Any]]]]:
     by_ref: dict[tuple[str, int], dict[str, Any]] = {}
     ok_index: dict[str, list[dict[str, Any]]] = defaultdict(list)
-    for level in ("A1", "A2"):
+    for level in scope.LEVELS:
         root = ROOT / "audio" / level.lower()
         manifest_path = root / "words_manifest.jsonl"
         rows = duden.load_existing_manifest_rows(manifest_path)
-        expected = 685 if level == "A1" else 1147
-        if len(rows) != expected:
-            raise WordAudioError(f"{level} Duden manifest row count mismatch")
+        validate_duden_rows(level, rows)
         for item in rows:
             row = dict(item)
             row.update({"level": level, "path": str(root / "words" / item["output_filename"])})
@@ -229,7 +272,11 @@ def load_duden_catalog() -> tuple[dict[tuple[str, int], dict[str, Any]], dict[st
     return by_ref, ok_index
 
 
-MAIN_RE = re.compile(r"^(A[12])-MAIN-(\d{4})$")
+MAIN_RE = re.compile(r"^(A1|A2|B1)-MAIN-(\d{4})$")
+
+
+def duden_sort_key(item: dict[str, Any]) -> tuple[int, int]:
+    return scope.LEVEL_RANK[item["level"]], int(item["row"])
 
 
 def select_local_duden(fields: dict[str, str], by_ref: dict[tuple[str, int], dict[str, Any]], ok_index: dict[str, list[dict[str, Any]]]) -> dict[str, Any] | None:
@@ -243,14 +290,14 @@ def select_local_duden(fields: dict[str, str], by_ref: dict[tuple[str, int], dic
         if item and item.get("status") == "ok" and source_matches(fields, item, variants):
             direct.append(item)
     if direct:
-        return sorted(direct, key=lambda item: (item["level"] != "A1", int(item["row"])))[0]
+        return min(direct, key=duden_sort_key)
     candidates = list({
         (item["level"], int(item["row"])): item
         for variant in variants for item in ok_index.get(variant, []) if source_matches(fields, item, variants)
     }.values())
     if not candidates:
         return None
-    candidates.sort(key=lambda item: (item["level"] != "A1", int(item["row"])))
+    candidates.sort(key=duden_sort_key)
     best_level = candidates[0]["level"]
     best = [item for item in candidates if item["level"] == best_level]
     hashes = {item.get("sha256") for item in best}
@@ -267,7 +314,7 @@ def source_word(fields: dict[str, str], by_ref: dict[tuple[str, int], dict[str, 
         if match:
             item = by_ref.get((match.group(1), int(match.group(2))))
             if item and source_matches(fields, item, variants):
-                choices.append((match.group(1) != "A1", int(match.group(2)), clean(item["word"])))
+                choices.append((scope.LEVEL_RANK[match.group(1)], int(match.group(2)), clean(item["word"])))
     if choices:
         return sorted(choices)[0][2]
     return clean(fields.get("Lemma", ""))
@@ -287,7 +334,9 @@ def matched_main_rows(fields: dict[str, str], by_ref: dict[tuple[str, int], dict
 
 
 def load_overrides() -> dict[str, str]:
-    data = load_json(OVERRIDES_PATH, {"spoken_text": {}})
+    data = load_json(OVERRIDES_PATH, {"schema_version": 1, "spoken_text": {}})
+    if data.get("schema_version") != 1:
+        raise WordAudioError("unsupported spoken-text override schema")
     values = data.get("spoken_text", {})
     if not isinstance(values, dict):
         raise WordAudioError("spoken_text overrides must be an object")
@@ -324,6 +373,65 @@ def assignment(source: str, path: Path, *, detail: dict[str, Any]) -> dict[str, 
         "media_name": media_name("duden" if source.startswith("duden") else source, sha256),
         "detail": detail,
     }
+
+
+def level_counts(records: dict[int, dict[str, Any]]) -> dict[str, dict[str, int]]:
+    return {
+        level: {
+            "notes": sum(record["fields"].get("CEFR") == level for record in records.values()),
+            "cards": sum(
+                len(record["cards"])
+                for record in records.values()
+                if record["fields"].get("CEFR") == level
+            ),
+        }
+        for level in scope.LEVELS
+    }
+
+
+def expected_level_counts() -> dict[str, dict[str, int]]:
+    return {
+        level: {
+            "notes": scope.EXPECTED_NOTES_BY_LEVEL[level],
+            "cards": scope.EXPECTED_CARDS_BY_LEVEL[level],
+        }
+        for level in scope.LEVELS
+    }
+
+
+def validate_manifest(manifest: dict[str, Any], *, require_prepared: bool = False) -> None:
+    if manifest.get("schema_version") != MANIFEST_SCHEMA_VERSION:
+        raise WordAudioError("word-audio manifest schema is stale; rebuild it")
+    if manifest.get("levels") != list(scope.LEVELS):
+        raise WordAudioError("word-audio manifest level set is stale; rebuild it")
+    if manifest.get("duden_rows") != scope.DUDEN_ROWS:
+        raise WordAudioError("word-audio Duden catalog contract is stale; rebuild it")
+    if manifest.get("duden_statuses") != sorted(DUDEN_STABLE_STATUSES):
+        raise WordAudioError("word-audio Duden status contract is stale; rebuild it")
+    if manifest.get("edge_config") != EDGE_CONFIG or manifest.get("commons_config") != COMMONS_CONFIG:
+        raise WordAudioError("word-audio generator config is stale; rebuild it")
+    if manifest.get("wiktionary_config") != WIKTIONARY_CONFIG:
+        raise WordAudioError("word-audio Wiktionary config is stale; rebuild it")
+    if manifest.get("source_order") != ["duden_local", "duden_extra", "commons", "wiktionary", "edge"]:
+        raise WordAudioError("word-audio source precedence is stale; rebuild it")
+    if manifest.get("duden_level_order") != list(scope.LEVELS):
+        raise WordAudioError("word-audio Duden level precedence is stale; rebuild it")
+    if manifest.get("note_count") != scope.EXPECTED_NOTES or manifest.get("card_count") != scope.EXPECTED_CARDS:
+        raise WordAudioError("word-audio manifest corpus totals are stale; rebuild it")
+    if manifest.get("level_counts") != expected_level_counts():
+        raise WordAudioError("word-audio manifest per-level counts are stale; rebuild it")
+    notes = manifest.get("notes")
+    if not isinstance(notes, dict) or len(notes) != scope.EXPECTED_NOTES:
+        raise WordAudioError("word-audio manifest note set is incomplete")
+    actual = Counter(item.get("level") for item in notes.values() if isinstance(item, dict))
+    if dict(actual) != scope.EXPECTED_NOTES_BY_LEVEL:
+        raise WordAudioError(f"word-audio manifest note levels are invalid: {dict(actual)}")
+    if require_prepared:
+        if not manifest.get("prepared_utc"):
+            raise WordAudioError("word-audio manifest is not prepared")
+        missing = [item.get("note_id") for item in notes.values() if not item.get("assignment")]
+        if missing:
+            raise WordAudioError(f"word-audio manifest has unassigned notes: {missing[:5]}")
 
 
 def build_audit() -> dict[str, Any]:
@@ -369,16 +477,24 @@ def build_audit() -> dict[str, Any]:
                 counts["missing_override"] += 1
         notes[str(note_id)] = note_item
     manifest = {
-        "schema_version": 2,
+        "schema_version": MANIFEST_SCHEMA_VERSION,
         "created_utc": now_utc(),
+        "levels": list(scope.LEVELS),
+        "level_counts": level_counts(records),
+        "duden_rows": dict(scope.DUDEN_ROWS),
+        "duden_statuses": sorted(DUDEN_STABLE_STATUSES),
         "edge_config": EDGE_CONFIG,
         "commons_config": COMMONS_CONFIG,
+        "wiktionary_config": WIKTIONARY_CONFIG,
         "source_order": ["duden_local", "duden_extra", "commons", "wiktionary", "edge"],
+        "duden_level_order": list(scope.LEVELS),
         "note_count": len(notes),
+        "card_count": sum(len(record["cards"]) for record in records.values()),
         "counts": dict(counts),
         "missing_overrides": missing_overrides,
         "notes": notes,
     }
+    validate_manifest(manifest)
     STATE.mkdir(parents=True, exist_ok=True)
     atomic_json(MANIFEST_PATH, manifest)
     return manifest
@@ -434,7 +550,7 @@ async def prepare_duden(groups: dict[str, dict[str, Any]]) -> dict[str, Any]:
             if group.get("skip_duden"):
                 items[key] = {
                     "request_key": key, "spoken_text": group["spoken_text"], "status": "unresolved",
-                    "reason": "existing A1/A2 MAIN Duden audit found no accepted audio", "match_method": "main-audit-cache",
+                    "reason": "existing A1-B1 MAIN Duden audit found no accepted audio", "match_method": "main-audit-cache",
                     "updated_utc": now_utc(),
                 }
                 atomic_json(DUDEN_EXTRA_INDEX, index)
@@ -467,7 +583,7 @@ async def prepare_duden(groups: dict[str, dict[str, Any]]) -> dict[str, Any]:
             else:
                 index.pop("cooldown_until", None)
             atomic_json(DUDEN_EXTRA_INDEX, index)
-            print(f"duden {number}/{len(groups)} {group['spoken_text']!r}: {result['status']}")
+            print(console_text(f"duden {number}/{len(groups)} {group['spoken_text']!r}: {result['status']}"))
             if result["status"] == "technical_error":
                 raise WordAudioError(f"Duden technical error for {group['spoken_text']!r}: {result['reason']}")
     return index
@@ -686,7 +802,7 @@ async def prepare_commons(groups: dict[str, dict[str, Any]], duden_index: dict[s
                 result = {"status": "unresolved", "request_key": key, "spoken_text": group["spoken_text"], "reason": "; ".join(rejected[:5]) or "no exact Commons pronunciation file", "checked_utc": now_utc()}
             items[key] = result
             atomic_json(COMMONS_INDEX, index)
-            print(f"commons {number}/{len(pending)} {group['spoken_text']!r}: {result['status']}")
+            print(console_text(f"commons {number}/{len(pending)} {group['spoken_text']!r}: {result['status']}"))
     for key, item in items.items():
         if item.get("status") == "ok":
             validate_audio(Path(item["path"]), item.get("sha256"), item.get("size"))
@@ -792,7 +908,7 @@ async def prepare_wiktionary(groups: dict[str, dict[str, Any]], duden_index: dic
                 result = {"status": "unresolved", "request_key": key, "spoken_text": group["spoken_text"], "reason": str(exc), "checked_utc": now_utc()}
             items[key] = result
             atomic_json(WIKTIONARY_INDEX, index)
-            print(f"wiktionary {number}/{len(pending)} {group['spoken_text']!r}: {result['status']}")
+            print(console_text(f"wiktionary {number}/{len(pending)} {group['spoken_text']!r}: {result['status']}"))
     for item in items.values():
         if item.get("status") == "ok":
             validate_audio(Path(item["path"]), item.get("sha256"), item.get("size"))
@@ -856,7 +972,7 @@ async def prepare_edge(groups: dict[str, dict[str, Any]], duden_index: dict[str,
                     "size": size, "sha256": sha256, "status": "ok", "created_utc": now_utc(),
                 }
                 atomic_json(EDGE_INDEX, index)
-                print(f"edge {number}/{len(needed)} {group['spoken_text']!r}: ok")
+                print(console_text(f"edge {number}/{len(needed)} {group['spoken_text']!r}: ok"))
                 last_error = None
                 break
             except Exception as exc:
@@ -869,6 +985,7 @@ async def prepare_edge(groups: dict[str, dict[str, Any]], duden_index: dict[str,
 
 
 def finalize_manifest(manifest: dict[str, Any], duden_index: dict[str, Any], commons_index: dict[str, Any], edge_index: dict[str, Any], wiktionary_index: dict[str, Any] | None = None) -> dict[str, Any]:
+    validate_manifest(manifest)
     wiktionary_index = wiktionary_index or {"items": {}}
     counts: Counter[str] = Counter()
     for item in manifest["notes"].values():
@@ -896,6 +1013,7 @@ def finalize_manifest(manifest: dict[str, Any], duden_index: dict[str, Any], com
     if expected != manifest.get("note_count") or sum(counts.values()) != expected:
         raise WordAudioError("prepared manifest is incomplete")
     manifest.update({"prepared_utc": now_utc(), "counts": dict(counts), "missing_overrides": []})
+    validate_manifest(manifest, require_prepared=True)
     atomic_json(MANIFEST_PATH, manifest)
     return manifest
 
@@ -904,8 +1022,9 @@ async def command_prepare(_: argparse.Namespace) -> None:
     if not _.confirm_commons_license:
         raise WordAudioError("Commons preparation requires --confirm-commons-license")
     manifest = load_json(MANIFEST_PATH, None) if _.offline else build_audit()
-    if not manifest or manifest.get("note_count") != len(manifest.get("notes", {})):
+    if not manifest:
         raise WordAudioError("offline preparation requires a complete prior audit manifest")
+    validate_manifest(manifest)
     if manifest["missing_overrides"]:
         raise WordAudioError(
             f"{len(manifest['missing_overrides'])} notes need spoken-text overrides; see {MANIFEST_PATH}"
@@ -923,6 +1042,7 @@ def command_audit(_: argparse.Namespace) -> None:
     manifest = build_audit()
     print(json.dumps({
         "notes": manifest["note_count"], "counts": manifest["counts"],
+        "levels": manifest["level_counts"], "duden_rows": manifest["duden_rows"],
         "missing_overrides": manifest["missing_overrides"], "manifest": str(MANIFEST_PATH),
     }, ensure_ascii=False, indent=2))
 
@@ -954,8 +1074,9 @@ def model_snapshot() -> dict[str, Any]:
 
 def command_snapshot(_: argparse.Namespace) -> None:
     manifest = load_json(MANIFEST_PATH, None)
-    if not manifest or not manifest.get("prepared_utc"):
+    if not manifest:
         raise WordAudioError("prepared manifest missing")
+    validate_manifest(manifest, require_prepared=True)
     records = live_records()
     if set(map(int, manifest["notes"])) != set(records):
         raise WordAudioError("prepared note ID set differs from live deck")
@@ -963,17 +1084,24 @@ def command_snapshot(_: argparse.Namespace) -> None:
         if manifest["notes"][str(note_id)]["source_signature"] != source_signature(record["fields"]):
             raise WordAudioError(f"source fields changed after preparation: {note_id}")
     STATE.mkdir(parents=True, exist_ok=True)
-    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + f"_{time.time_ns() % 1_000_000_000:09d}"
     backup = STATE / f"Goethe_Institute_pre_word_audio_{stamp}.apkg"
-    result = gw.anki("exportPackage", deck=PARENT_DECK, path=backup.as_posix(), includeSched=True)
-    if not result or not backup.exists():
+    if backup.exists():
+        raise WordAudioError(f"backup destination already exists: {backup}")
+    try:
+        result = gw.anki("exportPackage", deck=PARENT_DECK, path=backup.as_posix(), includeSched=True)
+    except gw.MigrationError as exc:
+        if "timed out" not in str(exc).casefold() and "timeout" not in str(exc).casefold():
+            raise
+        result = True
+    if not result or not apkg.wait_for_valid_apkg(backup):
         raise WordAudioError("Anki APKG export failed")
     cards = [card for record in records.values() for card in record["cards"]]
     card_ids = [int(card["cardId"]) for card in cards]
     reviews = all_reviews(card_ids)
     snapshot = {
         "schema_version": 1, "created_utc": now_utc(), "backup": str(backup),
-        "backup_sha256": duden.hash_file(backup), "manifest_sha256": duden.hash_file(MANIFEST_PATH),
+        "backup_sha256": apkg.hash_file(backup), "manifest_sha256": duden.hash_file(MANIFEST_PATH),
         "notes": {str(note_id): {"model": record["model"], "fields": record["fields"], "tags": record["tags"]} for note_id, record in records.items()},
         "cards": {str(card["cardId"]): schedule_projection(card) for card in cards},
         "reviews": reviews, "reviews_sha256": canonical_hash(reviews), "model": model_snapshot(),
@@ -987,25 +1115,40 @@ def load_ready() -> tuple[dict[str, Any], dict[str, Any]]:
     snapshot = load_json(SNAPSHOT_PATH, None)
     if not manifest or not manifest.get("prepared_utc") or not snapshot:
         raise WordAudioError("prepared manifest or snapshot missing")
+    validate_manifest(manifest, require_prepared=True)
     if snapshot.get("manifest_sha256") != duden.hash_file(MANIFEST_PATH):
         raise WordAudioError("prepared manifest changed after snapshot")
+    backup = Path(str(snapshot.get("backup", "")))
+    if not apkg.valid_apkg(backup) or snapshot.get("backup_sha256") != apkg.hash_file(backup):
+        raise WordAudioError("scheduled APKG backup is missing, corrupt, or changed")
     return manifest, snapshot
 
 
 def pilot_ids(manifest: dict[str, Any]) -> list[int]:
     candidates = sorted(manifest["notes"].values(), key=lambda item: (
-        item["assignment"]["source"] != "commons", item["level"], bool(item["old_word_audio"]), item["note_id"]
+        scope.LEVEL_RANK[item["level"]], item["assignment"]["source"] != "commons",
+        bool(item["old_word_audio"]), item["note_id"]
     ))
     selected: list[int] = []
     seen: set[tuple[str, str, bool]] = set()
+    for level in scope.LEVELS:
+        item = next((candidate for candidate in candidates if candidate["level"] == level), None)
+        if item:
+            selected.append(int(item["note_id"]))
     for item in candidates:
         key = (item["level"], item["assignment"]["source"], bool(item["old_word_audio"]))
-        if key not in seen or len(selected) < PILOT_SIZE:
+        if int(item["note_id"]) not in selected and key not in seen:
             selected.append(int(item["note_id"]))
-            seen.add(key)
+        seen.add(key)
         if len(selected) == PILOT_SIZE:
             break
-    return selected
+    if len(selected) < PILOT_SIZE:
+        selected.extend(
+            int(item["note_id"])
+            for item in candidates
+            if int(item["note_id"]) not in selected
+        )
+    return selected[:PILOT_SIZE]
 
 
 def selected_ids(manifest: dict[str, Any], scope: str) -> list[int]:
@@ -1164,7 +1307,7 @@ def main(argv: list[str] | None = None) -> int:
         if asyncio.iscoroutine(result):
             asyncio.run(result)
     except (WordAudioError, gw.MigrationError, RuntimeError) as exc:
-        print(f"ERROR: {exc}", file=sys.stderr)
+        print(console_text(f"ERROR: {exc}", getattr(sys.stderr, "encoding", None)), file=sys.stderr)
         return 1
     return 0
 

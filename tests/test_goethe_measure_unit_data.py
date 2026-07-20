@@ -70,10 +70,13 @@ def test_measure_audit_accepts_old_live_content_and_targets_lexical_content() ->
         entry = entries[source_id]
         assert (entry["lemma"], entry["pos"], entry["decision"]) == (lemma, "n.", "REVISE")
         assert entry["desired_meaning_en"] == meaning
-        assert entry["expected_meaning_en"] == old_meaning
+        # v4 canonicalises the expected field to the reviewed lexical gloss;
+        # the pre-v4 live wording remains available as migration provenance.
+        assert entry["expected_meaning_en"] == meaning
         assert entry["previous_meaning_en"] == old_meaning
-        assert entry["expected_examples"] == entry["previous_examples"] == []
-        assert entry["desired_examples"][0]["origin"] == "review-authored"
+        assert entry["previous_examples"] == []
+        assert entry["expected_examples"] == entry["desired_examples"]
+        assert entry["desired_examples"][0]["origin"] == "goethe"
         assert {item["provider"] for item in entry["evidence"]} == {"Cambridge", "Duden"}
         assert all("/suchen/" not in item["url"] for item in entry["evidence"])
 
@@ -99,6 +102,20 @@ def test_measure_overrides_explain_pfund_and_keep_both_kilogramm_answers() -> No
     assert kilogramm["AcceptedFullAnswersDE"] == "das Kilogramm|das Kilo"
 
 
+def test_b1_colour_contrast_override_removes_html_and_disables_ambiguous_production() -> None:
+    policy = review_policy.load_policy()
+    fields = {
+        "SourceID": "B1-WG-0161",
+        "Lemma": "hell<br>dunkel",
+        "POS": "",
+    }
+    assert review_policy.apply_fields(fields, policy)
+    assert fields["Lemma"] == "hell-, dunkel-"
+    assert fields["POS"] == "adj."
+    assert fields["AcceptedAnswersDE"] == "hell-, dunkel-"
+    assert fields["AcceptedFullAnswersDE"] == "hell-, dunkel-"
+
+
 def test_exported_measure_cards_use_bare_nouns_and_human_audio() -> None:
     rows = {
         row["source_id"]: row
@@ -111,7 +128,10 @@ def test_exported_measure_cards_use_bare_nouns_and_human_audio() -> None:
     for source_id, (lemma, meaning, _old_meaning) in AUDIT_ROWS.items():
         row = rows[source_id]
         assert (row["lemma"], row["meaning_en"], row["pos"]) == (lemma, meaning, "n.")
-        assert row["word_audio"].startswith("[sound:_goethe_word_commons_")
+        assert row["word_audio"].startswith((
+            "[sound:_goethe_word_duden_",
+            "[sound:_goethe_word_commons_",
+        ))
         assert not row["lemma"].startswith("ein ")
         assert any(ref.startswith("B1-WG-") for ref in row["source_refs"])
 

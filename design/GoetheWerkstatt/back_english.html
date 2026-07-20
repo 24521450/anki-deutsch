@@ -82,22 +82,33 @@
       .normalize("NFC")
       .toLocaleLowerCase("de-DE")
       .trim()
-      .replace(/\s+/g, " ");
+      .replace(/\s+/g, " ")
+      .replace(/ä/g, "ae")
+      .replace(/ö/g, "oe")
+      .replace(/ü/g, "ue")
+      .replace(/ß/g, "ss");
   }
   function lexicalPart(value, articleBearing) {
     var lexical = String(value || "").trim();
     return articleBearing ? lexical.replace(/^(?:der|die|das)\s+/i, "") : lexical;
   }
+  function terminalSeinCore(answer) {
+    var match = String(answer || "").match(/^(.*\S)\s+sein\s*$/i);
+    return match ? match[1] : "";
+  }
+  function exactVariants(answer) {
+    var core = terminalSeinCore(answer);
+    return core ? [answer, core + " s"] : [answer];
+  }
   function variants(answer) {
-    var longStateCores = {
-      "dabei": true, "dagegen": true, "dafuer": true, "einverstanden": true,
-      "erkaeltet": true, "erlaubt": true, "fertig": true, "fit": true,
-      "gueltig": true, "unterwegs": true, "verabredet": true, "verboten": true
-    };
-    var normalized = normalize(answer);
-    if (!normalized.endsWith(" sein")) return [answer];
-    var core = answer.replace(/\s+sein\s*$/i, "");
-    return longStateCores[normalize(core)] ? [answer, core] : [answer];
+    var core = terminalSeinCore(answer);
+    return core ? [answer, core] : [answer];
+  }
+  function trailingHyphenVariants(lemma) {
+    var raw = String(lemma || "").trim();
+    if (!/-$/.test(raw)) return [];
+    var stem = raw.slice(0, -1);
+    return [raw, stem, stem + "e", stem + "er", stem + "es", stem + "em", stem + "en", stem + "s"];
   }
 
   if (!/^(?:1|true|yes)$/i.test(text("gw-production-enabled"))) return;
@@ -128,8 +139,10 @@
   var acceptedLenient = {};
   var acceptedLexical = {};
   fullAnswers.forEach(function (answer) {
-    acceptedCorrect[correctKey(answer)] = true;
-    acceptedCorrect[correctKey(lexicalPart(answer, articleBearing))] = true;
+    exactVariants(answer).forEach(function (variant) {
+      acceptedCorrect[correctKey(variant)] = true;
+      acceptedCorrect[correctKey(lexicalPart(variant, articleBearing))] = true;
+    });
     acceptedLenient[normalize(answer)] = true;
     variants(lexicalPart(answer, articleBearing)).forEach(function (variant) {
       acceptedLexical[normalize(variant)] = true;
@@ -137,12 +150,23 @@
   });
   var accepted = {};
   if (!hasAuthoritativeFullAnswers) answers.forEach(function (answer) {
-    acceptedCorrect[correctKey(answer)] = true;
-    articles.forEach(function (article) { acceptedCorrect[correctKey(article + " " + answer)] = true; });
+    exactVariants(answer).forEach(function (variant) {
+      acceptedCorrect[correctKey(variant)] = true;
+      articles.forEach(function (article) { acceptedCorrect[correctKey(article + " " + variant)] = true; });
+    });
     variants(answer).forEach(function (variant) {
       acceptedLexical[normalize(lexicalPart(variant, articleBearing))] = true;
       accepted[normalize(variant)] = true;
       articles.forEach(function (article) { accepted[normalize(article + " " + variant)] = true; });
+    });
+  });
+  trailingHyphenVariants(text("gw-lemma")).forEach(function (answer) {
+    exactVariants(answer).forEach(function (variant) {
+      acceptedCorrect[correctKey(variant)] = true;
+      acceptedCorrect[correctKey(lexicalPart(variant, articleBearing))] = true;
+      articles.forEach(function (article) {
+        acceptedCorrect[correctKey(article + " " + variant)] = true;
+      });
     });
   });
   function classify(value) {

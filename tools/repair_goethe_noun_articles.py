@@ -18,6 +18,7 @@ from typing import Any
 import goethe_completion as completion
 import goethe_example_audio as example_audio
 import goethe_noun_policy as noun_policy
+import goethe_scope as scope
 import goethe_werkstatt_migrate as gw
 import goethe_word_audio as word_audio
 
@@ -30,8 +31,14 @@ PARENT_DECK = "Goethe Institute"
 CONFIRMATION = "REPAIR_GOETHE_NOUN_ARTICLES"
 NEW_SOURCE_ID = "A2-WG-0130-NEUJAHR"
 SILVESTER_NOTE_ID = 1783863836345
-EXPECTED_BASELINE = {"notes": 3490, "cards": 6980}
-EXPECTED_FINAL = {"notes": 3491, "cards": 6982}
+EXPECTED_FINAL = {"notes": scope.EXPECTED_NOTES, "cards": scope.EXPECTED_CARDS}
+# This one-off repair turns one combined identity into two notes, each with
+# the model's two cards.  Its audited pre-apply inventory is therefore -1/-2
+# from the shared post-split corpus contract.
+EXPECTED_BASELINE = {
+    "notes": EXPECTED_FINAL["notes"] - 1,
+    "cards": EXPECTED_FINAL["cards"] - 2,
+}
 
 # note_id: (SourceID, current lemma)
 TARGETS = {

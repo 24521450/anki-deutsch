@@ -36,12 +36,22 @@
     "B1-MAIN-0020": "das Abonnement|das Abo",
     "B1-WG-0061": "der Ketchup|das Ketchup|der Ketschup|das Ketschup",
     "B1-WG-0062": "der Killer|die Killerin",
+    "B1-WG-0015": "die SMS|das SMS",
+    "A1-84886454651": "die E-Mail|das E-Mail|die Email|das Email",
+    "B1-WG-0130": "die Schweiz: Sekundarstufe I",
+    "B1-WG-0131": "die Schweiz: Sekundarstufe II",
     "B1-WG-0069": "der Manager|die Managerin",
     "B1-WG-0094": "der User|die Userin",
     "A1-84886454612": "die Disco|die Disko|die Diskothek",
     "A1-84886454788": "das Hähnchen|das Hühnchen",
     "A1-84886455036": "die Rezeption|die Reception",
     "A2-0759": "die Pizza|die Pizzen",
+    "A1-84887177260": "das Kilogramm|das Kilo",
+    "B1-WG-0033": "der Chat(room)|der Chatroom",
+    "B1-WG-0117": "die Grundschule|die Mittelschule|die Realschule|die Gesamtschule|die Berufsschule|die Sonderschule",
+    "B1-WG-0122": "die Volksschule|die Hauptschule|die Neue Mittelschule|die Berufsschule",
+    "B1-WG-0309": "der Januar|der Jänner",
+    "B1-WG-0310": "der Februar|der Feber",
     "B1-MAIN-0252": "der Bancomat|der Bankomat",
     "B1-MAIN-0798": "die Fantasie|die Phantasie",
     "B1-MAIN-1049": "die Glace|das Glace|die Glacé|das Glacé",
@@ -73,6 +83,9 @@
     "B1-MAIN-2961": {"enabled": false, "hint": ""},
     "B1-WG-0015": {"enabled": false, "hint": ""},
     "B1-WG-0117": {"enabled": false, "hint": ""},
-    "B1-WG-0122": {"enabled": false, "hint": ""}
+    "B1-WG-0122": {"enabled": false, "hint": ""},
+    "B1-WG-0161": {"enabled": false, "hint": ""},
+    "B1-WG-0130": {"enabled": false, "hint": ""},
+    "B1-WG-0131": {"enabled": false, "hint": ""}
   }
 }

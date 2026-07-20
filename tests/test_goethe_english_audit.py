@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import copy
 import json
-import re
 import sys
+from functools import lru_cache
 from pathlib import Path
+
+import pytest
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -15,40 +17,119 @@ if str(TOOLS) not in sys.path:
 import goethe_english_audit as audit  # noqa: E402
 
 
-def test_manifest_covers_every_current_note_with_a_decision_and_sources():
-    manifest = audit.load_json(audit.MANIFEST)
-    audit.validate_manifest(manifest)
-    assert manifest["schema_version"] == 3
-    assert manifest["counts"]["notes"] == 1531
-    assert manifest["counts"]["a1"] == 818
-    assert manifest["counts"]["a2"] == 713
-    assert manifest["counts"]["keep"] + manifest["counts"]["revise"] == 1531
-    assert manifest["counts"]["ambiguous_prompt_groups"] == 0
-    assert sum(not entry["desired_examples"] for entry in manifest["entries"].values()) == 57
-    assert all(entry["review_status"] == "reviewed" for entry in manifest["entries"].values())
-    assert all(entry["evidence"] for entry in manifest["entries"].values())
+@lru_cache(maxsize=1)
+def manifest() -> dict:
+    return audit.load_json(audit.MANIFEST)
+
+
+def test_v4_catalog_covers_the_fully_reviewed_canonical_a1_b1_corpus():
+    catalog = manifest()
+    audit.validate_scaffold(catalog)
+
+    assert catalog["schema_version"] == 4
+    assert catalog["counts"] == {
+        "notes": audit.goethe_scope.EXPECTED_NOTES,
+        "reviewed": audit.goethe_scope.EXPECTED_NOTES,
+        "unreviewed": 0,
+        "keep": 1576,
+        "revise": 1917,
+        "pending": 0,
+        "meaning_updates": 1581,
+        "example_updates": 1055,
+        "no_examples": audit.goethe_scope.EXPECTED_EMPTY_NOTES,
+        "b1_no_examples": audit.goethe_scope.EXPECTED_EMPTY_NOTES_BY_LEVEL["B1"],
+        "ambiguous_prompt_groups": 0,
+        "a1": audit.goethe_scope.EXPECTED_NOTES_BY_LEVEL["A1"],
+        "a2": audit.goethe_scope.EXPECTED_NOTES_BY_LEVEL["A2"],
+        "b1": audit.goethe_scope.EXPECTED_NOTES_BY_LEVEL["B1"],
+    }
+
+
+def test_full_validation_accepts_the_complete_reviewed_catalog():
+    assert audit.audit_blockers(manifest()) == {}
+    audit.validate_manifest(manifest())
+
+
+def test_every_row_has_one_stable_canonical_identity_without_note_id_guards():
+    entries = list(manifest()["entries"].values())
+    expected = audit.goethe_scope.EXPECTED_NOTES
+    assert len({entry["source_id"] for entry in entries}) == expected
+    assert len({entry["stable_guid"] for entry in entries}) == expected
+    assert all(entry["source_id"] in entry["source_refs"] for entry in entries)
+    assert all("note_id_guard" not in entry for entry in entries)
+
+
+def test_a1_a2_v3_rows_are_collapsed_into_current_canonical_notes():
+    entries = manifest()["entries"]
+    lower = [entry for entry in entries.values() if entry["cefr"] in {"A1", "A2"}]
+    collapsed = [entry for entry in lower if len(entry["collapsed_v3_source_ids"]) > 1]
+
+    assert len(lower) == 1525
+    assert all(entry["review_status"] == "reviewed" for entry in lower)
+    assert all(entry["evidence"] for entry in lower)
+    assert len(collapsed) == 5
+    assert sum(len(entry["collapsed_v3_source_ids"]) - 1 for entry in collapsed) == 6
+    assert entries["A1-84886454531"]["collapsed_v3_source_ids"] == [
+        "A1-84886454531", "A2-0102", "A2-0103",
+    ]
+
+
+def test_all_b1_batches_are_reviewed_and_legacy_material_remains_only_a_hint():
+    b1 = [entry for entry in manifest()["entries"].values() if entry["cefr"] == "B1"]
+
+    assert len(b1) == audit.goethe_scope.EXPECTED_NOTES_BY_LEVEL["B1"]
+    assert all(entry["decision"] in {"KEEP", "REVISE"} for entry in b1)
+    assert all(entry["review_status"] == "reviewed" for entry in b1)
+    assert all(entry["evidence"] for entry in b1)
+    hinted = [entry for entry in b1 if "legacy_hints" in entry]
+    assert hinted
     assert all(
-        not entry["difficult"] or len({item["url"].split("/")[2] for item in entry["evidence"]}) >= 2
-        for entry in manifest["entries"].values()
+        entry["legacy_hints"]["classification"] == "hint_only_not_review_evidence"
+        for entry in hinted
     )
 
 
-def test_neujahr_and_silvester_have_distinct_reviewed_senses():
-    entries = audit.load_json(audit.MANIFEST)["entries"]
-    silvester = entries["A2-WG-0130"]
-    neujahr = entries["A2-WG-0130-NEUJAHR"]
+def test_b1_review_batches_are_bounded_and_preserve_no_example_exceptions():
+    b1 = [entry for entry in manifest()["entries"].values() if entry["cefr"] == "B1"]
+    batches = {entry["audit_batch"] for entry in b1}
 
-    assert silvester["lemma"] == "Silvester"
-    assert silvester["note_id_guard"] == 1783863836345
-    assert silvester["desired_meaning_en"] == "New Year's Eve"
-    assert neujahr["lemma"] == "Neujahr"
-    assert neujahr["note_id_guard"] == 1784375306336
-    assert neujahr["desired_meaning_en"] == "New Year's Day"
-    assert neujahr["desired_examples"] == [{
-        "de": "Neujahr fällt in diesem Jahr auf einen Mittwoch.",
-        "en": "New Year's Day falls on a Wednesday this year.",
-        "origin": "review-authored",
-    }]
+    assert batches == {f"B1-{index:02d}" for index in range(1, 9)}
+    assert max(sum(entry["audit_batch"] == batch for entry in b1) for batch in batches) <= 250
+    assert sum(not entry["desired_examples"] for entry in b1) == (
+        audit.goethe_scope.EXPECTED_EMPTY_NOTES_BY_LEVEL["B1"]
+    )
+
+
+def test_b1_wortgruppe_contrast_has_canonical_grammar_and_gloss():
+    entry = manifest()["entries"]["B1-WG-0161"]
+    assert entry["lemma"] == "hell-, dunkel-"
+    assert entry["pos"] == "adj."
+    assert entry["desired_meaning_en"] == "light-; dark- (colour prefixes)"
+
+
+def test_known_v3_reviewed_senses_survive_the_canonical_migration():
+    entries = manifest()["entries"]
+    assert entries["A2-WG-0130"]["desired_meaning_en"] == "New Year's Eve"
+    assert entries["A2-WG-0130-NEUJAHR"]["desired_meaning_en"] == "New Year's Day"
+    assert entries["A2-0851"]["desired_meaning_en"] == (
+        "to moan/complain (about); to tell someone off"
+    )
+    assert entries["A1-84886454810"]["desired_meaning_en"] == "warm; sincere"
+    assert len(entries["A1-84886454810"]["evidence"]) >= 2
+
+
+def test_reviewed_lieblings_example_and_all_current_german_examples_are_retained():
+    entries = manifest()["entries"]
+    assert sum(len(entry["desired_examples"]) for entry in entries.values()) == 4318
+    assert sum(
+        len(entry["desired_examples"])
+        for entry in entries.values() if entry["cefr"] == "A1"
+    ) == 995
+    assert entries["A1-84886454917"]["desired_examples"][-1] == {
+        "de": "Meine Lieblingsfarbe ist Blau.",
+        "en": "My favourite colour is blue.",
+        "origin": "goethe",
+    }
 
 
 def test_identity_check_accepts_reviewed_canonical_inflection_overrides_only():
@@ -63,157 +144,351 @@ def test_identity_check_accepts_reviewed_canonical_inflection_overrides_only():
     }, "Bus")
 
 
-def test_audited_glosses_have_no_dictionary_placeholders_or_spaced_slashes():
-    manifest = audit.load_json(audit.MANIFEST)
-    meanings = [entry["desired_meaning_en"] for entry in manifest["entries"].values()]
-    assert not any("sth." in value or "so." in value for value in meanings)
-    assert not any(" / " in value for value in meanings)
+def test_find_entry_uses_stable_guid_when_source_id_changes():
+    entry = manifest()["entries"]["A2-0851"]
+    fields = {
+        "SourceID": "RENAMED",
+        "LegacyGUID": entry["stable_guid"],
+    }
+    assert audit.find_entry(fields, manifest()) is entry
 
 
-def test_every_retained_example_was_reaudited_with_explicit_origin():
-    entries = audit.load_json(audit.MANIFEST)["entries"].values()
-    examples = [example for entry in entries for example in entry["desired_examples"]]
-    assert len(examples) == 2035
-    assert sum(example["origin"] == "review-authored" for example in examples) == 149
-    assert not any(" a author" in example["en"] for example in examples)
-    assert not any(" a artist" in example["en"] for example in examples)
-    assert not any(" a actor" in example["en"] for example in examples)
-    assert not any(re.search(r"\btires?\b", example["en"], re.I) for example in examples)
+def test_identity_equivalent_accepts_historical_alias_and_ref_reordering():
+    catalog = manifest()
+    entry = catalog["entries"]["A1-84886454470"]
+    fields = {
+        "SourceID": "A1-84886454472",
+        "SourceRefs": "|".join(reversed(entry["source_refs"])),
+        "LegacyGUID": entry["stable_guid"],
+        "Lemma": entry["lemma"],
+        "AcceptedAnswersDE": entry["lemma"],
+        "CEFR": entry["cefr"],
+    }
+    assert audit.identity_equivalent(fields, entry, catalog)
 
 
-def test_schimpfen_uses_contextual_cambridge_senses():
-    entry = audit.load_json(audit.MANIFEST)["entries"]["A2-0851"]
-    assert entry["desired_meaning_en"] == "to moan/complain (about); to tell someone off"
-    assert entry["desired_examples"][0]["en"] == "Why are you complaining so loudly? — I'm annoyed about my car."
-    assert entry["evidence"][0]["url"] == "https://dictionary.cambridge.org/dictionary/german-english/schimpfen"
+@pytest.mark.parametrize("mutation", ["missing", "extra", "duplicate", "wrong_guid"])
+def test_identity_equivalent_rejects_provenance_or_guid_drift(mutation):
+    catalog = manifest()
+    entry = catalog["entries"]["A1-84886454470"]
+    refs = list(entry["source_refs"])
+    if mutation == "missing":
+        refs = refs[:-1]
+    elif mutation == "extra":
+        refs.append("A1-NOT-A-REAL-REF")
+    elif mutation == "duplicate":
+        refs.append(refs[-1])
+    fields = {
+        "SourceID": entry["source_id"],
+        "SourceRefs": "|".join(refs),
+        "LegacyGUID": (
+            catalog["entries"]["A1-84886454531"]["stable_guid"]
+            if mutation == "wrong_guid" else entry["stable_guid"]
+        ),
+        "Lemma": entry["lemma"],
+        "AcceptedAnswersDE": entry["lemma"],
+        "CEFR": entry["cefr"],
+    }
+    assert not audit.identity_equivalent(fields, entry, catalog)
 
 
-def test_herzlich_has_a_general_learner_gloss_not_the_context_bound_heartfelt():
-    entry = audit.load_json(audit.MANIFEST)["entries"]["A1-84886454810"]
-    assert entry["desired_meaning_en"] == "warm; sincere"
-    assert entry["desired_examples"] == [{
-        "de": "Herzlichen Glückwunsch!",
-        "en": "Congratulations!",
-        "origin": "goethe",
-    }]
-    assert len(entry["evidence"]) >= 2
-
-
-def test_achtung_is_one_contextual_example_and_turkei_uses_standard_english():
-    entries = audit.load_json(audit.MANIFEST)["entries"]
-    assert entries["A1-MAIN-0008"]["desired_examples"] == [{
-        "de": "Achtung! Das dürfen Sie nicht tun.",
-        "en": "Watch out! You're not allowed to do that.",
-        "origin": "goethe",
-    }]
-    assert entries["A1-WG-0107"]["desired_meaning_en"] == "Turkey"
-    assert entries["A1-WG-0107"]["desired_examples"] == [{
-        "de": "Sie kommt aus der Türkei.",
-        "en": "She comes from Turkey.",
-        "origin": "review-authored",
-    }]
-    translations = json.loads((ROOT / "review" / "goethe_completion_translations.json").read_text(encoding="utf-8"))
-    assert translations["Türkei"] == "Turkey"
-
-
-def test_desired_fields_is_idempotent_and_preserves_audio():
-    manifest = audit.load_json(audit.MANIFEST)
-    entry = manifest["entries"]["A2-0851"]
+def test_desired_fields_canonicalises_alias_identity():
+    catalog = manifest()
+    entry = catalog["entries"]["A1-84886454470"]
     fields = {name: "" for name in audit.gw.FIELDS}
     fields.update({
-        "SourceID": "A2-0851",
-        "Lemma": "schimpfen",
+        "SourceID": "A1-84886454472",
+        "SourceRefs": "|".join(reversed(entry["source_refs"])),
+        "LegacyGUID": entry["stable_guid"],
+        "Lemma": entry["lemma"],
         "MeaningEN": entry["expected_meaning_en"],
-        "Example1DE": entry["expected_examples"][0]["de"],
-        "Example1EN": entry["expected_examples"][0]["en"],
-        "Example1Audio": "[sound:test.mp3]",
-        "Example2DE": entry["expected_examples"][1]["de"],
-        "Example2EN": entry["expected_examples"][1]["en"],
+        "CEFR": entry["cefr"],
     })
+    audit.goethe_examples.render_fields(fields, entry["expected_examples"])
+    desired = audit.desired_fields(fields, entry)
+    assert desired["SourceID"] == entry["source_id"]
+    assert desired["SourceRefs"] == "|".join(entry["source_refs"])
+
+
+def test_desired_fields_is_idempotent_and_preserves_audio_by_unchanged_german():
+    entry = manifest()["entries"]["A2-0851"]
+    fields = {name: "" for name in audit.gw.FIELDS}
+    fields.update({
+        "SourceID": entry["source_id"],
+        "LegacyGUID": entry["stable_guid"],
+        "Lemma": entry["lemma"],
+        "CEFR": entry["cefr"],
+        "MeaningEN": entry["expected_meaning_en"],
+    })
+    audit.goethe_examples.render_fields(fields, entry["expected_examples"])
+    fields["Example1Audio"] = "[sound:test.mp3]"
+
     desired = audit.desired_fields(fields, entry)
     assert desired["Example1Audio"] == "[sound:test.mp3]"
     assert audit.desired_fields(copy.deepcopy(desired), entry) == desired
-    downstream_audio = copy.deepcopy(desired)
-    downstream_audio["Example1Audio"] = "[sound:edge.mp3]"
-    assert audit.audit_projection(downstream_audio) == audit.audit_projection(desired)
 
 
-def test_pair_state_ignores_untranslated_duplicate_of_a_merged_dialogue():
-    entry = audit.load_json(audit.MANIFEST)["entries"]["A1-84886454639"]
-    current = copy.deepcopy(entry["expected_examples"])
-    current.append({
-        "de": "Hin und zurück?<br>– Nein, bitte nur einfach.",
-        "en": "",
-        "origin": "goethe",
-    })
+def test_scaffold_rejects_any_change_to_german_example_text():
+    catalog = copy.deepcopy(manifest())
+    entry = catalog["entries"]["A2-0851"]
+    entry["desired_examples"][0]["de"] += " changed"
 
-    assert audit.pair_state(current, entry) == "expected"
+    with pytest.raises(audit.AuditError, match="changed German example text"):
+        audit.validate_scaffold(catalog)
 
 
-def test_audit_tracks_reviewed_canonical_merge_glosses_and_lieblings_example():
-    entries = audit.load_json(audit.MANIFEST)["entries"]
-    assert {
-        source_id: entries[source_id]["desired_meaning_en"]
-        for source_id in (
-            "A1-84886454612", "A1-84886454914",
-            "A1-84886455036", "A2-MAIN-0202",
-        )
-    } == {
-        "A1-84886454612": "disco; discotheque",
-        "A1-84886454914": "dear; kind",
-        "A1-84886455036": "reception; front desk",
-        "A2-MAIN-0202": "with you; present or included; while doing so",
-    }
-    assert entries["A1-84886454917"]["desired_examples"][-1] == {
-        "de": "Meine Lieblingsfarbe ist Blau.",
-        "en": "My favourite colour is blue.",
-        "origin": "goethe",
-    }
-
-    retained_merge_examples = {
-        "A1-84886454531": "Eine Bekannte von mir wohnt in Köln.",
-        "A1-84886454612": "Wir gehen heute Abend in die Disko(thek).",
-        "A1-84886454788": "Zum Mittagessen gibt es Hühnchen mit Reis.",
-        "A1-84886454914": "Liebe Frau Meier!",
-        "A1-84886454963": "Bis nächstes Mal!",
-        "A1-84886455036": "Geben Sie bitte den Schlüssel an der Rezeption ab.",
-        "A1-84886455149": "Tschüs, bis morgen!",
-        "A1-84886455204": "Ich will dir nicht wehtun.",
-        "A1-84886455228": "Herzlich willkommen in Köln.",
-        "A2-0647": "Seid ihr am Wochenende zu Hause? – Ja, meistens.",
-        "A2-0759": "Lass uns eine Pizza bestellen!",
-        "A2-MAIN-0202": "Was hast du dir dabei gedacht?",
-    }
-    for source_id, german in retained_merge_examples.items():
-        assert german in {item["de"] for item in entries[source_id]["desired_examples"]}
+def test_tag_transition_clears_all_legacy_english_and_review_tags():
+    tags = [
+        "keep-me", audit.OLD_VERIFIED_TAG, audit.OLD_AUDITED_TAG,
+        audit.V3_AUDITED_TAG, audit.REVIEW_TAG,
+    ]
+    assert audit.desired_tags(tags) == ["goethe::quality::english_audited::v4::british", "keep-me"]
 
 
-def test_uncovered_record_is_marked_for_review_not_verified():
+def test_uncovered_and_pending_records_are_marked_for_review_not_audited():
     fields = {name: "" for name in audit.gw.FIELDS}
     fields.update({"SourceID": "NEW", "LegacyGUID": "new", "MeaningEN": "new"})
-    records = {"new": {"fields": fields, "examples": [], "tags": [audit.OLD_VERIFIED_TAG]}}
-    audit.apply_manifest_to_records(records, audit.load_json(audit.MANIFEST), strict=False)
-    assert audit.REVIEW_TAG in records["new"]["tags"]
-    assert audit.AUDITED_TAG not in records["new"]["tags"]
+    records = {"new": {"fields": fields, "examples": [], "tags": [audit.V3_AUDITED_TAG]}}
+    audit.apply_manifest_to_records(records, manifest(), strict=False)
+    assert records["new"]["tags"] == [audit.REVIEW_TAG]
 
-
-def test_strict_coverage_accepts_merged_alias_source_refs_without_applying_alias_content():
-    full_manifest = audit.load_json(audit.MANIFEST)
-    canonical = copy.deepcopy(full_manifest["entries"]["A1-84886454963"])
-    alias = copy.deepcopy(full_manifest["entries"]["A2-0679"])
-    fields = {name: "" for name in audit.gw.FIELDS}
-    fields.update({
-        "SourceID": canonical["source_id"],
-        "SourceRefs": f"{canonical['source_id']}|{alias['source_id']}",
-        "MeaningEN": canonical["expected_meaning_en"],
+    pending_source_id = "B1-SYNTHETIC-PENDING"
+    pending_entry = {
+        "source_id": pending_source_id,
+        "stable_guid": f"goethe:{pending_source_id}",
+        "review_status": "unreviewed",
+        "decision": "PENDING",
+    }
+    pending_fields = {name: "" for name in audit.gw.FIELDS}
+    pending_fields.update({
+        "SourceID": pending_source_id,
+        "LegacyGUID": pending_entry["stable_guid"],
+        "MeaningEN": "pending",
     })
-    audit.goethe_examples.render_fields(fields, canonical["expected_examples"])
-    records = {"merged": {"fields": fields, "examples": [], "tags": []}}
-
+    records = {
+        "pending": {
+            "fields": pending_fields,
+            "examples": [],
+            "tags": [audit.AUDITED_TAG],
+        },
+    }
     audit.apply_manifest_to_records(
         records,
-        {"entries": {canonical["source_id"]: canonical, alias["source_id"]: alias}},
-        strict=True,
+        {"entries": {pending_source_id: pending_entry}},
+        strict=False,
     )
+    assert records["pending"]["tags"] == [audit.REVIEW_TAG]
 
-    assert records["merged"]["fields"]["MeaningEN"] == canonical["desired_meaning_en"]
+
+def test_review_validator_requires_two_domains_for_difficult_entries():
+    entry = copy.deepcopy(manifest()["entries"]["A1-84886454810"])
+    entry["evidence"] = [entry["evidence"][0]]
+    entry["difficult"] = True
+    assert "difficult_needs_two_domains" in audit._review_entry_errors(entry)
+
+
+def test_review_validator_rejects_known_us_spellings():
+    entry = copy.deepcopy(manifest()["entries"]["A2-0851"])
+    entry["desired_meaning_en"] = "favorite color"
+    assert "non_british_spelling" in audit._review_entry_errors(entry)
+
+
+def test_evidence_validator_rejects_wrong_provider_host_and_missing_difficulty():
+    entry = copy.deepcopy(manifest()["entries"]["A2-0851"])
+    entry["evidence"][0]["url"] = "https://example.invalid/dictionary/german-english/test"
+    entry.pop("difficult", None)
+    errors = audit._review_entry_errors(entry)
+    assert "invalid_evidence" in errors
+    assert "difficult_not_explicit" in errors
+
+
+def test_b1_evidence_requires_bilingual_support_and_duden_for_difficult_rows():
+    entry = copy.deepcopy(manifest()["entries"]["B1-MAIN-0002"])
+    entry.update({"decision": "KEEP", "review_status": "reviewed", "difficult": False})
+    entry["evidence"] = [{
+        "provider": "Duden",
+        "url": "https://www.duden.de/rechtschreibung/abbiegen",
+        "supports": "Confirms the German verb sense and part of speech.",
+    }]
+    assert "missing_bilingual_evidence" in audit._review_entry_errors(entry)
+
+    entry["difficult"] = True
+    entry["evidence"] = [
+        {
+            "provider": "Cambridge",
+            "url": "https://dictionary.cambridge.org/dictionary/german-english/abbiegen",
+            "supports": "Confirms the bilingual sense.",
+        },
+        {
+            "provider": "Collins",
+            "url": "https://www.collinsdictionary.com/dictionary/german-english/abbiegen",
+            "supports": "Independent bilingual sense check.",
+        },
+    ]
+    assert "difficult_needs_duden" in audit._review_entry_errors(entry)
+
+
+def test_batch_report_is_a_strict_row_and_collision_gate():
+    rows = copy.deepcopy(list(manifest()["entries"].values()))
+    evidence = [{
+        "provider": "Cambridge",
+        "url": "https://dictionary.cambridge.org/dictionary/german-english/abbiegen",
+        "supports": "Direct bilingual entry used by this synthetic validation fixture.",
+    }]
+    for index, entry in enumerate(rows):
+        if entry.get("audit_batch") != "B1-01":
+            continue
+        meaning = (
+            f"to review sense {index}"
+            if str(entry.get("pos", "")).casefold().startswith("v.")
+            else f"reviewed sense {index}"
+        )
+        entry.update({
+            "desired_meaning_en": meaning,
+            "decision": "REVISE",
+            "review_status": "reviewed",
+            "difficult": False,
+            "reason": "Synthetic row-specific review fixture.",
+            "evidence": evidence,
+        })
+        for example_index, example in enumerate(entry["desired_examples"]):
+            example["en"] = f"Reviewed example {index}-{example_index}."
+    catalog = audit.manifest_from_rows(rows)
+
+    report = audit.batch_report(catalog, "B1-01")
+
+    assert report["rows"] == 250
+    assert report["examples"] == 320
+    assert report["reviewed"] == 250
+    assert report["blockers"] == {}
+    assert report["internal_collision_groups"] == []
+    assert report["cross_batch_collision_groups"] == []
+
+
+def test_scaffold_refuses_to_overwrite_reviewed_b1_without_force(tmp_path):
+    output = tmp_path / "catalog.jsonl"
+    output.write_text(json.dumps({
+        "source_id": "B1-X", "cefr": "B1", "review_status": "reviewed",
+    }) + "\n", encoding="utf-8")
+
+    with pytest.raises(audit.AuditError, match="refusing to overwrite reviewed B1 rows"):
+        audit.guard_scaffold_overwrite(output, force=False)
+    audit.guard_scaffold_overwrite(output, force=True)
+
+
+def test_british_validator_allows_tire_as_a_verb_but_rejects_us_tyre_noun():
+    entry = copy.deepcopy(manifest()["entries"]["A2-0851"])
+    entry["pos"] = "v."
+    entry["desired_meaning_en"] = "to tire"
+    entry["desired_examples"] = [{
+        "de": "Die Arbeit strengt mich an.",
+        "en": "The work tires me.",
+        "origin": "review-authored",
+    }]
+    assert "non_british_spelling" not in audit._review_entry_errors(entry)
+
+    entry["desired_examples"][0]["en"] = "Check the front tires."
+    assert "non_british_spelling" in audit._review_entry_errors(entry)
+
+
+def test_reviewed_b1_rows_reject_additional_us_learner_vocabulary():
+    entry = copy.deepcopy(manifest()["entries"]["B1-MAIN-0002"])
+    entry.update({
+        "decision": "REVISE",
+        "review_status": "reviewed",
+        "difficult": False,
+        "evidence": [{
+            "provider": "Cambridge",
+            "url": "https://dictionary.cambridge.org/dictionary/german-english/abbiegen",
+            "supports": "Confirms the bilingual verb sense.",
+        }],
+    })
+    entry["desired_examples"][0]["en"] = "My neighbor took the elevator."
+    assert "non_british_spelling" in audit._review_entry_errors(entry)
+
+    entry["desired_meaning_en"] = "wallet; billfold"
+    entry["desired_examples"][0]["en"] = "The wallet is empty."
+    assert "non_british_spelling" in audit._review_entry_errors(entry)
+
+    entry["desired_meaning_en"] = "car park"
+    entry["desired_examples"][0]["en"] = "The parking lot is full."
+    assert "non_british_spelling" in audit._review_entry_errors(entry)
+
+
+def test_reviewed_b1_rows_enforce_decision_verb_and_gender_gloss_conventions():
+    entry = copy.deepcopy(manifest()["entries"]["B1-MAIN-0002"])
+    assert "decision_mismatch" not in audit._review_entry_errors(entry)
+    assert "noncanonical_verb_gloss" not in audit._review_entry_errors(entry)
+
+    entry["decision"] = "KEEP"
+    assert "decision_mismatch" in audit._review_entry_errors(entry)
+
+    entry["decision"] = "REVISE"
+    entry["desired_meaning_en"] = "turn at a junction"
+    assert "noncanonical_verb_gloss" in audit._review_entry_errors(entry)
+
+    entry["pos"] = "n."
+    entry["desired_meaning_en"] = "female guide"
+    assert "noncanonical_gender_gloss" in audit._review_entry_errors(entry)
+
+    entry["desired_meaning_en"] = "guide (female)"
+    assert "noncanonical_gender_gloss" in audit._review_entry_errors(entry)
+
+    entry["desired_meaning_en"] = "(female) guide"
+    assert "noncanonical_gender_gloss" not in audit._review_entry_errors(entry)
+
+    entry["desired_meaning_en"] = "guide service; (female) guide"
+    assert "noncanonical_gender_gloss" not in audit._review_entry_errors(entry)
+
+
+def test_verify_scope_requires_pilot_targets_and_preserves_other_notes(monkeypatch):
+    entries = {
+        source_id: copy.deepcopy(manifest()["entries"][source_id])
+        for source_id in ("B1-MAIN-0002", "A2-0851")
+    }
+    catalog = {"entries": entries}
+
+    def fields(entry):
+        result = {name: "" for name in audit.gw.FIELDS}
+        result.update({
+            "SourceID": entry["source_id"],
+            "SourceRefs": "|".join(entry["source_refs"]),
+            "LegacyGUID": entry["stable_guid"],
+            "Lemma": entry["lemma"],
+            "AcceptedAnswersDE": entry["lemma"],
+            "CEFR": entry["cefr"],
+            "MeaningEN": entry["expected_meaning_en"],
+        })
+        audit.goethe_examples.render_fields(result, entry["expected_examples"])
+        return result
+
+    before = {source_id: fields(entry) for source_id, entry in entries.items()}
+    snapshot = {"notes": {
+        "1": {"fields": before["B1-MAIN-0002"], "tags": [audit.REVIEW_TAG]},
+        "2": {"fields": before["A2-0851"], "tags": [audit.V3_AUDITED_TAG]},
+    }}
+    records = {
+        1: {
+            "fields": audit.desired_fields(before["B1-MAIN-0002"], entries["B1-MAIN-0002"]),
+            "tags": audit.desired_tags([audit.REVIEW_TAG]),
+        },
+        2: {"fields": before["A2-0851"], "tags": [audit.V3_AUDITED_TAG]},
+    }
+    monkeypatch.setattr(audit, "verify_protected_collection", lambda *_: None)
+
+    assert audit.verify_applied_scope(
+        records, catalog, snapshot, {"B1-MAIN-0002"},
+    ) == []
+    assert audit.verify_applied_scope(
+        records, catalog, snapshot, set(entries),
+    ) == [2]
+
+
+def test_cli_exposes_batch_gate_scaffold_guard_and_scoped_verify():
+    parser = audit.build_parser()
+    assert parser.parse_args(["check-batch", "--batch", "B1-01"]).batch == "B1-01"
+    assert parser.parse_args(["verify"]).scope == "full"
+    assert parser.parse_args(["verify", "--scope", "pilot"]).scope == "pilot"
+    assert parser.parse_args([
+        "scaffold", "--force-overwrite-reviewed",
+    ]).force_overwrite_reviewed is True

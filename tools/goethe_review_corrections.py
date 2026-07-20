@@ -54,8 +54,8 @@ def plan() -> dict[str, dict]:
             "before": current,
             "after": desired,
         }
-    if len(records) != 31:
-        raise RuntimeError(f"review correction target set changed: expected 31, got {len(records)}")
+    if len(records) != 32:
+        raise RuntimeError(f"review correction target set changed: expected 32, got {len(records)}")
     return records
 
 
@@ -83,7 +83,10 @@ def command_apply(args: argparse.Namespace) -> None:
     if set(saved) != set(current):
         raise RuntimeError("live correction target inventory changed since audit")
     actions = []
-    allowed = {"Lemma", "AcceptedAnswersDE", "AcceptedFullAnswersDE", "FormOrVariantNote", "ExampleTargetSpansJSON"}
+    allowed = {
+        "Lemma", "POS", "AcceptedAnswersDE", "AcceptedFullAnswersDE",
+        "FormOrVariantNote", "ExampleTargetSpansJSON",
+    }
     for note_id, item in current.items():
         payload = {name: item["after"].get(name, "") for name in allowed if item["after"].get(name, "") != item["before"].get(name, "")}
         if payload:
@@ -99,7 +102,10 @@ def command_verify(_: argparse.Namespace) -> None:
     expected = json.loads(SNAPSHOT.read_text(encoding="utf-8"))
     by_id = {str(note["noteId"]): fields(note) for note in live_notes()}
     for note_id, item in expected.items():
-        for name in ("Lemma", "AcceptedAnswersDE", "AcceptedFullAnswersDE", "FormOrVariantNote", "ExampleTargetSpansJSON"):
+        for name in (
+            "Lemma", "POS", "AcceptedAnswersDE", "AcceptedFullAnswersDE",
+            "FormOrVariantNote", "ExampleTargetSpansJSON",
+        ):
             if by_id.get(note_id, {}).get(name, "") != item["after"].get(name, ""):
                 raise RuntimeError(f"post-correction field mismatch: {note_id} {name}")
     print(json.dumps({"status": "PASS", "notes": len(expected)}, indent=2))

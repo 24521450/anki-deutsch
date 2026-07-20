@@ -33,9 +33,9 @@ def fields(**values: str) -> dict[str, str]:
 
 def test_review_policy_has_expected_reviewed_sets() -> None:
     loaded = policy.load_policy()
-    assert len(loaded["answers"]) == 46
-    assert len(loaded["production"]) >= 25
-    assert sum(rule["enabled"] == policy.DISABLED for rule in loaded["production"].values()) == 7
+    assert len(loaded["answers"]) == 56
+    assert len(loaded["production"]) == 28
+    assert sum(rule["enabled"] == policy.DISABLED for rule in loaded["production"].values()) == 10
     assert loaded["answers"]["A1-84886454468"] == "der Arzt|die Ärztin"
     assert loaded["answers"]["A2-WG-0023"] == "der Angestellte|die Angestellte"
     assert loaded["answers"]["A2-0572"] == "die Kunst|die Kunsterziehung"
@@ -45,6 +45,7 @@ def test_review_policy_has_expected_reviewed_sets() -> None:
     assert "B1-MAIN-0442" not in loaded["production"]
     assert loaded["production"]["B1-MAIN-1299"]["enabled"] == policy.DISABLED
     assert loaded["production"]["B1-WG-0015"] == {"enabled": "", "hint": ""}
+    assert loaded["production"]["B1-WG-0161"] == {"enabled": "", "hint": ""}
     assert loaded["answers"]["B1-MAIN-0252"] == "der Bancomat|der Bankomat"
 
 

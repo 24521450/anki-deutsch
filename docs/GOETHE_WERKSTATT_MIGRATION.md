@@ -6,7 +6,12 @@ to AnkiConnect, so the GUI mapping below is now a fallback/reference only.
 
 ## Full rollout completed
 
-- Scope: Goethe A1 + A2; B1 excluded.
+- Historical scope: Goethe A1 + A2; B1 was excluded from this migration.
+
+This document records the earlier A1/A2 migration baseline. The active
+pipeline now covers A1, A2, and B1 together; see `README.md` and
+`docs/GOETHE_ENGLISH_AUDIT_V4.md` for the unified workflow and its B1 release
+gate.
 - Converted after pilot: 915 A1 notes and 646 A2 notes.
 - Final state: 1,581 `Goethe Werkstatt` notes / 3,162 unchanged cards.
 - Templates: 1,581 German → English and 1,581 English → German cards.
@@ -149,7 +154,8 @@ Use the real Reviewer, not Card Preview:
 - Wrong article fails.
 - `für=fuer`, `grüßen=gruessen`, `Straße=strasse`; missing `e` fails.
 - `leidtun` and `leid tun` both pass.
-- Full phrases remain strict except the reviewed long-state forms ending in `sein`, which also accept the state word alone; terminal `.?!` is ignored and internal hyphens remain strict.
+- Multi-word answers ending in `sein` accept either terminal `sein` or `s`; omitting the terminal token yields **Check**. Standalone `sein` does not accept `s`; terminal `.?!` is ignored and internal hyphens remain strict.
+- Lemmas ending in `-` accept the literal hyphen, the bare stem, and standard endings `e`, `er`, `es`, `em`, `en`, or `s` as **Correct**; arbitrary continuations and internal hyphens remain strict.
 - English → German front has no German/audio; word audio starts only after reveal.
 - Example audio is manual and examples 3–4 are under **Show more examples**.
 - Wrong answers show the submitted and expected answers without an extra rating hint.

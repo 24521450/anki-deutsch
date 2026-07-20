@@ -20,14 +20,24 @@ Word audio:
 
 The Goethe word-audio fallback order is validated Duden, exact Wikimedia
 Commons pronunciation, Wiktionary German pronunciation audio, then Edge TTS.
-Only the `WordAudio` field is updated by the Anki workflow; scheduling and
-review history are snapshotted and verified before/after an apply.
+The canonical workflow covers A1, A2, and B1 together. Only the `WordAudio`
+field is updated; scheduling and review history are snapshotted and verified
+before and after an apply.
 
 ```powershell
-python tools/a1_preflight.py
-python tools/a1_generate.py --pilot-only
-python tools/a1_generate.py
+python tools/goethe_word_audio.py audit
+python tools/goethe_word_audio.py prepare --confirm-duden-usage --confirm-commons-license
+python tools/goethe_word_audio.py snapshot
+python tools/goethe_word_audio.py apply --scope pilot --dry-run
+python tools/goethe_word_audio.py apply --scope pilot --confirmation APPLY_GOETHE_WORD_AUDIO
+python tools/goethe_word_audio.py verify --scope pilot
+python tools/goethe_word_audio.py apply --scope full --dry-run
+python tools/goethe_word_audio.py apply --scope full --confirmation APPLY_GOETHE_WORD_AUDIO
+python tools/goethe_word_audio.py verify --scope full
 ```
+
+The level-specific Duden downloaders remain source-audio preparation tools.
+They are not separate deck-update pipelines.
 
 Example sentence audio:
 
@@ -36,14 +46,43 @@ python tools/goethe_example_audio.py audit
 python tools/goethe_example_audio.py prepare --scope pilot
 python tools/goethe_example_audio.py prepare --scope full
 python tools/goethe_example_audio.py snapshot
+python tools/goethe_example_audio.py apply --scope pilot --dry-run
 python tools/goethe_example_audio.py apply --scope pilot --confirmation APPLY_GOETHE_EXAMPLE_AUDIO
 python tools/goethe_example_audio.py verify --scope pilot
+python tools/goethe_example_audio.py apply --scope full --dry-run
 python tools/goethe_example_audio.py apply --scope full --confirmation APPLY_GOETHE_EXAMPLE_AUDIO
 python tools/goethe_example_audio.py verify --scope full
 ```
 
-This A1+A2 workflow uses deterministic Edge TTS voices and preserves Anki
+This A1-B1 workflow uses deterministic Edge TTS voices and preserves Anki
 scheduling and review history. See `docs/GOETHE_EXAMPLE_AUDIO.md`.
+
+English audit and completion:
+
+```powershell
+python tools/goethe_english_audit.py inspect
+python tools/goethe_english_audit.py check-batch --batch B1-01
+python tools/goethe_english_audit.py compile
+python tools/goethe_completion.py build
+python tools/goethe_completion.py dry-run
+python tools/goethe_completion.py apply --confirmation COMPLETE_GOETHE_A1_A2_B1
+python tools/goethe_completion.py verify
+python tools/export_goethe_notes_jsonl.py
+```
+
+The checked-in v4 audit has one row per canonical A1-B1 note: 3,493 notes and
+6,986 cards in total, including 1,968 B1 notes. Of those B1 notes, 199 retain
+no Goethe example. The current scope restores the distinct Swiss
+`Sekundarstufe I` and `Sekundarstufe II` identities. `B1-WG-0066` (`E-Mail`)
+is provenance on the existing A1 note, not a separate B1 card. Live audit,
+completion apply, and the final JSONL snapshot
+fail closed until every B1 row has evidence-backed review and the collision
+checks pass. Completion apply validates exact note/card IDs and creates a
+scheduled APKG backup before any duplicate is deleted. See
+`docs/GOETHE_ENGLISH_AUDIT_V4.md`.
+
+`tools/goethe_b1_media.py` is a non-mutating compatibility shim that points to
+the two all-level audio workflows.
 
 Duden dictionary audio:
 

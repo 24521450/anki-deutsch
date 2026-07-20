@@ -4,13 +4,16 @@ from __future__ import annotations
 import argparse
 import copy
 import hashlib
+import importlib
 import json
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 import goethe_examples
-import goethe_english_audit
+import goethe_apkg as apkg
+import goethe_scope as scope
 import goethe_source_examples
 import goethe_werkstatt_migrate as gw
 import goethe_word_audio as word_audio
@@ -22,17 +25,15 @@ MANIFEST_PATH = STATE / "manifest.json"
 SNAPSHOT_PATH = STATE / "snapshot.json"
 MODEL = "Goethe Werkstatt"
 PARENT_DECK = "Goethe Institute"
-EXPECTED_NOTES = 1525
-EXPECTED_CARDS = 3050
+MANIFEST_SCHEMA_VERSION = 2
+EXPECTED_NOTES = scope.EXPECTED_NOTES
+EXPECTED_CARDS = scope.EXPECTED_CARDS
 EXPECTED_AFFECTED = 0
 EXPECTED_REMOVED = 0
-EXPECTED_REMAINING = 2009
-EXPECTED_EMPTY = 57
-EXPECTED_BY_LEVEL = {"A1": 994, "A2": 1015}
-PILOT_IDS = [
-    1497484860718, 1497484860719, 1497484860720, 1497484860727,
-    1497484860737, 1497484860784, 1497484860912, 1584886454497,
-]
+EXPECTED_REMAINING = scope.EXPECTED_EXAMPLE_OCCURRENCES
+EXPECTED_EMPTY = scope.EXPECTED_EMPTY_NOTES
+EXPECTED_BY_LEVEL = dict(scope.EXPECTED_EXAMPLE_OCCURRENCES_BY_LEVEL)
+EXPECTED_EMPTY_BY_LEVEL = dict(scope.EXPECTED_EMPTY_NOTES_BY_LEVEL)
 APPLY_CONFIRMATION = "PRUNE_GOETHE_EXAMPLES_TO_LEVEL_SOURCES"
 ROLLBACK_CONFIRMATION = "ROLLBACK_GOETHE_EXAMPLE_CLEANUP"
 REBASELINE_MODEL_CONFIRMATION = "REBASELINE_GOETHE_MODEL_AFTER_EXTERNAL_CHANGE"
@@ -68,10 +69,36 @@ def source_hashes() -> dict[str, str]:
     paths = {
         "A1": goethe_source_examples.SOURCE_PATHS["A1"],
         "A2": goethe_source_examples.SOURCE_PATHS["A2"],
+        "B1": goethe_source_examples.SOURCE_PATHS["B1"],
         "overrides": goethe_source_examples.OVERRIDES_PATH,
-        "english_audit": goethe_english_audit.MANIFEST,
     }
+    audit_path = english_audit_path()
+    if audit_path:
+        paths["english_audit"] = audit_path
     return {name: hash_file(path) for name, path in paths.items()}
+
+
+def english_audit_path() -> Path | None:
+    try:
+        audit = importlib.import_module("goethe_english_audit")
+    except ImportError:
+        return None
+    # v3 is immutable migration history, never a live cleanup authority.
+    candidates = [getattr(audit, "MANIFEST", None)]
+    return next((Path(raw) for raw in candidates if raw and Path(raw).exists()), None)
+
+
+def english_audit_entries(path: Path) -> list[dict[str, Any]]:
+    text = path.read_text(encoding="utf-8")
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError:
+        data = [json.loads(line) for line in text.splitlines() if line.strip()]
+    if isinstance(data, dict) and isinstance(data.get("entries"), dict):
+        return [entry for entry in data["entries"].values() if isinstance(entry, dict)]
+    if isinstance(data, dict):
+        return [data]
+    return [entry for entry in data if isinstance(entry, dict)] if isinstance(data, list) else []
 
 
 def live_records() -> dict[int, dict[str, Any]]:
@@ -101,10 +128,26 @@ def desired_example_fields(
 
 def reviewed_allowed_examples() -> dict[str, dict[str, str]]:
     allowed = goethe_source_examples.allowed_examples_by_level()
-    manifest = goethe_english_audit.load_json(goethe_english_audit.MANIFEST)
-    goethe_english_audit.validate_manifest(manifest)
-    for entry in manifest["entries"].values():
-        for example in entry["desired_examples"]:
+    audit_path = english_audit_path()
+    if audit_path is None:
+        return allowed
+    try:
+        audit = importlib.import_module("goethe_english_audit")
+        manifest = audit.load_json(audit_path)
+        audit.validate_scaffold(manifest)
+    except audit.AuditError:
+        return allowed
+    except (OSError, ValueError, TypeError, KeyError) as exc:
+        raise CleanupError(f"invalid English audit artifact: {exc}") from exc
+    for entry in manifest.get("entries", {}).values():
+        # A partial scaffold may contribute only rows that already passed the
+        # complete evidence gate. In particular, never promote pending B1
+        # desired examples into the cleanup whitelist.
+        if entry.get("review_status") != "reviewed" or audit._review_entry_errors(entry):
+            continue
+        if entry.get("cefr") not in allowed:
+            continue
+        for example in entry.get("desired_examples", []):
             key = goethe_source_examples.sentence_key(example["de"])
             allowed[entry["cefr"]].setdefault(key, example["de"])
     return allowed
@@ -121,13 +164,15 @@ def compile_manifest(records: dict[int, dict[str, Any]]) -> dict[str, Any]:
     allowed = reviewed_allowed_examples()
     updates: dict[str, dict[str, str]] = {}
     removals: list[dict[str, Any]] = []
-    remaining_by_level = {"A1": 0, "A2": 0}
+    remaining_by_level = {level: 0 for level in scope.LEVELS}
+    empty_by_level = {level: 0 for level in scope.LEVELS}
     empty = 0
     for note_id, record in sorted(records.items()):
         fields = record["fields"]
         desired, kept, removed = desired_example_fields(fields, allowed)
         remaining_by_level[fields["CEFR"]] += len(kept)
         empty += not kept
+        empty_by_level[fields["CEFR"]] += not kept
         if removed:
             updates[str(note_id)] = desired
             removals.append({
@@ -138,19 +183,21 @@ def compile_manifest(records: dict[int, dict[str, Any]]) -> dict[str, Any]:
         "notes": len(records), "cards": sum(len(record["cards"]) for record in records.values()),
         "affected_notes": len(updates), "removed_occurrences": sum(len(item["removed"]) for item in removals),
         "remaining_occurrences": sum(remaining_by_level.values()), "empty_notes": empty,
-        "remaining_by_level": remaining_by_level,
+        "remaining_by_level": remaining_by_level, "empty_by_level": empty_by_level,
     }
     expected = {
         "notes": EXPECTED_NOTES, "cards": EXPECTED_CARDS, "affected_notes": EXPECTED_AFFECTED,
         "removed_occurrences": EXPECTED_REMOVED, "remaining_occurrences": EXPECTED_REMAINING,
         "empty_notes": EXPECTED_EMPTY, "remaining_by_level": EXPECTED_BY_LEVEL,
+        "empty_by_level": EXPECTED_EMPTY_BY_LEVEL,
     }
     if summary != expected:
         raise CleanupError(f"cleanup projection changed: {summary} != {expected}")
     return {
-        "schema_version": 1, "created_utc": now_utc(), "source_hashes": source_hashes(),
+        "schema_version": MANIFEST_SCHEMA_VERSION, "created_utc": now_utc(),
+        "levels": list(scope.LEVELS), "source_hashes": source_hashes(),
         "expected_fingerprints": {str(note_id): record_fingerprint(record) for note_id, record in records.items()},
-        "updates": updates, "removals": removals, "pilot_ids": PILOT_IDS, "summary": summary,
+        "updates": updates, "removals": removals, "pilot_ids": [], "summary": summary,
     }
 
 
@@ -162,8 +209,10 @@ def command_compile(_: argparse.Namespace) -> None:
 
 def load_manifest() -> dict[str, Any]:
     manifest = word_audio.load_json(MANIFEST_PATH, None)
-    if not manifest or manifest.get("schema_version") != 1:
+    if not manifest or manifest.get("schema_version") != MANIFEST_SCHEMA_VERSION:
         raise CleanupError("cleanup manifest missing or incompatible; run compile")
+    if manifest.get("levels") != list(scope.LEVELS):
+        raise CleanupError("cleanup manifest level set is stale; run compile")
     if manifest.get("source_hashes") != source_hashes():
         raise CleanupError("Goethe source or reviewed overrides changed after compile")
     return manifest
@@ -191,10 +240,17 @@ def command_snapshot(_: argparse.Namespace) -> None:
     records = live_records()
     verify_compiled_baseline(records, manifest)
     STATE.mkdir(parents=True, exist_ok=True)
-    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + f"_{time.time_ns() % 1_000_000_000:09d}"
     backup = STATE / f"Goethe_Institute_pre_example_cleanup_{stamp}.apkg"
-    result = gw.anki("exportPackage", deck=PARENT_DECK, path=backup.as_posix(), includeSched=True)
-    if not result or not backup.exists():
+    if backup.exists():
+        raise CleanupError(f"backup destination already exists: {backup}")
+    try:
+        result = gw.anki("exportPackage", deck=PARENT_DECK, path=backup.as_posix(), includeSched=True)
+    except gw.MigrationError as exc:
+        if "timed out" not in str(exc).casefold() and "timeout" not in str(exc).casefold():
+            raise
+        result = True
+    if not result or not apkg.wait_for_valid_apkg(backup):
         raise CleanupError("Anki APKG export failed")
     cards = [card for record in records.values() for card in record["cards"]]
     reviews = word_audio.all_reviews([int(card["cardId"]) for card in cards])
@@ -216,6 +272,9 @@ def load_ready() -> tuple[dict[str, Any], dict[str, Any]]:
     snapshot = word_audio.load_json(SNAPSHOT_PATH, None)
     if not snapshot or snapshot.get("manifest_sha256") != hash_file(MANIFEST_PATH):
         raise CleanupError("matching snapshot missing; run snapshot after compile")
+    backup = Path(str(snapshot.get("backup", "")))
+    if not apkg.valid_apkg(backup) or snapshot.get("backup_sha256") != apkg.hash_file(backup):
+        raise CleanupError("scheduled APKG backup is missing, corrupt, or changed")
     return manifest, snapshot
 
 

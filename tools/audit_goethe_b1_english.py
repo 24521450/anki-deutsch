@@ -1,4 +1,9 @@
-"""Audit generated B1 English against the offline FreeDict German-English release."""
+"""Generate legacy FreeDict triage hints for the manual Goethe B1 English audit.
+
+FreeDict similarity is deliberately not review evidence.  This helper can rank
+candidate glosses, but its output must remain ``hint_only`` and cannot make a
+v4 row reviewed.
+"""
 from __future__ import annotations
 
 import argparse
@@ -83,6 +88,7 @@ def b1_records(manifest: dict) -> list[dict]:
 
 
 def audit(tei: Path) -> tuple[list[dict], dict]:
+    """Return triage classifications, never evidence-backed review decisions."""
     manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
     records = b1_records(manifest)
     new_levels = Counter(
@@ -134,7 +140,9 @@ def audit(tei: Path) -> tuple[list[dict], dict]:
             "meaning_en": meaning, "status": status,
             "best_dictionary_score": best_score,
             "dictionary_candidates": [value for _, value in ranked[:8]],
-            "evidence": "https://freedict.org/downloads/",
+            "review_status": "hint_only",
+            "is_review_evidence": False,
+            "source_url": "https://freedict.org/downloads/",
             "examples": examples,
         })
     summary = {
@@ -142,6 +150,7 @@ def audit(tei: Path) -> tuple[list[dict], dict]:
         "dictionary_coverage": sum(bool(entry["dictionary_candidates"]) for entry in entries),
         "example_flags": dict(sorted(example_flags.items())),
         "source": "FreeDict deu-eng 1.9-fd1",
+        "source_role": "hint_only_not_review_evidence",
     }
     return entries, summary
 

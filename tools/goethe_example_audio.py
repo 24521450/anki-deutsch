@@ -1,4 +1,4 @@
-"""Generate and safely wire Edge TTS audio for every Goethe A1/A2 example."""
+"""Generate and safely wire Edge TTS audio for every Goethe A1-B1 example."""
 from __future__ import annotations
 
 import argparse
@@ -10,6 +10,7 @@ import json
 import os
 import re
 import tempfile
+import time
 import unicodedata
 from collections import Counter
 from datetime import datetime, timezone
@@ -17,6 +18,8 @@ from pathlib import Path
 from typing import Any
 
 import goethe_examples
+import goethe_apkg as apkg
+import goethe_scope as scope
 import goethe_werkstatt_migrate as gw
 import goethe_word_audio as word_audio
 
@@ -28,10 +31,14 @@ MANIFEST_PATH = STATE / "manifest.json"
 SNAPSHOT_PATH = STATE / "snapshot.json"
 MODEL = "Goethe Werkstatt"
 PARENT_DECK = "Goethe Institute"
-EXPECTED_NOTES = 1525
-EXPECTED_CARDS = 3050
-EXPECTED_OCCURRENCES = 2009
-EXPECTED_UNIQUE = 1923
+MANIFEST_SCHEMA_VERSION = 2
+EXPECTED_NOTES = scope.EXPECTED_NOTES
+EXPECTED_CARDS = scope.EXPECTED_CARDS
+EXPECTED_NOTES_BY_LEVEL = dict(scope.EXPECTED_NOTES_BY_LEVEL)
+EXPECTED_CARDS_BY_LEVEL = dict(scope.EXPECTED_CARDS_BY_LEVEL)
+EXPECTED_OCCURRENCES_BY_LEVEL = dict(scope.EXPECTED_EXAMPLE_OCCURRENCES_BY_LEVEL)
+EXPECTED_OCCURRENCES = scope.EXPECTED_EXAMPLE_OCCURRENCES
+EXPECTED_UNIQUE = scope.EXPECTED_UNIQUE_EXAMPLE_AUDIO
 PILOT_SIZE = 20
 CONCURRENCY = 4
 AUDIO_FIELDS = tuple(f"Example{index}Audio" for index in range(1, 5)) + ("MoreExamplesHTML",)
@@ -99,7 +106,13 @@ def build_manifest(records: dict[int, dict[str, Any]], previous: dict[str, Any] 
     notes: dict[str, Any] = {}
     unique: dict[str, Any] = {}
     occurrence_count = 0
-    previous_unique = (previous or {}).get("unique", {}) if (previous or {}).get("config") == EDGE_CONFIG else {}
+    previous_compatible = (
+        (previous or {}).get("schema_version") == MANIFEST_SCHEMA_VERSION
+        and (previous or {}).get("levels") == list(scope.LEVELS)
+        and (previous or {}).get("config") == EDGE_CONFIG
+    )
+    previous_unique = (previous or {}).get("unique", {}) if previous_compatible else {}
+    occurrences_by_level: Counter[str] = Counter()
     for note_id, record in sorted(records.items()):
         examples = goethe_examples.parse_fields(record["fields"])
         occurrences = []
@@ -125,10 +138,13 @@ def build_manifest(records: dict[int, dict[str, Any]], previous: dict[str, Any] 
             if cached:
                 entry.update({key: cached[key] for key in ("status", "path", "size", "sha256", "media_name", "created_utc") if key in cached})
             occurrence_count += 1
+            occurrences_by_level[record["fields"]["CEFR"]] += 1
         notes[str(note_id)] = {
             "note_id": note_id, "level": record["fields"]["CEFR"],
             "source_signature": example_signature(record["fields"]), "occurrences": occurrences,
         }
+    for entry in unique.values():
+        entry["levels"].sort(key=scope.LEVEL_RANK.__getitem__)
     card_count = sum(len(record["cards"]) for record in records.values())
     if (len(records), card_count, occurrence_count, len(unique)) != (
         EXPECTED_NOTES, EXPECTED_CARDS, EXPECTED_OCCURRENCES, EXPECTED_UNIQUE,
@@ -137,20 +153,41 @@ def build_manifest(records: dict[int, dict[str, Any]], previous: dict[str, Any] 
             "baseline drift: "
             f"notes={len(records)} cards={card_count} occurrences={occurrence_count} unique={len(unique)}"
         )
+    level_counts = {
+        level: {
+            "notes": sum(record["fields"]["CEFR"] == level for record in records.values()),
+            "cards": sum(
+                len(record["cards"])
+                for record in records.values()
+                if record["fields"]["CEFR"] == level
+            ),
+            "occurrences": occurrences_by_level[level],
+        }
+        for level in scope.LEVELS
+    }
+    if level_counts != expected_level_counts():
+        raise ExampleAudioError(f"per-level baseline drift: {level_counts}")
     pilot_audio_ids = choose_pilot(unique, notes)
-    pilot_note_ids = []
-    remaining = set(pilot_audio_ids)
-    for note_id, item in notes.items():
-        if any(occurrence["audio_id"] in remaining for occurrence in item["occurrences"]):
-            pilot_note_ids.append(int(note_id))
-            remaining -= {occurrence["audio_id"] for occurrence in item["occurrences"]}
-        if not remaining:
-            break
-    return {
-        "schema_version": 1, "created_utc": now_utc(), "config": EDGE_CONFIG,
+    pilot_note_ids = choose_pilot_notes(notes, pilot_audio_ids)
+    manifest = {
+        "schema_version": MANIFEST_SCHEMA_VERSION, "created_utc": now_utc(), "config": EDGE_CONFIG,
+        "levels": list(scope.LEVELS), "level_counts": level_counts,
         "counts": {"notes": len(records), "cards": card_count, "occurrences": occurrence_count, "unique": len(unique)},
         "pilot_audio_ids": pilot_audio_ids, "pilot_note_ids": pilot_note_ids,
         "notes": notes, "unique": unique,
+    }
+    validate_manifest(manifest)
+    return manifest
+
+
+def expected_level_counts() -> dict[str, dict[str, int]]:
+    return {
+        level: {
+            "notes": EXPECTED_NOTES_BY_LEVEL[level],
+            "cards": EXPECTED_CARDS_BY_LEVEL[level],
+            "occurrences": EXPECTED_OCCURRENCES_BY_LEVEL[level],
+        }
+        for level in scope.LEVELS
     }
 
 
@@ -166,7 +203,7 @@ def choose_pilot(unique: dict[str, Any], notes: dict[str, Any]) -> list[str]:
     }
     selected: list[str] = []
     categories = []
-    for level in ("A1", "A2"):
+    for level in scope.LEVELS:
         for voice in EDGE_CONFIG["voices"]:
             categories.append([key for key, item in sorted(unique.items()) if level in item["levels"] and item["voice"] == voice])
     categories.extend([sorted(overflow_ids), sorted(changed_ids)])
@@ -176,6 +213,82 @@ def choose_pilot(unique: dict[str, Any], notes: dict[str, Any]) -> list[str]:
             selected.append(candidate)
     selected.extend(key for key in sorted(unique) if key not in selected)
     return selected[:PILOT_SIZE]
+
+
+def choose_pilot_notes(notes: dict[str, Any], pilot_audio_ids: list[str]) -> list[int]:
+    selected: list[int] = []
+    pilot_set = set(pilot_audio_ids)
+    for level in scope.LEVELS:
+        candidate = next((
+            (note_id, item)
+            for note_id, item in notes.items()
+            if item["level"] == level
+            and any(occurrence["audio_id"] in pilot_set for occurrence in item["occurrences"])
+        ), None)
+        if candidate:
+            note_id, _ = candidate
+            selected.append(int(note_id))
+    remaining = set(pilot_audio_ids)
+    for note_id in selected:
+        remaining -= {occurrence["audio_id"] for occurrence in notes[str(note_id)]["occurrences"]}
+    for note_id, item in notes.items():
+        if int(note_id) in selected:
+            continue
+        if any(occurrence["audio_id"] in remaining for occurrence in item["occurrences"]):
+            selected.append(int(note_id))
+            remaining -= {occurrence["audio_id"] for occurrence in item["occurrences"]}
+        if not remaining:
+            break
+    return selected
+
+
+def validate_manifest(manifest: dict[str, Any]) -> None:
+    if manifest.get("schema_version") != MANIFEST_SCHEMA_VERSION:
+        raise ExampleAudioError("example-audio manifest schema is stale; rebuild it")
+    if manifest.get("levels") != list(scope.LEVELS):
+        raise ExampleAudioError("example-audio manifest level set is stale; rebuild it")
+    if manifest.get("config") != EDGE_CONFIG:
+        raise ExampleAudioError("example-audio TTS config is stale; rebuild it")
+    expected_counts = {
+        "notes": EXPECTED_NOTES, "cards": EXPECTED_CARDS,
+        "occurrences": EXPECTED_OCCURRENCES, "unique": EXPECTED_UNIQUE,
+    }
+    if manifest.get("counts") != expected_counts:
+        raise ExampleAudioError("example-audio manifest corpus totals are stale; rebuild it")
+    if manifest.get("level_counts") != expected_level_counts():
+        raise ExampleAudioError("example-audio manifest per-level counts are stale; rebuild it")
+    notes = manifest.get("notes")
+    unique = manifest.get("unique")
+    if not isinstance(notes, dict) or not isinstance(unique, dict):
+        raise ExampleAudioError("example-audio manifest content is invalid")
+    note_counts = Counter(item.get("level") for item in notes.values() if isinstance(item, dict))
+    if dict(note_counts) != EXPECTED_NOTES_BY_LEVEL:
+        raise ExampleAudioError(f"example-audio manifest note levels are invalid: {dict(note_counts)}")
+    occurrences = [occurrence for item in notes.values() for occurrence in item.get("occurrences", [])]
+    if len(occurrences) != EXPECTED_OCCURRENCES or len(unique) != EXPECTED_UNIQUE:
+        raise ExampleAudioError("example-audio manifest occurrence index is incomplete")
+    if any(occurrence.get("audio_id") not in unique for occurrence in occurrences):
+        raise ExampleAudioError("example-audio manifest references an unknown audio ID")
+    usage = Counter(occurrence["audio_id"] for occurrence in occurrences)
+    usage_levels: dict[str, set[str]] = {audio_id: set() for audio_id in usage}
+    for note in notes.values():
+        for occurrence in note.get("occurrences", []):
+            usage_levels[occurrence["audio_id"]].add(note["level"])
+    if set(usage) != set(unique):
+        raise ExampleAudioError("example-audio manifest has unreferenced audio IDs")
+    for audio_id, item in unique.items():
+        levels = sorted(usage_levels[audio_id], key=scope.LEVEL_RANK.__getitem__)
+        if item.get("occurrences") != usage[audio_id] or item.get("levels") != levels:
+            raise ExampleAudioError(f"example-audio dedupe metadata is stale: {audio_id}")
+    if any(audio_id not in unique for audio_id in manifest.get("pilot_audio_ids", [])):
+        raise ExampleAudioError("example-audio pilot references an unknown audio ID")
+    pilot_levels = {
+        notes[str(note_id)]["level"]
+        for note_id in manifest.get("pilot_note_ids", [])
+        if str(note_id) in notes
+    }
+    if pilot_levels != set(scope.LEVELS):
+        raise ExampleAudioError("example-audio pilot does not cover A1, A2, and B1")
 
 
 def validate_cached(item: dict[str, Any]) -> bool:
@@ -223,6 +336,7 @@ async def generate_one(item: dict[str, Any], edge_tts: Any, semaphore: asyncio.S
 
 
 async def generate_scope(manifest: dict[str, Any], scope: str) -> None:
+    validate_manifest(manifest)
     try:
         import edge_tts
         from importlib.metadata import version
@@ -261,10 +375,22 @@ def live_records() -> dict[int, dict[str, Any]]:
 
 def command_audit(_: argparse.Namespace) -> None:
     records = live_records()
-    examples = [item for record in records.values() for item in goethe_examples.parse_fields(record["fields"])]
+    examples = [
+        (record["fields"]["CEFR"], item)
+        for record in records.values()
+        for item in goethe_examples.parse_fields(record["fields"])
+    ]
+    occurrences_by_level = Counter(level for level, _ in examples)
+    if sum(occurrences_by_level.values()) != EXPECTED_OCCURRENCES or dict(occurrences_by_level) != {
+        level: EXPECTED_OCCURRENCES_BY_LEVEL[level] for level in scope.LEVELS
+    }:
+        raise ExampleAudioError(f"example baseline drift: occurrences={dict(occurrences_by_level)}")
     sources = Counter()
-    for item in examples:
+    unique_ids = set()
+    for _, item in examples:
         audio = item["audio"]
+        spoken = spoken_text(item["de"])
+        unique_ids.add(request_id(spoken, voice_for(spoken)))
         if "_goethe_example_edge_" in audio:
             sources["edge-example"] += 1
         elif "googletts" in audio:
@@ -275,9 +401,16 @@ def command_audit(_: argparse.Namespace) -> None:
             sources["other"] += 1
         else:
             sources["blank"] += 1
-    print(json.dumps({"notes": len(records), "cards": sum(len(r["cards"]) for r in records.values()),
-                      "occurrences": len(examples), "unique": len({item["de"] for item in examples}),
-                      "sources": sources}, ensure_ascii=False, indent=2))
+    print(json.dumps({
+        "notes": len(records), "cards": sum(len(r["cards"]) for r in records.values()),
+        "occurrences": len(examples), "unique": len(unique_ids),
+        "levels": {level: {
+            "notes": sum(record["fields"]["CEFR"] == level for record in records.values()),
+            "cards": sum(len(record["cards"]) for record in records.values() if record["fields"]["CEFR"] == level),
+            "occurrences": occurrences_by_level[level],
+        } for level in scope.LEVELS},
+        "sources": sources,
+    }, ensure_ascii=False, indent=2))
 
 
 async def command_prepare(args: argparse.Namespace) -> None:
@@ -289,6 +422,7 @@ async def command_prepare(args: argparse.Namespace) -> None:
 
 
 def require_full_ready(manifest: dict[str, Any]) -> None:
+    validate_manifest(manifest)
     bad = [key for key, item in manifest["unique"].items() if not validate_cached(item)]
     if bad:
         raise ExampleAudioError(f"audio preparation incomplete: {len(bad)} missing or invalid")
@@ -296,8 +430,11 @@ def require_full_ready(manifest: dict[str, Any]) -> None:
 
 def command_snapshot(_: argparse.Namespace) -> None:
     manifest = word_audio.load_json(MANIFEST_PATH, None)
-    if not manifest or manifest.get("config") != EDGE_CONFIG:
+    if not manifest:
         raise ExampleAudioError("prepared manifest missing or incompatible")
+    validate_manifest(manifest)
+    if manifest.get("config") != EDGE_CONFIG:
+        raise ExampleAudioError("prepared manifest TTS config is incompatible")
     require_full_ready(manifest)
     records = live_records()
     if set(map(int, manifest["notes"])) != set(records):
@@ -306,16 +443,23 @@ def command_snapshot(_: argparse.Namespace) -> None:
         if manifest["notes"][str(note_id)]["source_signature"] != example_signature(record["fields"]):
             raise ExampleAudioError(f"example text changed after preparation: {note_id}")
     STATE.mkdir(parents=True, exist_ok=True)
-    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + f"_{time.time_ns() % 1_000_000_000:09d}"
     backup = STATE / f"Goethe_Institute_pre_example_audio_{stamp}.apkg"
-    result = gw.anki("exportPackage", deck=PARENT_DECK, path=backup.as_posix(), includeSched=True)
-    if not result or not backup.exists():
+    if backup.exists():
+        raise ExampleAudioError(f"backup destination already exists: {backup}")
+    try:
+        result = gw.anki("exportPackage", deck=PARENT_DECK, path=backup.as_posix(), includeSched=True)
+    except gw.MigrationError as exc:
+        if "timed out" not in str(exc).casefold() and "timeout" not in str(exc).casefold():
+            raise
+        result = True
+    if not result or not apkg.wait_for_valid_apkg(backup):
         raise ExampleAudioError("Anki APKG export failed")
     cards = [card for record in records.values() for card in record["cards"]]
     reviews = word_audio.all_reviews([int(card["cardId"]) for card in cards])
     snapshot = {
         "schema_version": 1, "created_utc": now_utc(), "backup": str(backup),
-        "backup_sha256": word_audio.duden.hash_file(backup),
+        "backup_sha256": apkg.hash_file(backup),
         "manifest_sha256": word_audio.duden.hash_file(MANIFEST_PATH),
         "notes": {str(note_id): {"model": record["model"], "fields": record["fields"], "tags": record["tags"]}
                   for note_id, record in records.items()},
@@ -332,9 +476,13 @@ def load_ready() -> tuple[dict[str, Any], dict[str, Any]]:
     snapshot = word_audio.load_json(SNAPSHOT_PATH, None)
     if not manifest or not snapshot:
         raise ExampleAudioError("manifest or snapshot missing")
+    validate_manifest(manifest)
     if snapshot.get("manifest_sha256") != word_audio.duden.hash_file(MANIFEST_PATH):
         raise ExampleAudioError("manifest changed after snapshot")
     require_full_ready(manifest)
+    backup = Path(str(snapshot.get("backup", "")))
+    if not apkg.valid_apkg(backup) or snapshot.get("backup_sha256") != apkg.hash_file(backup):
+        raise ExampleAudioError("scheduled APKG backup is missing, corrupt, or changed")
     return manifest, snapshot
 
 
@@ -383,6 +531,9 @@ def ensure_media(item: dict[str, Any]) -> None:
     stored = gw.anki("storeMediaFile", filename=item["media_name"], data=base64.b64encode(path.read_bytes()).decode("ascii"))
     if stored != item["media_name"]:
         raise ExampleAudioError(f"unexpected stored media name: {stored}")
+    retrieved = gw.anki("retrieveMediaFile", filename=item["media_name"])
+    if not retrieved or hashlib.sha256(base64.b64decode(retrieved)).hexdigest() != item["sha256"]:
+        raise ExampleAudioError(f"Anki media verification failed: {item['media_name']}")
 
 
 def update_notes(values: dict[int, dict[str, str]]) -> None:
@@ -398,12 +549,23 @@ def update_notes(values: dict[int, dict[str, str]]) -> None:
 
 
 def command_apply(args: argparse.Namespace) -> None:
-    if args.confirmation != APPLY_CONFIRMATION:
+    if not args.dry_run and args.confirmation != APPLY_CONFIRMATION:
         raise ExampleAudioError(f"confirmation must equal {APPLY_CONFIRMATION}")
     manifest, snapshot = load_ready()
     records = live_records()
     verify_baseline(records, manifest, snapshot)
     note_ids = selected_note_ids(manifest, args.scope)
+    values = {}
+    for note_id in note_ids:
+        expected = expected_audio_fields(note_id, manifest, snapshot["notes"][str(note_id)]["fields"])
+        if any(records[note_id]["fields"].get(name, "") != value for name, value in expected.items()):
+            values[note_id] = expected
+    print(json.dumps({
+        "scope": args.scope, "selected_notes": len(note_ids),
+        "changed_notes": len(values), "dry_run": args.dry_run,
+    }, indent=2))
+    if args.dry_run:
+        return
     audio_ids = {
         occurrence["audio_id"] for note_id in note_ids
         for occurrence in manifest["notes"][str(note_id)]["occurrences"]
@@ -412,12 +574,6 @@ def command_apply(args: argparse.Namespace) -> None:
         ensure_media(manifest["unique"][audio_id])
         if number % 100 == 0 or number == len(audio_ids):
             print(f"media {number}/{len(audio_ids)}")
-    values = {}
-    for note_id in note_ids:
-        expected = expected_audio_fields(note_id, manifest, snapshot["notes"][str(note_id)]["fields"])
-        if any(records[note_id]["fields"].get(name, "") != value for name, value in expected.items()):
-            values[note_id] = expected
-    print(json.dumps({"scope": args.scope, "selected_notes": len(note_ids), "changed_notes": len(values)}, indent=2))
     try:
         update_notes(values)
     except Exception:
@@ -489,7 +645,8 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("snapshot").set_defaults(func=command_snapshot)
     apply = sub.add_parser("apply")
     apply.add_argument("--scope", choices=("pilot", "full"), default="full")
-    apply.add_argument("--confirmation", required=True)
+    apply.add_argument("--dry-run", action="store_true")
+    apply.add_argument("--confirmation")
     apply.set_defaults(func=command_apply)
     verify = sub.add_parser("verify")
     verify.add_argument("--scope", choices=("pilot", "full"), default="full")

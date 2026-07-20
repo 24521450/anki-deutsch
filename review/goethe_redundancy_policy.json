@@ -39,6 +39,7 @@
     ]
   },
   "reviewed_note_merges": [
+    {"survivor": 1584886454651, "survivor_source_ref": "A1-84886454651", "duplicate": 1784527085549, "duplicate_source_ref": "B1-WG-0066"},
     {"survivor": 1584887177249, "survivor_source_ref": "A1-WG-0093", "duplicate": 1784075689145, "duplicate_source_ref": "B1-WG-0241"},
     {"survivor": 1584887177250, "survivor_source_ref": "A1-WG-0094", "duplicate": 1784075689238, "duplicate_source_ref": "B1-WG-0242"},
     {"survivor": 1584887177251, "survivor_source_ref": "A1-WG-0095", "duplicate": 1784075689331, "duplicate_source_ref": "B1-WG-0243"},
@@ -132,9 +133,85 @@
           "LegacyGUID": "goethe:A2-WG-0130-NEUJAHR"
         }
       }
+    },
+    {
+      "source_ref": "A2-WG-0089",
+      "survivor_note_id": 1783863835323,
+      "expected_lemma": "Schweiz",
+      "expected_source_refs": [
+        "A2-WG-0089",
+        "B1-WG-0130",
+        "B1-WG-0131",
+        "B1-WG-0181"
+      ],
+      "survivor": {
+        "source_id": "A2-WG-0089",
+        "source_refs": [
+          "A2-WG-0089",
+          "B1-WG-0181"
+        ],
+        "field_overrides": {
+          "Lemma": "Schweiz",
+          "POS": "n.",
+          "Article": "die",
+          "Gender": "f.",
+          "NounFormsRaw": "",
+          "FormOrVariantNote": "Schweiz | die Schweiz.",
+          "AcceptedAnswersDE": "Schweiz",
+          "AcceptedArticlesDE": "die",
+          "WordAudio": ""
+        }
+      },
+      "children": [
+        {
+          "source_id": "B1-WG-0130",
+          "coverage_ref": "B1-WG-0130",
+          "source_refs": [
+            "B1-WG-0130"
+          ],
+          "cefr": "B1",
+          "field_overrides": {
+            "Lemma": "Schweiz: Sekundarstufe I",
+            "POS": "n.",
+            "Article": "die",
+            "Gender": "f.",
+            "NounFormsRaw": "",
+            "FormOrVariantNote": "Schweiz: Sekundarstufe I | Sekundarstufe I.",
+            "AcceptedAnswersDE": "Schweiz: Sekundarstufe I|Sekundarstufe I",
+            "AcceptedArticlesDE": "die",
+            "WordAudio": "",
+            "OriginalOrder": "B1-WG-0130",
+            "SourceNoteRaw": "B1-WG-0130 Schweiz, Sekundarstufe I: die Realschule, Sekundarschule, Bezirksschule, Orientierungsstufe",
+            "LegacyGUID": "goethe:B1-WG-0130"
+          }
+        },
+        {
+          "source_id": "B1-WG-0131",
+          "coverage_ref": "B1-WG-0131",
+          "source_refs": [
+            "B1-WG-0131"
+          ],
+          "cefr": "B1",
+          "field_overrides": {
+            "Lemma": "Schweiz: Sekundarstufe II",
+            "POS": "n.",
+            "Article": "die",
+            "Gender": "f.",
+            "NounFormsRaw": "",
+            "FormOrVariantNote": "Schweiz: Sekundarstufe II | Sekundarstufe II.",
+            "AcceptedAnswersDE": "Schweiz: Sekundarstufe II|Sekundarstufe II",
+            "AcceptedArticlesDE": "die",
+            "WordAudio": "",
+            "OriginalOrder": "B1-WG-0131",
+            "SourceNoteRaw": "B1-WG-0131 Schweiz, Sekundarstufe II: die Mittelschule = das Gymnasium, die Berufsschule, die Berufsmittelschule, die Diplommittelschule",
+            "LegacyGUID": "goethe:B1-WG-0131"
+          }
+        }
+      ]
     }
   ],
   "merge_wortgruppen": {
+    "B1-WG-0066": {"target_source_ref": "A1-84886454651"},
     "A1-WG-0040": {
       "target": "ein halb; halb",
       "as_example": false

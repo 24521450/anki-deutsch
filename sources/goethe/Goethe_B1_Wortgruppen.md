@@ -20,7 +20,7 @@ Structured transcription of the *Wortgruppen* on pages 8–15 of `Goethe-Zertifi
 | B1-WG-0012 | der Lkw, -s | der Last(kraft)wagen, - | B1 | 8 |  |  | Lkw | n. | der | m. | -s |  | Expansion/context: der Last(kraft)wagen, - | https://www.duden.de/suchen/dudenonline/Lkw |
 | B1-WG-0013 | der PC, -s | der Personal Computer, - | B1 | 8 |  |  | PC | n. | der | m. | -s |  | Expansion/context: der Personal Computer, - | https://www.duden.de/suchen/dudenonline/PC |
 | B1-WG-0014 | der Pkw, -s | der Personenkraftwagen, - | B1 | 8 |  |  | Pkw | n. | der | m. | -s |  | Expansion/context: der Personenkraftwagen, - | https://www.duden.de/suchen/dudenonline/Pkw |
-| B1-WG-0015 | die (D, A)/das (CH) SMS, - | Textnachricht | B1 | 8 |  |  | D | n. | die/das | f./n. | A)/das (CH) SMS, - | SMS | Article variants printed by Goethe: die/das.; Expansion/context: Textnachricht | https://www.duden.de/suchen/dudenonline/D |
+| B1-WG-0015 | die (D, A)/das (CH) SMS, - | Textnachricht | B1 | 8 |  |  | SMS | n. | die/das | f./n. | - |  | Article variants printed by Goethe: die/das.; Expansion/context: Textnachricht | https://www.duden.de/suchen/dudenonline/SMS |
 | B1-WG-0016 | das TV, - | Television | B1 | 8 |  |  | TV | n. | das | n. | - |  | Expansion/context: Television | https://www.duden.de/suchen/dudenonline/TV |
 | B1-WG-0017 | usw. | und so weiter | B1 | 8 |  |  | usw. | phrase |  |  |  |  | Expansion/context: und so weiter | https://www.duden.de/suchen/dudenonline/usw. |
 | B1-WG-0018 | vgl. | vergleiche | B1 | 8 |  |  | vgl. | phrase |  |  |  |  | Expansion/context: vergleiche | https://www.duden.de/suchen/dudenonline/vgl. |
@@ -43,7 +43,7 @@ Structured transcription of the *Wortgruppen* on pages 8–15 of `Goethe-Zertifi
 | B1-WG-0030 | campen, campt, campte, hat gecampt |  | B1 | 8 |  |  | campen | v. |  |  |  |  | Conjugation: campt, campte, hat gecampt | https://www.duden.de/suchen/dudenonline/campen |
 | B1-WG-0031 | die Castingshow, -s |  | B1 | 8 |  |  | Castingshow | n. | die | f. | -s |  |  | https://www.duden.de/suchen/dudenonline/Castingshow |
 | B1-WG-0032 | der CD-Player, - |  | B1 | 8 |  |  | CD-Player | n. | der | m. | - |  |  | https://www.duden.de/suchen/dudenonline/CD-Player |
-| B1-WG-0033 | der Chat(room), -s |  | B1 | 8 |  |  | Chat(room | n. | der | m. | -s |  |  | https://www.duden.de/suchen/dudenonline/Chat%28room |
+| B1-WG-0033 | der Chat(room), -s |  | B1 | 8 |  |  | Chat(room) | n. | der | m. | -s | Chatroom | Printed by Goethe as Chat(room). | https://www.duden.de/suchen/dudenonline/Chatroom |
 | B1-WG-0034 | chatten, chattet, chattete, hat gechattet |  | B1 | 8 |  |  | chatten | v. |  |  |  |  | Conjugation: chattet, chattete, hat gechattet | https://www.duden.de/suchen/dudenonline/chatten |
 | B1-WG-0035 | checken, checkt, checkte, hat gecheckt |  | B1 | 8 |  |  | checken | v. |  |  |  |  | Conjugation: checkt, checkte, hat gecheckt | https://www.duden.de/suchen/dudenonline/checken |
 | B1-WG-0036 | der Chip, -s |  | B1 | 8 |  |  | Chip | n. | der | m. | -s |  |  | https://www.duden.de/suchen/dudenonline/Chip |
@@ -76,7 +76,7 @@ Structured transcription of the *Wortgruppen* on pages 8–15 of `Goethe-Zertifi
 | B1-WG-0063 | der Laptop, -s |  | B1 | 8 |  |  | Laptop | n. | der | m. | -s |  |  | https://www.duden.de/suchen/dudenonline/Laptop |
 | B1-WG-0064 | der Link, -s |  | B1 | 8 |  |  | Link | n. | der | m. | -s |  |  | https://www.duden.de/suchen/dudenonline/Link |
 | B1-WG-0065 | live |  | B1 | 8 |  |  | live | phrase |  |  |  |  |  | https://www.duden.de/suchen/dudenonline/live |
-| B1-WG-0066 | die (D, A)/das (A, CH) (E-)Mail, -s |  | B1 | 8 |  |  | D | n. | die/das | f./n. | A)/das (A, CH) (E-)Mail, -s | (A | Article variants printed by Goethe: die/das. | https://www.duden.de/suchen/dudenonline/D |
+| B1-WG-0066 | die (D, A)/das (A, CH) (E-)Mail, -s |  | B1 | 8 |  |  | E-Mail | n. | die/das | f./n. | -s | Email | Printed as (E-)Mail by Goethe; article variants: die/das. | https://www.duden.de/suchen/dudenonline/E-Mail |
 | B1-WG-0067 | die Mailbox, -en |  | B1 | 8 |  |  | Mailbox | n. | die | f. | -en |  |  | https://www.duden.de/suchen/dudenonline/Mailbox |
 | B1-WG-0068 | mailen, mailt, mailte, hat gemailt |  | B1 | 8 |  |  | mailen | v. |  |  |  |  | Conjugation: mailt, mailte, hat gemailt | https://www.duden.de/suchen/dudenonline/mailen |
 | B1-WG-0069 | der Manager, -/die Managerin, -nen |  | B1 | 8 |  |  | Manager | n. | der/die | m./f. | -/die Managerin, -nen | Managerin | Article variants printed by Goethe: der/die. | https://www.duden.de/suchen/dudenonline/Manager |
@@ -143,15 +143,15 @@ Structured transcription of the *Wortgruppen* on pages 8–15 of `Goethe-Zertifi
 | B1-WG-0120 | Deutschland: die Volkshochschule |  | B1 | 10 |  |  | Deutschland: die Volkshochschule | n. | die | f. |  |  |  | https://www.duden.de/suchen/dudenonline/Deutschland%3A%20die%20Volkshochschule |
 | B1-WG-0121 | Österreich: die Krippe/der Kindergarten |  | B1 | 10 | Kindergarten |  |  |  |  |  |  |  |  |  |
 | B1-WG-0122 | Österreich: die Volksschule/Hauptschule/Neue Mittelschule/Berufsschule |  | B1 | 10 |  |  | Österreich: die Volksschule | n. | die | f. |  | Hauptschule<br>Neue Mittelschule<br>Berufsschule |  | https://www.duden.de/suchen/dudenonline/%C3%96sterreich%3A%20die%20Volksschule |
-| B1-WG-0123 | Österreich: die Allgemeinbildende Höhere Schule (AHS) | das Gymnasium | B1 | 10 |  |  | Österreich: die Allgemeinbildende Höhere Schule (AHS | n. | die | f. |  |  | Expansion/context: das Gymnasium | https://www.duden.de/suchen/dudenonline/%C3%96sterreich%3A%20die%20Allgemeinbildende%20H%C3%B6here%20Schule%20%28AHS |
-| B1-WG-0124 | Österreich: die Berufsbildende Höhere Schule (BHS) |  | B1 | 10 |  |  | Österreich: die Berufsbildende Höhere Schule (BHS | n. | die | f. |  |  |  | https://www.duden.de/suchen/dudenonline/%C3%96sterreich%3A%20die%20Berufsbildende%20H%C3%B6here%20Schule%20%28BHS |
+| B1-WG-0123 | Österreich: die Allgemeinbildende Höhere Schule (AHS) | das Gymnasium | B1 | 10 |  |  | Österreich: die Allgemeinbildende Höhere Schule (AHS) | n. | die | f. |  |  | Expansion/context: das Gymnasium | https://www.duden.de/suchen/dudenonline/%C3%96sterreich%3A%20die%20Allgemeinbildende%20H%C3%B6here%20Schule%20%28AHS%29 |
+| B1-WG-0124 | Österreich: die Berufsbildende Höhere Schule (BHS) |  | B1 | 10 |  |  | Österreich: die Berufsbildende Höhere Schule (BHS) | n. | die | f. |  |  |  | https://www.duden.de/suchen/dudenonline/%C3%96sterreich%3A%20die%20Berufsbildende%20H%C3%B6here%20Schule%20%28BHS%29 |
 | B1-WG-0125 | Österreich: die (Fach-)Hochschule, Akademie, Universität (Uni) |  | B1 | 10 | Universität |  |  |  |  |  |  |  |  |  |
 | B1-WG-0126 | Österreich: die Pädagogische Hochschule |  | B1 | 10 |  |  | Österreich: die Pädagogische Hochschule | n. | die | f. |  |  |  | https://www.duden.de/suchen/dudenonline/%C3%96sterreich%3A%20die%20P%C3%A4dagogische%20Hochschule |
 | B1-WG-0127 | Österreich: die Volkshochschule |  | B1 | 10 |  |  | Österreich: die Volkshochschule | n. | die | f. |  |  |  | https://www.duden.de/suchen/dudenonline/%C3%96sterreich%3A%20die%20Volkshochschule |
 | B1-WG-0128 | Schweiz: die Krippe/die Spielgruppe/der Kindergarten |  | B1 | 10 | Kindergarten |  |  |  |  |  |  |  |  |  |
 | B1-WG-0129 | Schweiz: die Primarschule |  | B1 | 10 |  |  | Schweiz: die Primarschule | n. | die | f. |  |  |  | https://www.duden.de/suchen/dudenonline/Schweiz%3A%20die%20Primarschule |
-| B1-WG-0130 | Schweiz, Sekundarstufe I: die Realschule, Sekundarschule, Bezirksschule, Orientierungsstufe |  | B1 | 10 |  |  | Schweiz | n. | die | f. | Sekundarstufe I: die Realschule, Sekundarschule, Bezirksschule, Orientierungsstufe |  |  | https://www.duden.de/suchen/dudenonline/Schweiz |
-| B1-WG-0131 | Schweiz, Sekundarstufe II: die Mittelschule = das Gymnasium, die Berufsschule, die Berufsmittelschule, die Diplommittelschule |  | B1 | 10 |  |  | Schweiz | n. | die/das | f./n. | Sekundarstufe II: die Mittelschule = das Gymnasium, die Berufsschule, die Berufsmittelschule, die Diplommittelschule |  | Article variants printed by Goethe: die/das. | https://www.duden.de/suchen/dudenonline/Schweiz |
+| B1-WG-0130 | Schweiz, Sekundarstufe I: die Realschule, Sekundarschule, Bezirksschule, Orientierungsstufe |  | B1 | 10 |  |  | Schweiz: Sekundarstufe I | n. | die | f. |  | Sekundarstufe I | Expansion/context: die Realschule, Sekundarschule, Bezirksschule, Orientierungsstufe. | https://www.duden.de/suchen/dudenonline/Sekundarstufe%20I |
+| B1-WG-0131 | Schweiz, Sekundarstufe II: die Mittelschule = das Gymnasium, die Berufsschule, die Berufsmittelschule, die Diplommittelschule |  | B1 | 10 |  |  | Schweiz: Sekundarstufe II | n. | die | f. |  | Sekundarstufe II | Expansion/context: die Mittelschule = das Gymnasium, die Berufsschule, die Berufsmittelschule, die Diplommittelschule. | https://www.duden.de/suchen/dudenonline/Sekundarstufe%20II |
 | B1-WG-0132 | Schweiz: die (Fach-)Hochschule, Universität (Uni) |  | B1 | 10 | Universität |  |  |  |  |  |  |  |  |  |
 | B1-WG-0133 | Schweiz: die Pädagogische Hochschule |  | B1 | 10 |  |  | Schweiz: die Pädagogische Hochschule | n. | die | f. |  |  |  | https://www.duden.de/suchen/dudenonline/Schweiz%3A%20die%20P%C3%A4dagogische%20Hochschule |
 | B1-WG-0134 | Schweiz: die Volkshochschule |  | B1 | 10 |  |  | Schweiz: die Volkshochschule | n. | die | f. |  |  |  | https://www.duden.de/suchen/dudenonline/Schweiz%3A%20die%20Volkshochschule |
@@ -396,8 +396,8 @@ Structured transcription of the *Wortgruppen* on pages 8–15 of `Goethe-Zertifi
 
 | ID | Entry | Detail | CEFR | Source Page | Alphabetical Match | Note | Canonical Lemma | POS | Article | Gender | Noun Forms | Accepted Variants | Grammar Note | Dictionary Sources |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| B1-WG-0309 | der Januar (D, CH); A: der Jänner |  | B1 | 14 |  |  | Januar (D | n. | der | m. | CH); A: der Jänner |  |  | https://www.duden.de/suchen/dudenonline/Januar%20%28D |
-| B1-WG-0310 | der Februar (D, CH); A: der Feber |  | B1 | 14 |  |  | Februar (D | n. | der | m. | CH); A: der Feber |  |  | https://www.duden.de/suchen/dudenonline/Februar%20%28D |
+| B1-WG-0309 | der Januar (D, CH); A: der Jänner |  | B1 | 14 |  |  | Januar | n. | der | m. |  | Jänner | Regional variants printed by Goethe: D/CH Januar; A Jänner. | https://www.duden.de/suchen/dudenonline/Januar |
+| B1-WG-0310 | der Februar (D, CH); A: der Feber |  | B1 | 14 |  |  | Februar | n. | der | m. |  | Feber | Regional variants printed by Goethe: D/CH Februar; A Feber. | https://www.duden.de/suchen/dudenonline/Februar |
 | B1-WG-0311 | der März |  | B1 | 14 |  |  | März | n. | der | m. |  |  |  | https://www.duden.de/suchen/dudenonline/M%C3%A4rz |
 | B1-WG-0312 | der April |  | B1 | 14 |  |  | April | n. | der | m. |  |  |  | https://www.duden.de/suchen/dudenonline/April |
 | B1-WG-0313 | der Mai |  | B1 | 14 |  |  | Mai | n. | der | m. |  |  |  | https://www.duden.de/suchen/dudenonline/Mai |
