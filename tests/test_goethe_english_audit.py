@@ -31,11 +31,11 @@ def test_v4_catalog_covers_the_fully_reviewed_canonical_a1_b1_corpus():
         "notes": audit.goethe_scope.EXPECTED_NOTES,
         "reviewed": audit.goethe_scope.EXPECTED_NOTES,
         "unreviewed": 0,
-        "keep": 1576,
-        "revise": 1917,
+        "keep": 1572,
+        "revise": 1921,
         "pending": 0,
-        "meaning_updates": 1581,
-        "example_updates": 1055,
+        "meaning_updates": 1584,
+        "example_updates": 1058,
         "no_examples": audit.goethe_scope.EXPECTED_EMPTY_NOTES,
         "b1_no_examples": audit.goethe_scope.EXPECTED_EMPTY_NOTES_BY_LEVEL["B1"],
         "ambiguous_prompt_groups": 0,
@@ -118,6 +118,50 @@ def test_known_v3_reviewed_senses_survive_the_canonical_migration():
     assert len(entries["A1-84886454810"]["evidence"]) >= 2
 
 
+def test_confirmed_a2_translation_repairs_are_canonical():
+    entries = manifest()["entries"]
+
+    abitur = entries["A2-WG-0092"]
+    assert abitur["expected_meaning_en"] == "Abitur; school-leaving qualification"
+    assert abitur["desired_meaning_en"] == (
+        "German school-leaving examination; university entrance qualification"
+    )
+    assert abitur["desired_examples"] == [{
+        "de": "Nach dem Abitur möchte sie studieren.",
+        "en": (
+            "After taking her school-leaving examination, she would like to go "
+            "to university."
+        ),
+        "origin": "review-authored",
+    }]
+
+    mailbox = entries["A2-0615"]
+    assert mailbox["expected_meaning_en"] == "mailbox"
+    assert mailbox["desired_meaning_en"] == "voicemail"
+    assert mailbox["decision"] == "REVISE"
+    assert mailbox["difficult"] is True
+    assert {item["provider"] for item in mailbox["evidence"]} >= {"Cambridge", "Duden"}
+
+    museum = entries["A2-0661"]
+    assert museum["desired_examples"][0]["en"] == (
+        "There is a new exhibition at the art museum."
+    )
+    assert museum["decision"] == "REVISE"
+
+    consultation = entries["A2-0919"]
+    assert consultation["desired_examples"][0]["en"] == (
+        "Dr Weiß has office hours from 9:00 am to 12:30 pm."
+    )
+    assert consultation["decision"] == "REVISE"
+
+    jeans = entries["A2-0520"]
+    assert jeans["expected_meaning_en"] == "Jeans"
+    assert jeans["desired_meaning_en"] == "jeans"
+    assert jeans["decision"] == "REVISE"
+
+    assert entries["A2-WG-0003"]["desired_meaning_en"] == "ICE"
+
+
 def test_reviewed_lieblings_example_and_all_current_german_examples_are_retained():
     entries = manifest()["entries"]
     assert sum(len(entry["desired_examples"]) for entry in entries.values()) == 4318
@@ -165,6 +209,23 @@ def test_identity_equivalent_accepts_historical_alias_and_ref_reordering():
         "CEFR": entry["cefr"],
     }
     assert audit.identity_equivalent(fields, entry, catalog)
+
+
+def test_identity_equivalent_accepts_only_html_escaped_guid_representation():
+    catalog = manifest()
+    entry = catalog["entries"]["A2-0192"]
+    fields = {
+        "SourceID": entry["source_id"],
+        "SourceRefs": "|".join(entry["source_refs"]),
+        "LegacyGUID": entry["stable_guid"].replace(">", "&gt;"),
+        "Lemma": entry["lemma"],
+        "AcceptedAnswersDE": entry["lemma"],
+        "CEFR": entry["cefr"],
+    }
+
+    assert audit.identity_equivalent(fields, entry, catalog)
+    fields["LegacyGUID"] = "not-the-reviewed-guid"
+    assert not audit.identity_equivalent(fields, entry, catalog)
 
 
 @pytest.mark.parametrize("mutation", ["missing", "extra", "duplicate", "wrong_guid"])

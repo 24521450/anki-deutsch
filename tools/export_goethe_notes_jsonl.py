@@ -173,7 +173,7 @@ def resolve_audit_entry(row: dict[str, Any], entries: dict[str, dict[str, Any]])
         or len(actual_refs) != len(set(actual_refs))
         or set(actual_refs) != set(expected_refs)
         or source_id not in actual_refs
-        or row.get("guid") != entry.get("stable_guid")
+        or not scope.guid_matches_expected(row.get("guid"), entry.get("stable_guid"))
         or row.get("cefr") != entry.get("cefr")
     ):
         raise ExportError(f"stable identity drift from v4 audit: {row['anki_note_id']}")
@@ -196,6 +196,7 @@ def validate_audited_content(rows: list[dict[str, Any]], entries: dict[str, dict
             raise ExportError(f"English examples drift from v4 audit: {row['anki_note_id']}")
         # Emit the canonical v4 identity even if a pre-unification live note
         # still carries a historical merged SourceID or ref order.
+        row["guid"] = entry["stable_guid"]
         row["source_id"] = entry["source_id"]
         row["source_refs"] = list(entry["source_refs"])
     if matched != set(entries):

@@ -168,6 +168,23 @@ def test_export_canonicalises_historical_source_alias_by_guid():
     assert row["source_refs"] == ["A1-X", "A1-LEGACY"]
 
 
+def test_export_accepts_html_escaped_guid_and_emits_canonical_identity():
+    row = export.serialize_note(note(), cards())
+    row["guid"] = "opaque&amp;guid"
+    entry = {
+        "source_id": row["source_id"], "stable_guid": "opaque&guid",
+        "source_refs": row["source_refs"], "lemma": row["lemma"],
+        "cefr": row["cefr"], "desired_meaning_en": row["meaning_en"],
+        "desired_examples": [
+            {"de": item["de"], "en": item["en"]} for item in row["examples"]
+        ],
+    }
+
+    export.validate_audited_content([row], {entry["source_id"]: entry})
+
+    assert row["guid"] == "opaque&guid"
+
+
 def test_export_rejects_alias_not_present_in_audited_provenance():
     current = note()
     current["fields"]["SourceID"]["value"] = "A1-LEGACY"
@@ -182,6 +199,15 @@ def test_export_rejects_alias_not_present_in_audited_provenance():
     }
     with pytest.raises(export.ExportError, match="stable identity drift"):
         export.validate_audited_content([row], {entry["source_id"]: entry})
+
+
+def test_checked_in_build_matches_the_canonical_english_audit():
+    rows = [
+        json.loads(line)
+        for line in export.OUTPUT.read_text(encoding="utf-8").splitlines()
+    ]
+
+    export.validate_audited_content(rows, export.load_audit_entries())
 
 
 def test_validate_rows_enforces_per_level_counts_and_canonical_order(monkeypatch):

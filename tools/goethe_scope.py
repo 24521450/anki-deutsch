@@ -1,6 +1,7 @@
 """Shared corpus contract for the canonical Goethe A1-B1 decks."""
 from __future__ import annotations
 
+import html
 from typing import Any, Mapping
 
 import goethe_werkstatt_migrate as gw
@@ -49,3 +50,10 @@ def stable_guid(fields: Mapping[str, Any]) -> str:
     if source_id:
         return f"goethe:{source_id}"
     raise ScopeError("note has neither LegacyGUID nor SourceID")
+
+
+def guid_matches_expected(actual: Any, expected: Any) -> bool:
+    """Accept the canonical GUID or its HTML-escaped Anki field representation."""
+    actual_text = str(actual or "").strip()
+    expected_text = str(expected or "").strip()
+    return actual_text == expected_text or html.unescape(actual_text) == expected_text

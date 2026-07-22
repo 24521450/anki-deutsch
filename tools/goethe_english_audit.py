@@ -85,6 +85,7 @@ REVIEW_TAG = goethe_scope.ENGLISH_REVIEW_TAG
 LEGACY_ENGLISH_TAGS = {OLD_VERIFIED_TAG, OLD_AUDITED_TAG, V3_AUDITED_TAG, REVIEW_TAG}
 CONFIRMATION = "APPLY_GOETHE_ENGLISH_AUDIT_V4"
 PILOT_SOURCE_IDS = [
+    "A2-WG-0092",
     "A1-84886454810",
     "A2-0851", "A2-MAIN-0202", "A2-0404", "A1-84886454916",
     "A2-0853", "A1-84886454763", "A1-84886454835", "A2-0654",
@@ -604,7 +605,7 @@ def identity_equivalent(
         return False
     try:
         expected_guid = str(entry.get("stable_guid", entry.get("legacy_guid", "")))
-        if stable_guid(fields) != expected_guid:
+        if not goethe_scope.guid_matches_expected(stable_guid(fields), expected_guid):
             return False
     except AuditError:
         return False
