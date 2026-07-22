@@ -35,28 +35,55 @@
     var lemma = text("gw-lemma");
     var lexicalLemma = stripGenderQualifier(lemma);
     var values = [lemma, lexicalLemma];
-    values = values.concat(text("gw-accepted-answers").split("|").map(stripGenderQualifier));
+    var caseSensitive = {};
+    var accepted = text("gw-accepted-answers").split("|").map(stripGenderQualifier);
+    var lexicalBases = unique([lexicalLemma].concat(accepted));
+    values = values.concat(accepted);
 
     var noun = text("gw-noun-forms");
     var suffixes = noun.match(/-(?:e|en|er|n|s)\b/gi) || [];
-    suffixes.forEach(function (suffix) { values.push(lexicalLemma + suffix.slice(1)); });
+    suffixes.forEach(function (suffix) {
+      lexicalBases.forEach(function (base) { values.push(base + suffix.slice(1)); });
+    });
+    var markerMatcher = /(?:\u00a8-|"-?)(en|er|e|n|s)?(?![\p{L}\p{N}_])/giu;
+    var markerSuffix = null;
+    var markerMatch;
+    while ((markerMatch = markerMatcher.exec(noun))) {
+      var suffix = markerMatch[1] || "";
+      if (markerSuffix === null || suffix.length > markerSuffix.length) markerSuffix = suffix;
+    }
+    if (markerSuffix !== null) {
+      lexicalBases.forEach(function (base) {
+        var umlautForm = umlaut(base) + markerSuffix;
+        values.push(umlautForm);
+        caseSensitive[umlautForm] = true;
+      });
+    }
     if (/-[AÄÖÜäöü]/.test(noun)) {
       var ending = /,\s*(e|er|en|n)?\b/i.exec(noun);
-      values.push(umlaut(lexicalLemma) + (ending && ending[1] ? ending[1] : ""));
+      lexicalBases.forEach(function (base) {
+        values.push(umlaut(base) + (ending && ending[1] ? ending[1] : ""));
+      });
     }
 
     var pos = text("gw-pos");
-    if (/^n\.?$/i.test(pos) && /e$/i.test(lexicalLemma) && /-(?:n|en)\b/i.test(noun)) {
-      var nominalizedBase = lexicalLemma.slice(0, -1);
-      ["e", "en", "em", "er", "es"].forEach(function (ending) {
-        values.push(nominalizedBase + ending);
+    if (/^n\.?$/i.test(pos) && /-(?:n|en)\b/i.test(noun)) {
+      lexicalBases.forEach(function (base) {
+        if (!/e$/i.test(base)) return;
+        var nominalizedBase = base.slice(0, -1);
+        ["e", "en", "em", "er", "es"].forEach(function (ending) {
+          values.push(nominalizedBase + ending);
+        });
       });
     }
 
     var stop = { hat: true, ist: true, sind: true, wird: true, sein: true, haben: true, sich: true };
     var verbLemma = lexicalLemma.replace(/^\(sich\)\s*/i, "").replace(/^sich\s+/i, "").trim();
     var isSingleWordVerb = /^v\.?$/i.test(pos) && !/\s/.test(verbLemma);
-    if (isSingleWordVerb) addFirstPersonPresentForm(values, verbLemma);
+    if (isSingleWordVerb) {
+      values.push(verbLemma);
+      addFirstPersonPresentForm(values, verbLemma);
+    }
     text("gw-verb-forms").split(",").forEach(function (form) {
       form = form.trim();
       if (!form) return;
@@ -69,10 +96,12 @@
         var particle = parts[parts.length - 1];
         var lowerLemma = verbLemma.toLocaleLowerCase("de-DE");
         var lowerParticle = particle.toLocaleLowerCase("de-DE");
-        if (lowerParticle.length > 1 && lowerLemma.indexOf(lowerParticle) === 0 && verbLemma.length > particle.length + 2) {
+        if (lowerParticle.length > 1 && lowerLemma.indexOf(lowerParticle) === 0) {
           var baseInfinitive = verbLemma.slice(particle.length);
-          values.push(baseInfinitive);
-          addFirstPersonPresentForm(values, baseInfinitive);
+          if (/en$/i.test(baseInfinitive) && baseInfinitive.length > 4) {
+            values.push(baseInfinitive, baseInfinitive.slice(0, -2), particle);
+            addFirstPersonPresentForm(values, baseInfinitive);
+          }
         }
       }
     });
@@ -81,7 +110,10 @@
       var base = lexicalLemma.replace(/-$/, "");
       ["e", "en", "em", "er", "es"].forEach(function (ending) { values.push(base + ending); });
     }
-    return unique(values.map(function (value) { return value.trim(); })).sort(function (left, right) { return right.length - left.length; });
+    var result = unique(values.map(function (value) { return value.trim(); })).sort(function (left, right) { return right.length - left.length; });
+    Object.defineProperty(result, "caseSensitive", { value: caseSensitive });
+    Object.defineProperty(result, "wholeWord", { value: !/^n\.?$/i.test(pos) });
+    return result;
   }
   function escapeRegex(value) {
     return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -90,8 +122,11 @@
     var ranges = [];
     candidates.forEach(function (candidate) {
       var escaped = escapeRegex(candidate);
-      var bounded = candidate.length < 4 ? "(?<![\\p{L}\\p{N}])" + escaped + "(?![\\p{L}\\p{N}])" : escaped;
-      var matcher = new RegExp(bounded, "giu");
+      var bounded = candidate.length < 4 || candidates.wholeWord
+        ? "(?<![\\p{L}\\p{N}_])" + escaped + "(?![\\p{L}\\p{N}_])"
+        : escaped;
+      var flags = candidates.caseSensitive && candidates.caseSensitive[candidate] ? "gu" : "giu";
+      var matcher = new RegExp(bounded, flags);
       var match;
       while ((match = matcher.exec(source))) ranges.push([match.index, match.index + match[0].length]);
     });

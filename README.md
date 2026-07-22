@@ -81,6 +81,22 @@ checks pass. Completion apply validates exact note/card IDs and creates a
 scheduled APKG backup before any duplicate is deleted. See
 `docs/GOETHE_ENGLISH_AUDIT_V4.md`.
 
+Target-highlight refresh:
+
+```powershell
+python tools/goethe_target_highlight_refresh.py audit
+python tools/goethe_target_highlight_refresh.py backup
+python tools/goethe_target_highlight_refresh.py apply --confirmation APPLY_GOETHE_TARGET_HIGHLIGHT_REFRESH
+python tools/goethe_target_highlight_refresh.py verify
+```
+
+Run these commands in order with Anki Desktop available. The audit must match
+the reviewed 40-note/44-example manifest exactly; backup creates a scheduled
+APKG and hash-checked local snapshot before apply can write. Apply is limited to
+reviewed `ExampleTargetSpansJSON` values and repository model templates. To
+restore the snapshotted spans and templates, use
+`python tools/goethe_target_highlight_refresh.py rollback --confirmation ROLLBACK_GOETHE_TARGET_HIGHLIGHT_REFRESH`.
+
 `tools/goethe_b1_media.py` is a non-mutating compatibility shim that points to
 the two all-level audio workflows.
 

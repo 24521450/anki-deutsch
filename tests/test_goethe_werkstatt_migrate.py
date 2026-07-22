@@ -425,12 +425,59 @@ let terms = configure({"gw-lemma": "schaffen", "gw-verb-forms": "schafft, hat ge
 let source = "Kannst du mir bitte helfen? Ich schaffe das nicht alleine.";
 let found = api.matchRanges(source, terms).map((range) => source.slice(range[0], range[1]));
 if (found.join("|") !== "schaffe") throw new Error("missing regular first-person form: " + found.join("|"));
+terms = configure({"gw-lemma": "sich eintragen", "gw-verb-forms": "trägt ein, hat eingetragen", "gw-pos": "v."});
+source = "Sie müssen Ihren Namen und Ihre Adresse eintragen.";
+found = api.matchRanges(source, terms).map((range) => source.slice(range[0], range[1]));
+if (found.join("|") !== "eintragen") throw new Error("missing reflexive bare infinitive: " + found.join("|"));
 terms = configure({"gw-lemma": "Apfel", "gw-noun-forms": "-Ä", "gw-pos": "n."});
 if (!terms.includes("Äpfel")) throw new Error("missing umlaut plural");
+for (const notation of ["¨-er", "\"-er"]) {
+  terms = configure({"gw-lemma": "Blatt", "gw-noun-forms": notation, "gw-pos": "n."});
+  source = "Die Bäume haben schon gelbe Blätter.";
+  found = api.matchRanges(source, terms).map((range) => source.slice(range[0], range[1]));
+  if (found.join("|") !== "Blätter") throw new Error("missing umlaut notation " + notation + ": " + found.join("|"));
+}
+terms = configure({"gw-lemma": "Blatt", "gw-noun-forms": "¨-e / \"-er", "gw-pos": "n."});
+source = "Die Bäume haben schon gelbe Blätter.";
+found = api.matchRanges(source, terms).map((range) => source.slice(range[0], range[1]));
+if (found.join("|") !== "Blätter") throw new Error("umlaut marker did not prefer longest suffix: " + found.join("|"));
+for (const notation of ["¨-", "\"", "\"-"]) {
+  terms = configure({"gw-lemma": "Mangel", "gw-noun-forms": notation, "gw-pos": "n."});
+  source = "Wir haben keine Mängel gefunden.";
+  found = api.matchRanges(source, terms).map((range) => source.slice(range[0], range[1]));
+  if (found.join("|") !== "Mängel") throw new Error("missing marker-only umlaut " + notation + ": " + found.join("|"));
+}
+terms = configure({"gw-lemma": "Wunsch", "gw-noun-forms": "\"-e", "gw-pos": "n."});
+source = "Ich wünsche mir viele Wünsche.";
+found = api.matchRanges(source, terms).map((range) => source.slice(range[0], range[1]));
+if (found.join("|") !== "Wünsche") throw new Error("umlaut noun form ignored case: " + found.join("|"));
 terms = configure({"gw-lemma": "anfangen", "gw-verb-forms": "fängt an, hat angefangen", "gw-pos": "v."});
 source = "Hier fängt die Straße an.";
 found = api.matchRanges(source, terms).map((range) => source.slice(range[0], range[1]));
 if (!found.includes("fängt") || !found.includes("an")) throw new Error("missing separable verb parts");
+terms = configure({"gw-lemma": "umdrehen", "gw-verb-forms": "dreht um, drehte um, hat umgedreht", "gw-pos": "v."});
+for (const sentence of ["Dreh dich mal um.", "Dreh das Blatt um;"]) {
+  found = api.matchRanges(sentence, terms).map((range) => sentence.slice(range[0], range[1]));
+  if (found.join("|") !== "Dreh|um") throw new Error("missing separable imperative: " + found.join("|"));
+}
+source = "Die Drehung dauert eine Minute.";
+found = api.matchRanges(source, terms).map((range) => source.slice(range[0], range[1]));
+if (found.length) throw new Error("verb stem matched inside a word: " + found.join("|"));
+source = "x_dreh_y";
+found = api.matchRanges(source, terms).map((range) => source.slice(range[0], range[1]));
+if (found.length) throw new Error("verb stem matched across underscores: " + found.join("|"));
+terms = configure({"gw-lemma": "abtun", "gw-verb-forms": "tut ab, hat abgetan", "gw-pos": "v."});
+source = "Das hat nichts damit zu tun.";
+found = api.matchRanges(source, terms).map((range) => source.slice(range[0], range[1]));
+if (found.length) throw new Error("short separable base was derived: " + found.join("|"));
+terms = configure({"gw-lemma": "planen", "gw-verb-forms": "plant, hat geplant", "gw-pos": "v."});
+source = "Das ist ein guter Plan.";
+found = api.matchRanges(source, terms).map((range) => source.slice(range[0], range[1]));
+if (found.length) throw new Error("non-separable imperative was invented: " + found.join("|"));
+terms = configure({"gw-lemma": "umdrehen", "gw-verb-forms": "hat umgedreht", "gw-pos": "v."});
+source = "Dreh dich mal um.";
+found = api.matchRanges(source, terms).map((range) => source.slice(range[0], range[1]));
+if (found.length) throw new Error("imperative was derived without particle evidence: " + found.join("|"));
 terms = configure({"gw-lemma": "abfahren", "gw-verb-forms": "fährt ab, ist abgefahren", "gw-pos": "v."});
 source = "Wir fahren um zwölf Uhr ab.";
 found = api.matchRanges(source, terms).map((range) => source.slice(range[0], range[1]));

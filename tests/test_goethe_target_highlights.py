@@ -96,6 +96,108 @@ def test_build_target_spans_uses_utf16_offsets_and_example_order():
     ]) == [[(13, 20)], [(0, 7)], [(13, 20)]]
 
 
+@pytest.mark.parametrize("lemma", ["sich eintragen", "(sich) eintragen"])
+def test_build_target_spans_highlights_bare_infinitive_for_reflexive_lemma(lemma: str):
+    value = fields(
+        Lemma=lemma,
+        AcceptedAnswersDE=lemma,
+        VerbFormsRaw="trägt ein, hat eingetragen",
+        POS="v.",
+        Example1DE="Sie müssen Ihren Namen und Ihre Adresse eintragen.",
+        Example2DE="Tragen Sie sich bitte in diese Liste ein!",
+    )
+
+    assert json.loads(highlights.build_target_spans(value)) == [
+        [[40, 49]],
+        [[0, 6], [37, 40]],
+    ]
+
+
+def test_build_target_spans_highlights_bounded_separable_imperative_stem():
+    value = fields(
+        Lemma="umdrehen",
+        AcceptedAnswersDE="umdrehen",
+        VerbFormsRaw="dreht um, drehte um, hat umgedreht",
+        POS="v.",
+        Example1DE="Dreh dich mal um. Da hinten liegt das Buch doch.",
+        Example2DE="Dreh das Blatt um; die Lösung steht auf der Rückseite.",
+    )
+
+    assert json.loads(highlights.build_target_spans(value)) == [
+        [[0, 4], [14, 16]],
+        [[0, 4], [15, 17]],
+    ]
+
+
+def test_imperative_stem_requires_separable_evidence_and_word_boundaries():
+    non_separable = fields(
+        Lemma="planen",
+        AcceptedAnswersDE="planen",
+        VerbFormsRaw="plant, hat geplant",
+        POS="v.",
+        Example1DE="Das ist ein guter Plan.",
+    )
+    separable = fields(
+        Lemma="umdrehen",
+        AcceptedAnswersDE="umdrehen",
+        VerbFormsRaw="dreht um, hat umgedreht",
+        POS="v.",
+        Example1DE="Das Drehbuch liegt da; dreh es um.",
+    )
+
+    assert json.loads(highlights.build_spans(non_separable)) == [[]]
+    assert json.loads(highlights.build_spans(separable)) == [
+        [[23, 27], [31, 33]],
+    ]
+
+
+def test_build_spans_derives_umlaut_plural_from_goethe_marker():
+    value = fields(
+        Lemma="Blatt",
+        AcceptedAnswersDE="Blatt",
+        NounFormsRaw="¨-er",
+        POS="n.",
+        Example1DE="Haben Sie ein Blatt Papier für mich?",
+        Example2DE="Die Bäume haben schon gelbe Blätter.",
+    )
+
+    assert json.loads(highlights.build_spans(value)) == [
+        [[14, 19]],
+        [[28, 35]],
+    ]
+
+
+def test_umlaut_marker_forms_do_not_match_lowercase_verbs():
+    value = fields(
+        Lemma="Wunsch",
+        AcceptedAnswersDE="Wunsch",
+        NounFormsRaw='"-e',
+        POS="n.",
+        Example1DE="Wünsche können wahr werden.",
+        Example2DE="Ich wünsche Ihnen alles Gute!",
+        Example3DE="Sie wünschen?",
+    )
+
+    assert json.loads(highlights.build_spans(value)) == [
+        [[0, 7]],
+        [],
+        [],
+    ]
+
+
+@pytest.mark.parametrize("marker", ["¨-", '"-', '"'])
+def test_build_spans_derives_umlaut_form_from_marker_without_suffix(marker: str):
+    value = fields(
+        Lemma="Mangel",
+        AcceptedAnswersDE="Mangel",
+        NounFormsRaw=marker,
+        POS="n.",
+        Example1DE="Mehrere Mängel wurden gefunden.",
+    )
+
+    assert json.loads(highlights.build_spans(value)) == [[[8, 14]]]
+
+
 @pytest.mark.parametrize(
     "value,texts",
     [

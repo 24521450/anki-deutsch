@@ -14,6 +14,13 @@ class HighlightError(RuntimeError):
     pass
 
 
+class _Candidate(str):
+    def __new__(cls, value: str, *, case_sensitive: bool = False) -> _Candidate:
+        candidate = super().__new__(cls, value)
+        candidate.case_sensitive = case_sensitive
+        return candidate
+
+
 class _TextExtractor(HTMLParser):
     def __init__(self) -> None:
         super().__init__(convert_charrefs=True)
@@ -67,6 +74,17 @@ def candidate_terms(fields: dict[str, str]) -> list[str]:
     noun = str(fields.get("NounFormsRaw") or "")
     for suffix in re.findall(r"-(?:e|en|er|n|s)\b", noun, flags=re.I):
         values.extend(base + suffix[1:] for base in lexical_bases)
+    marker_suffixes = re.findall(
+        r'(?:¨-|"-?)(en|er|e|n|s)?(?!\w)',
+        noun,
+        flags=re.I,
+    )
+    if marker_suffixes:
+        suffix = max(marker_suffixes, key=len)
+        values.extend(
+            _Candidate(_umlaut(base) + suffix, case_sensitive=True)
+            for base in lexical_bases
+        )
     if re.search(r"-[AÄÖÜäöü]", noun):
         ending = re.search(r",\s*(e|er|en|n)?\b", noun, flags=re.I)
         values.extend(
@@ -84,6 +102,7 @@ def candidate_terms(fields: dict[str, str]) -> list[str]:
     verb_lemma = re.sub(r"^sich\s+", "", verb_lemma, flags=re.I).strip()
     single_word_verb = bool(re.fullmatch(r"v\.?", pos, flags=re.I) and " " not in verb_lemma)
     if single_word_verb:
+        values.append(verb_lemma)
         _add_first_person(values, verb_lemma)
     irregular = {
         "sein": ("bin", "bist", "ist", "sind", "seid", "war", "waren", "gewesen"),
@@ -104,10 +123,11 @@ def candidate_terms(fields: dict[str, str]) -> list[str]:
                 values.append(part)
         if single_word_verb and len(parts) > 1:
             particle = parts[-1]
-            if len(particle) > 1 and verb_lemma.casefold().startswith(particle.casefold()) and len(verb_lemma) > len(particle) + 2:
+            if len(particle) > 1 and verb_lemma.casefold().startswith(particle.casefold()):
                 base_infinitive = verb_lemma[len(particle) :]
-                values.extend((base_infinitive, particle))
-                _add_first_person(values, base_infinitive)
+                if len(base_infinitive) > 4 and re.search(r"en$", base_infinitive, flags=re.I):
+                    values.extend((base_infinitive, base_infinitive[:-2], particle))
+                    _add_first_person(values, base_infinitive)
 
     if re.search(r"adj|det|pron", pos, flags=re.I):
         inflection_bases = [lexical_lemma] + [value for value in accepted if value.endswith("-")]
@@ -118,11 +138,12 @@ def candidate_terms(fields: dict[str, str]) -> list[str]:
     result: list[str] = []
     seen: set[str] = set()
     for value in values:
+        case_sensitive = bool(getattr(value, "case_sensitive", False))
         value = str(value or "").strip()
         key = value.casefold()
         if value and key not in seen:
             seen.add(key)
-            result.append(value)
+            result.append(_Candidate(value, case_sensitive=True) if case_sensitive else value)
     return sorted(result, key=len, reverse=True)
 
 
@@ -139,7 +160,8 @@ def match_ranges(text: str, candidates: Iterable[str], pos: str = "") -> list[tu
     for candidate in candidates:
         if not candidate:
             continue
-        matcher = re.compile(_bounded_pattern(candidate, pos), flags=re.I)
+        flags = 0 if getattr(candidate, "case_sensitive", False) else re.I
+        matcher = re.compile(_bounded_pattern(candidate, pos), flags=flags)
         ranges.extend((match.start(), match.end()) for match in matcher.finditer(text))
     ranges.sort(key=lambda value: (value[0], -(value[1] - value[0])))
     selected: list[tuple[int, int]] = []
