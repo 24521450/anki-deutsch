@@ -21,6 +21,8 @@ def fields(**values: str) -> dict[str, str]:
         "AcceptedAnswersDE": "",
         "NounFormsRaw": "",
         "VerbFormsRaw": "",
+        "SourceNoteRaw": "",
+        "SourceID": "",
         "POS": "",
         **{f"Example{index}DE": "" for index in range(1, 5)},
         "MoreExamplesHTML": "",
@@ -149,6 +151,82 @@ def test_imperative_stem_requires_separable_evidence_and_word_boundaries():
     assert json.loads(highlights.build_spans(separable)) == [
         [[23, 27], [31, 33]],
     ]
+
+
+def test_regular_imperative_is_supported_without_matching_mid_clause_noun():
+    probieren = fields(
+        Lemma="probieren",
+        AcceptedAnswersDE="probieren",
+        VerbFormsRaw="probiert, hat probiert",
+        POS="v.",
+        Example1DE="Die Tür geht schwer auf. Probier mal!",
+    )
+    planen = fields(
+        Lemma="planen",
+        AcceptedAnswersDE="planen",
+        VerbFormsRaw="plant, hat geplant",
+        POS="v.",
+        Example1DE="Das ist ein guter Plan.",
+    )
+
+    assert json.loads(highlights.build_spans(probieren)) == [[[25, 32]]]
+    assert json.loads(highlights.build_spans(planen)) == [[]]
+
+
+@pytest.mark.parametrize(
+    ("lemma", "raw", "source_raw", "sentence", "expected"),
+    [
+        ("antworten", "", "source: antworten, antwortet,", "Er antwortet sofort.", ["antwortet"]),
+        ("wissen", "", "source: wissen, weiß,", "Weißt du das?", ["Weißt"]),
+        ("vergessen", "vergisst, hat vergessen", "", "Vergiss das nicht!", ["Vergiss"]),
+        ("zweifeln", "zweifelt, hat gezweifelt", "", "Ich zweifle daran.", ["zweifle"]),
+        ("winken", "winkt, winkte, hat gewinkt", "", "Sie winkten uns zu.", ["winkten"]),
+    ],
+)
+def test_verb_form_families_use_principal_forms(
+    lemma: str, raw: str, source_raw: str, sentence: str, expected: list[str],
+):
+    value = fields(
+        Lemma=lemma, AcceptedAnswersDE=lemma, VerbFormsRaw=raw,
+        SourceNoteRaw=source_raw, POS="v.", Example1DE=sentence,
+    )
+    found = highlights.match_ranges(sentence, highlights.candidate_terms(value), value["POS"])
+    assert surfaces(sentence, found) == expected
+
+
+def test_separable_particle_is_clause_paired_and_not_a_preposition():
+    value = fields(
+        Lemma="aufpassen",
+        AcceptedAnswersDE="aufpassen",
+        VerbFormsRaw="passt auf, hat aufgepasst",
+        POS="v.",
+        Example1DE="Pass auf der Treppe auf, dass du nicht fällst!",
+    )
+    text = value["Example1DE"]
+    found = highlights.match_ranges(text, highlights.candidate_terms(value), value["POS"])
+    assert surfaces(text, found) == ["Pass", "auf"]
+    assert found[-1] == (20, 23)
+
+
+def test_reviewed_blank_pos_verb_is_supported_without_general_pos_inference():
+    reviewed = fields(
+        SourceID="A2-1202",
+        Lemma="zurückkommen",
+        AcceptedAnswersDE="zurückkommen",
+        SourceNoteRaw='{"Wort_DE":"zurückkommen","Verbformen":""}',
+        POS="",
+        Example1DE="Wann kommst du zurück?",
+    )
+    unknown = fields(
+        SourceID="UNKNOWN",
+        Lemma="zurückkommen",
+        AcceptedAnswersDE="zurückkommen",
+        POS="",
+        Example1DE="Wann kommst du zurück?",
+    )
+
+    assert json.loads(highlights.build_spans(reviewed)) == [[[5, 11], [15, 21]]]
+    assert json.loads(highlights.build_spans(unknown)) == [[]]
 
 
 def test_build_spans_derives_umlaut_plural_from_goethe_marker():

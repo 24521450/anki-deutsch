@@ -23,13 +23,15 @@ import goethe_werkstatt_migrate as gw
 
 ROOT = gw.ROOT
 STATE = ROOT / "tools" / ".goethe_target_highlight_refresh"
-MANIFEST_PATH = ROOT / "review" / "goethe_target_highlight_repairs.json"
+MANIFEST_PATH = ROOT / "review" / "goethe_target_highlight_repairs_v2.json"
 MODEL = getattr(gw, "MODEL", "Goethe Werkstatt")
 PARENT_DECK = "Goethe Institute"
 TARGET_FIELD = "ExampleTargetSpansJSON"
 
-EXPECTED_CHANGED_NOTES = 40
-EXPECTED_CHANGED_EXAMPLES = 44
+EXPECTED_CHANGED_NOTES = 141
+EXPECTED_CHANGED_EXAMPLES = 166
+EXPECTED_ADDED_RANGES = 195
+EXPECTED_REMOVED_RANGES = 8
 APPLY_CONFIRMATION = "APPLY_GOETHE_TARGET_HIGHLIGHT_REFRESH"
 ROLLBACK_CONFIRMATION = "ROLLBACK_GOETHE_TARGET_HIGHLIGHT_REFRESH"
 
@@ -176,16 +178,17 @@ def load_manifest() -> dict[str, Any]:
     manifest = read_json(MANIFEST_PATH, "review manifest")
     if manifest.get("schema_version") != 1:
         raise RefreshError("unsupported review manifest schema")
-    if manifest.get("expected_changed_notes") != EXPECTED_CHANGED_NOTES:
-        raise RefreshError(
-            f"review manifest must declare {EXPECTED_CHANGED_NOTES} changed notes"
-        )
-    if manifest.get("expected_changed_examples") != EXPECTED_CHANGED_EXAMPLES:
-        raise RefreshError(
-            f"review manifest must declare {EXPECTED_CHANGED_EXAMPLES} changed examples"
-        )
+    declared_notes = manifest.get("expected_changed_notes")
+    declared_examples = manifest.get("expected_changed_examples")
+    declared_added = manifest.get("expected_added_ranges")
+    declared_removed = manifest.get("expected_removed_ranges")
+    if any(
+        not isinstance(value, int) or isinstance(value, bool) or value < 0
+        for value in (declared_notes, declared_examples, declared_added, declared_removed)
+    ):
+        raise RefreshError("review manifest count declarations are invalid")
     repairs = manifest.get("repairs")
-    if not isinstance(repairs, list) or len(repairs) != EXPECTED_CHANGED_NOTES:
+    if not isinstance(repairs, list) or len(repairs) != declared_notes:
         raise RefreshError("review manifest repair count differs from its declaration")
     source_ids = [item.get("source_id") for item in repairs if isinstance(item, dict)]
     if len(source_ids) != len(repairs) or any(not isinstance(value, str) or not value for value in source_ids):
@@ -197,6 +200,8 @@ def load_manifest() -> dict[str, Any]:
     note_ids: list[int] = []
     card_ids: list[int] = []
     changed_examples = 0
+    added_ranges = 0
+    removed_ranges = 0
     for item in repairs:
         required = {"source_id", "note_id", "card_ids", "lemma", "before", "after"}
         if set(item) != required:
@@ -222,16 +227,21 @@ def load_manifest() -> dict[str, Any]:
         if not delta:
             raise RefreshError(f"review repair contains no change: {item['source_id']}")
         changed_examples += delta
+        for old_ranges, new_ranges in zip(before, after):
+            added_ranges += sum(span not in old_ranges for span in new_ranges)
+            removed_ranges += sum(span not in new_ranges for span in old_ranges)
         note_ids.append(note_id)
         card_ids.extend(cards)
     if len(note_ids) != len(set(note_ids)):
         raise RefreshError("review manifest has duplicate note IDs")
     if len(card_ids) != len(set(card_ids)):
         raise RefreshError("review manifest has duplicate card IDs")
-    if changed_examples != EXPECTED_CHANGED_EXAMPLES:
+    if changed_examples != declared_examples:
         raise RefreshError(
             "review manifest changed-example count differs from its declaration"
         )
+    if added_ranges != declared_added or removed_ranges != declared_removed:
+        raise RefreshError("review manifest range delta differs from its declaration")
     return manifest
 
 
@@ -334,11 +344,16 @@ def load_plan(*, require_sources: bool = True) -> tuple[dict[str, Any], str]:
         raise RefreshError("audit plan hash is invalid")
     if plan.get("schema_version") != 1:
         raise RefreshError("unsupported audit plan payload")
-    if plan.get("changed_notes") != EXPECTED_CHANGED_NOTES or plan.get("changed_examples") != EXPECTED_CHANGED_EXAMPLES:
-        raise RefreshError("audit plan changed-count contract is invalid")
     repairs = plan.get("repairs")
-    if not isinstance(repairs, list) or len(repairs) != EXPECTED_CHANGED_NOTES:
+    if not isinstance(repairs, list) or len(repairs) != plan.get("changed_notes"):
         raise RefreshError("audit plan repair inventory is invalid")
+    changed_examples = sum(
+        before != after
+        for item in repairs
+        for before, after in zip(item.get("before", []), item.get("after", []))
+    )
+    if changed_examples != plan.get("changed_examples"):
+        raise RefreshError("audit plan changed-count contract is invalid")
     if require_sources:
         if plan.get("review_manifest_sha256") != hash_file(MANIFEST_PATH):
             raise RefreshError("review manifest changed after audit")
@@ -512,7 +527,14 @@ def validate_template_preimage(live_templates: Any) -> None:
         target_prefix, _, target_suffix = split_highlighter(
             str(expected.get("Back", "")), f"repository template {name}",
         )
-        if current_prefix != target_prefix or current_suffix != target_suffix:
+        legacy_prefix = target_prefix.replace(
+            '  <span id="gw-source-note-raw" hidden>{{SourceNoteRaw}}</span>\n', "",
+        )
+        if name == "German → English":
+            legacy_prefix = legacy_prefix.replace(
+                '  <span id="gw-source-id" hidden>{{SourceID}}</span>\n', "",
+            )
+        if current_prefix not in {target_prefix, legacy_prefix} or current_suffix != target_suffix:
             raise RefreshError(f"unrelated live template drift: {name}")
 
 
@@ -623,7 +645,7 @@ def load_snapshot(plan: dict[str, Any], plan_hash: str) -> dict[str, Any]:
         raise RefreshError("backup snapshot inventory hash is invalid")
     if inventory.get("reviews_sha256") != canonical_hash(inventory.get("reviews")):
         raise RefreshError("backup snapshot review hash is inconsistent")
-    if not isinstance(inventory.get("target_notes"), dict) or len(inventory["target_notes"]) != EXPECTED_CHANGED_NOTES:
+    if not isinstance(inventory.get("target_notes"), dict) or len(inventory["target_notes"]) != plan["changed_notes"]:
         raise RefreshError("backup snapshot target-note inventory is invalid")
     validate_plan_preimage(plan, inventory)
     return snapshot
@@ -739,7 +761,9 @@ def command_apply(args: argparse.Namespace) -> None:
     })
 
 
-def load_result(plan_hash: str, snapshot: dict[str, Any]) -> dict[str, Any]:
+def load_result(
+    plan_hash: str, snapshot: dict[str, Any], plan: dict[str, Any],
+) -> dict[str, Any]:
     result = read_json(STATE / "result.json", "refresh result")
     if result.get("schema_version") != 1 or result.get("status") != "applied":
         raise RefreshError("refresh result is not in applied state")
@@ -750,7 +774,10 @@ def load_result(plan_hash: str, snapshot: dict[str, Any]) -> dict[str, Any]:
         or result.get("backup_sha256") != snapshot.get("backup_sha256")
     ):
         raise RefreshError("refresh result belongs to another backup")
-    if result.get("changed_notes") != EXPECTED_CHANGED_NOTES or result.get("changed_examples") != EXPECTED_CHANGED_EXAMPLES:
+    if (
+        result.get("changed_notes") != plan.get("changed_notes")
+        or result.get("changed_examples") != plan.get("changed_examples")
+    ):
         raise RefreshError("refresh result changed-count contract is invalid")
     return result
 
@@ -759,7 +786,7 @@ def command_verify(_: argparse.Namespace) -> None:
     require_version()
     plan, plan_hash = load_plan()
     snapshot = load_snapshot(plan, plan_hash)
-    load_result(plan_hash, snapshot)
+    load_result(plan_hash, snapshot, plan)
     inventory = live_inventory(plan)
     verify_applied(plan, snapshot, inventory)
     print_json({

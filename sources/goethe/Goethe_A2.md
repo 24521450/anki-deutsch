@@ -235,7 +235,7 @@ This word list is derived from the alphabetical word list on pages 8-31 of the G
 | **Datei** | n. | f. | A2 | Wo hast du die Datei gespeichert?<br>Kannst du die Datei bitte öffnen? | source: die Datei, -en |
 | **Datum** | n. | n. | A2 | Bitte Datum und Unterschrift nicht vergessen!<br>Welches Datum haben wir heute?<br>Haben Sie meine Kontaktdaten? | source: das Datum, -en |
 | **dauern** | v. |  | A2 | Wie lange dauert die Pause? - Eine halbe Stunde. | source: dauern, dauert, |
-| **denken** | v. |  | A2 | Ich denke, du hast recht.<br>Ich denke oft an meine Freundin.<br>Was denktst du? Sollen wir heute Abend ins Kino gehen? | source: denken, denkt, |
+| **denken** | v. |  | A2 | Ich denke, du hast recht.<br>Ich denke oft an meine Freundin.<br>Was denkst du? Sollen wir heute Abend ins Kino gehen? | source: denken, denkt, |
 | **denn** | conj. |  | A2 | Ich kann nicht kommen, denn ich bin krank. |  |
 | **deshalb** | adv. |  | A2 | Ich bin krank. Deshalb komme ich heute nicht ins Büro. |  |
 | **deutlich** | adj. |  | A2 | Sprechen Sie bitte deutlich!<br>Können Sie das bitte deutlicher schreiben? Ich kann das nicht lesen. |  |

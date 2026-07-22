@@ -521,7 +521,13 @@ def command_preflight(_: argparse.Namespace) -> None:
 
 
 def templates() -> dict[str, Any]:
-    highlighter = (DESIGN / "target_highlighter.js").read_text(encoding="utf-8")
+    verb_policy = json.loads((ROOT / "review" / "goethe_verb_target_policy.json").read_text(encoding="utf-8"))
+    highlighter = (
+        "globalThis.goetheWerkstattVerbTargetPolicy = "
+        + json.dumps(verb_policy, ensure_ascii=False, separators=(",", ":"))
+        + ";\n"
+        + (DESIGN / "target_highlighter.js").read_text(encoding="utf-8")
+    )
     example_audio = (DESIGN / "example_audio.js").read_text(encoding="utf-8")
     word_audio = (DESIGN / "word_audio.js").read_text(encoding="utf-8")
     return {

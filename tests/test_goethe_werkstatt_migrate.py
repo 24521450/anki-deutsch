@@ -508,6 +508,39 @@ if (found.length !== 1 || found[0] !== "an") throw new Error("short target match
     subprocess.run([node, "-e", harness], check=True, capture_output=True, text=True)
 
 
+def test_assembled_target_highlighter_supports_reviewed_verb_families():
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("Node.js is required for the card JavaScript regression test")
+    back = gw.templates()["German → English"]["Back"]
+    script = back.split("</main>\n<script>\n", 1)[1].split("\n</script>\n<script>\n", 1)[0]
+    harness = r'''
+const fields = {};
+globalThis.document = {
+  getElementById: (id) => ({ textContent: fields[id] || "" }),
+  querySelectorAll: () => []
+};
+''' + script + r'''
+const api = globalThis.goetheWerkstattTargetHighlighter;
+function check(values, source, expected) {
+  Object.keys(fields).forEach((key) => delete fields[key]);
+  Object.assign(fields, values);
+  const terms = api.terms();
+  const found = api.rangesForExample(source, terms, 1).map((range) => source.slice(range[0], range[1]));
+  if (found.join("|") !== expected.join("|")) throw new Error(found.join("|") + " != " + expected.join("|"));
+}
+check({"gw-lemma":"probieren","gw-verb-forms":"probiert, hat probiert","gw-pos":"v."},
+  "Die Tür geht schwer auf. Probier mal!", ["Probier"]);
+check({"gw-lemma":"wissen","gw-source-note-raw":"source: wissen, weiß,","gw-pos":"v."},
+  "Weißt du das?", ["Weißt"]);
+check({"gw-source-id":"A2-1202","gw-lemma":"zurückkommen","gw-pos":""},
+  "Wann kommst du zurück?", ["kommst", "zurück"]);
+check({"gw-lemma":"planen","gw-verb-forms":"plant, hat geplant","gw-pos":"v."},
+  "Das ist ein guter Plan.", []);
+'''
+    subprocess.run([node, "-e", harness], check=True, capture_output=True, text=True)
+
+
 def test_field_contract_is_stable():
     assert gw.FIELDS[0] == "Lemma"
     assert gw.FIELDS[gw.FIELDS.index("LegacyGUID") + 1:] == [

@@ -16,14 +16,16 @@ import goethe_target_highlight_refresh as refresh  # noqa: E402
 import goethe_target_highlights as highlights  # noqa: E402
 
 
-def test_checked_in_review_manifest_has_the_locked_40_note_44_example_contract() -> None:
+def test_checked_in_review_manifest_has_the_locked_v2_contract() -> None:
     manifest = refresh.load_manifest()
-    assert len(manifest["repairs"]) == 40
+    assert len(manifest["repairs"]) == 141
     assert sum(
         before != after
         for item in manifest["repairs"]
         for before, after in zip(item["before"], item["after"])
-    ) == 44
+    ) == 166
+    assert manifest["expected_added_ranges"] == 195
+    assert manifest["expected_removed_ranges"] == 8
 
 
 def field_values(note: dict) -> dict[str, str]:
@@ -91,6 +93,8 @@ def reviewed_fixture() -> tuple[list[dict], dict]:
         "schema_version": 1,
         "expected_changed_notes": 40,
         "expected_changed_examples": 44,
+        "expected_added_ranges": 44,
+        "expected_removed_ranges": 0,
         "repairs": repairs,
     }
 
