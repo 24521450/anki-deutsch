@@ -395,6 +395,84 @@ def test_resolve_row_unresolved_when_page_missing(monkeypatch):
     assert page is None
 
 
+def test_strict_sitemap_resolution_finds_suffixed_exact_page(monkeypatch):
+    html = """
+    <html>
+      <head><link rel="canonical" href="https://www.duden.de/rechtschreibung/alle_Pronomen_Zahlwort" /></head>
+      <body>
+        <h1>alle</h1>
+        <button class="pronunciation-guide__sound"
+                data-href="https://cdn.duden.de/_media_/audio/ID4130600_434721273.mp3"
+                data-file-id="ID4130600_434721273">audio</button>
+      </body>
+    </html>
+    """
+
+    async def fake_fetch_page(session, url, throttle=None):
+        assert url.endswith("/alle_Pronomen_Zahlwort")
+        return 200, html, {}
+
+    monkeypatch.setattr(duden, "fetch_page", fake_fetch_page)
+    row = duden.SourceRow(1, "alle", "", "", "A2", "", "")
+    index = {"alle": [duden.LexemeCandidate("alle", "https://www.duden.de/rechtschreibung/alle_Pronomen_Zahlwort")]}
+    resolution, pages = asyncio.run(duden.resolve_exact_sitemap_row(None, row, index))
+    assert resolution.status == "ok"
+    assert resolution.match_method == "sitemap-exact"
+    assert resolution.duden_page_url.endswith("/alle_Pronomen_Zahlwort")
+    assert resolution.file_id == "ID4130600_434721273"
+    assert len(pages) == 1
+
+
+def test_strict_sitemap_resolution_accepts_same_audio_but_rejects_distinct_audio(monkeypatch):
+    def page(url: str, file_id: str) -> str:
+        return f"""
+        <html><head><link rel="canonical" href="{url}" /></head><body>
+          <h1>alle</h1>
+          <button class="pronunciation-guide__sound"
+                  data-href="https://cdn.duden.de/_media_/audio/{file_id}.mp3"
+                  data-file-id="{file_id}">audio</button>
+        </body></html>
+        """
+
+    current = {"same": True}
+
+    async def fake_fetch_page(session, url, throttle=None):
+        file_id = "ID-SAME" if current["same"] or url.endswith("_one") else "ID-OTHER"
+        return 200, page(url, file_id), {}
+
+    monkeypatch.setattr(duden, "fetch_page", fake_fetch_page)
+    row = duden.SourceRow(1, "alle", "", "", "A2", "", "")
+    index = {"alle": [
+        duden.LexemeCandidate("alle", "https://www.duden.de/rechtschreibung/alle_one"),
+        duden.LexemeCandidate("alle", "https://www.duden.de/rechtschreibung/alle_two"),
+    ]}
+    resolution, _ = asyncio.run(duden.resolve_exact_sitemap_row(None, row, index))
+    assert resolution.status == "ok"
+    current["same"] = False
+    resolution, _ = asyncio.run(duden.resolve_exact_sitemap_row(None, row, index))
+    assert resolution.status == "ambiguous"
+
+
+def test_strict_sitemap_resolution_rejects_metadata_conflict(monkeypatch):
+    html = """
+    <html><head><link rel="canonical" href="https://www.duden.de/rechtschreibung/Laden_Verb" /></head><body>
+      <h1>Laden</h1>
+      <dl><dt class="tuple__key">Wortart:</dt><dd class="tuple__val">Verb</dd></dl>
+      <button class="pronunciation-guide__sound" data-href="https://cdn.duden.de/x.mp3" data-file-id="IDX">audio</button>
+    </body></html>
+    """
+
+    async def fake_fetch_page(session, url, throttle=None):
+        return 200, html, {}
+
+    monkeypatch.setattr(duden, "fetch_page", fake_fetch_page)
+    row = duden.SourceRow(1, "Laden", "n.", "m.", "A2", "", "")
+    index = {"Laden": [duden.LexemeCandidate("Laden", "https://www.duden.de/rechtschreibung/Laden_Verb")]}
+    resolution, _ = asyncio.run(duden.resolve_exact_sitemap_row(None, row, index))
+    assert resolution.status == "unresolved"
+    assert resolution.match_method == "sitemap-metadata-conflict"
+
+
 def test_resolve_row_marks_technical_error_on_403(monkeypatch):
     async def fake_fetch_page(session, url):
         return 403, "", {}

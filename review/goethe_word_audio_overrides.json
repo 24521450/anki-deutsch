@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "spoken_text": {
     "B1-WG-0161": "hell, dunkel",
     "B1-MAIN-0060": "aller",
@@ -152,5 +152,14 @@
     "2. zweitens": "zweitens",
     "3. drittens": "drittens",
     "4. viertens": "viertens"
+  },
+  "provider_pins": {
+    "A2-0521": {
+      "provider": "wiktionary",
+      "expected_lemma": "Keller",
+      "title": "File:De-Keller.ogg",
+      "sha256": "f95670fae06724c95ec55e33089a014793b57f504821006c7809d5c1a1ec935f",
+      "reason": "Intentional user-reviewed Wiktionary pronunciation; do not replace with Duden."
+    }
   }
 }

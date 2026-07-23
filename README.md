@@ -26,7 +26,7 @@ before and after an apply.
 
 ```powershell
 python tools/goethe_word_audio.py audit
-python tools/goethe_word_audio.py prepare --confirm-duden-usage --confirm-commons-license
+python tools/goethe_word_audio.py prepare --confirm-duden-usage --confirm-commons-license --refresh-duden-fallbacks
 python tools/goethe_word_audio.py snapshot
 python tools/goethe_word_audio.py apply --scope pilot --dry-run
 python tools/goethe_word_audio.py apply --scope pilot --confirmation APPLY_GOETHE_WORD_AUDIO

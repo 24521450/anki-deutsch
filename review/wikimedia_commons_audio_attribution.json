@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_utc": "2026-07-20T13:48:52.611828+00:00",
+  "generated_utc": "2026-07-23T04:30:26.744922+00:00",
   "notice": "This file must accompany any redistributed APKG containing the referenced Wikimedia Commons audio.",
   "items": [
     {
@@ -2367,7 +2367,7 @@
       "license_short_name": "CC BY-SA 4.0",
       "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
       "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
-      "checked_utc": "2026-07-19T14:08:21.113615+00:00"
+      "checked_utc": "2026-07-23T04:30:22.177200+00:00"
     },
     {
       "sha256": "353df0958d0d7a3b04ec7937c42abf0e59826efa11f671ad5dab087fa371bd4e",
@@ -4414,6 +4414,20 @@
       "checked_utc": "2026-07-13T00:59:02.859913+00:00"
     },
     {
+      "sha256": "df4e5872faaab51ba37ffbc9afdda19e5127c93d656822e660d21961e25a1fde",
+      "spoken_text": "Ukraine",
+      "title": "File:DE-Ukraine.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:DE-Ukraine.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/5/53/DE-Ukraine.ogg",
+      "artist": "Jeuwre",
+      "credit": "Own work",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
+      "checked_utc": "2026-07-20T13:49:22.455251+00:00"
+    },
+    {
       "sha256": "1706eb4f1396cf64ada62f62d6fb3ef604065e13c1307216470dc8eb9046f8e7",
       "spoken_text": "Umtausch",
       "title": "File:De-Umtausch.ogg",
@@ -4876,6 +4890,20 @@
       "checked_utc": "2026-07-13T00:59:50.561489+00:00"
     },
     {
+      "sha256": "fa54fe868cf45f203671ae63d8187cffbcb94535d40549ee11ca42dfe9b08c08",
+      "spoken_text": "weder … noch",
+      "title": "File:De-weder.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-weder.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/e/e2/De-weder.ogg",
+      "artist": "Jeuwre",
+      "credit": "Own work , recorded with Rode NT-USB, converted with Audacity",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
+      "checked_utc": "2026-07-20T13:50:41.430652+00:00"
+    },
+    {
       "sha256": "b163673d0d3a08c4c2c64bbf21151dcb9e80b36c15a0c8c77c532e67a57c6345",
       "spoken_text": "wegbringen",
       "title": "File:De-wegbringen.ogg",
@@ -5042,6 +5070,20 @@
       "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
       "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
       "checked_utc": "2026-07-20T13:48:00.230832+00:00"
+    },
+    {
+      "sha256": "5404307a98a188d4b704d339b359248b8d9e18260f85cb4264f638671637b7e0",
+      "spoken_text": "zehn",
+      "title": "File:De-zehn2.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-zehn2.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/a/a8/De-zehn2.ogg",
+      "artist": "Jeuwre",
+      "credit": "Own work , recorded with Røde NT-USB and Audacity , converted with SoX (Sound eXchange audio editing software)",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
+      "checked_utc": "2026-07-20T13:50:16.662850+00:00"
     },
     {
       "sha256": "4945fbbb833444e8ca7bde2c316423e72cc91a44f59605fce5b7b1cb03d43157",
@@ -5266,6 +5308,20 @@
       "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
       "usage_terms": "Creative Commons Attribution-Share Alike 3.0",
       "checked_utc": "2026-07-15T00:54:45.233494+00:00"
+    },
+    {
+      "sha256": "b0f8c3e16db4c3f3a88e68cd3711a617f10a4c106aeaf7c9abc4a45ae12b4a0b",
+      "spoken_text": "Österreich",
+      "title": "File:De-Österreich2.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-%C3%96sterreich2.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/a/aa/De-%C3%96sterreich2.ogg",
+      "artist": "Jeuwre",
+      "credit": "Own work",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
+      "checked_utc": "2026-07-20T13:49:17.040906+00:00"
     },
     {
       "sha256": "920ddd8653e865eb96d6beb53be6183f496d2056514577d189f46720d0c83f6b",

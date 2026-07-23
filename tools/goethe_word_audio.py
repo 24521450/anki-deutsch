@@ -44,6 +44,7 @@ COMMONS_DIR = WORK_AUDIO / "commons"
 WIKTIONARY_DIR = WORK_AUDIO / "wiktionary"
 MANIFEST_PATH = STATE / "manifest.json"
 DUDEN_EXTRA_INDEX = STATE / "duden_extra.json"
+DUDEN_RESCAN_REPORT = STATE / "duden_fallback_rescan.json"
 EDGE_INDEX = STATE / "edge.json"
 COMMONS_INDEX = STATE / "commons.json"
 WIKTIONARY_INDEX = STATE / "wiktionary.json"
@@ -53,7 +54,8 @@ COMMONS_ATTRIBUTION_PATH = ROOT / "review" / "wikimedia_commons_audio_attributio
 MODEL = "Goethe Werkstatt"
 PARENT_DECK = "Goethe Institute"
 LEVEL_DECKS = scope.LEVEL_DECK
-MANIFEST_SCHEMA_VERSION = 3
+MANIFEST_SCHEMA_VERSION = 4
+DUDEN_RESOLVER_VERSION = 2
 APPLY_CONFIRMATION = "APPLY_GOETHE_WORD_AUDIO"
 ROLLBACK_CONFIRMATION = "ROLLBACK_GOETHE_WORD_AUDIO"
 EDGE_CONFIG = {
@@ -81,7 +83,7 @@ WIKTIONARY_CONFIG = {
     "language_section": "German",
     "config_version": 1,
 }
-SOURCE_FIELDS = ("Lemma", "POS", "Gender", "AcceptedAnswersDE", "SourceRefs", "CEFR")
+SOURCE_FIELDS = ("Lemma", "POS", "Gender", "AcceptedAnswersDE", "SourceID", "SourceRefs", "CEFR")
 PILOT_SIZE = 12
 DUDEN_REQUIRED_FIELDS = frozenset({
     "row", "word", "pos", "gender", "output_filename", "source", "status",
@@ -333,14 +335,43 @@ def matched_main_rows(fields: dict[str, str], by_ref: dict[tuple[str, int], dict
     return rows
 
 
-def load_overrides() -> dict[str, str]:
+def load_override_policy() -> dict[str, Any]:
     data = load_json(OVERRIDES_PATH, {"schema_version": 1, "spoken_text": {}})
-    if data.get("schema_version") != 1:
+    if data.get("schema_version") not in {1, 2}:
         raise WordAudioError("unsupported spoken-text override schema")
+    return data
+
+
+def load_overrides() -> dict[str, str]:
+    data = load_override_policy()
     values = data.get("spoken_text", {})
     if not isinstance(values, dict):
         raise WordAudioError("spoken_text overrides must be an object")
     return {clean(key): clean(value) for key, value in values.items() if clean(value)}
+
+
+def load_provider_pins() -> dict[str, dict[str, str]]:
+    data = load_override_policy()
+    values = data.get("provider_pins", {})
+    if not isinstance(values, dict):
+        raise WordAudioError("provider_pins must be an object")
+    pins: dict[str, dict[str, str]] = {}
+    for source_id, raw in values.items():
+        if not isinstance(raw, dict) or raw.get("provider") != "wiktionary":
+            raise WordAudioError(f"unsupported provider pin: {source_id}")
+        pin = {str(key): clean(value) for key, value in raw.items()}
+        if not pin.get("expected_lemma") or not pin.get("title") or not re.fullmatch(r"[0-9a-f]{64}", pin.get("sha256", "")):
+            raise WordAudioError(f"incomplete provider pin: {source_id}")
+        pins[clean(source_id)] = pin
+    return pins
+
+
+def provider_pin_for(fields: dict[str, str], pins: dict[str, dict[str, str]]) -> dict[str, str] | None:
+    source_id = clean(fields.get("SourceID", ""))
+    pin = pins.get(source_id)
+    if pin and clean(fields.get("Lemma", "")) != pin["expected_lemma"]:
+        raise WordAudioError(f"provider pin lemma mismatch: {source_id}")
+    return pin
 
 
 UNSAFE_SPOKEN_RE = re.compile(r"[()/;]|\d|(^|\s)[A-Za-zÄÖÜäöüß]\.|,$")
@@ -438,14 +469,17 @@ def build_audit() -> dict[str, Any]:
     records = live_records()
     by_ref, ok_index = load_duden_catalog()
     overrides = load_overrides()
+    provider_pins = load_provider_pins()
     notes: dict[str, Any] = {}
     missing_overrides: list[dict[str, Any]] = []
     counts: Counter[str] = Counter()
     for note_id, record in sorted(records.items()):
         fields = record["fields"]
-        item = select_local_duden(fields, by_ref, ok_index)
+        pin = provider_pin_for(fields, provider_pins)
+        item = None if pin else select_local_duden(fields, by_ref, ok_index)
         note_item: dict[str, Any] = {
             "note_id": note_id,
+            "card_ids": [int(card["cardId"]) for card in record["cards"]],
             "level": fields["CEFR"],
             "lemma": fields["Lemma"],
             "pos": fields.get("POS", ""),
@@ -454,21 +488,21 @@ def build_audit() -> dict[str, Any]:
             "source_signature": source_signature(fields),
             "old_word_audio": fields.get("WordAudio", ""),
         }
+        if pin:
+            note_item["provider_pin"] = pin
         if item:
             note_item["assignment"] = assignment("duden_local", Path(item["path"]), detail=item)
             counts["duden_local"] += 1
         else:
             raw = source_word(fields, by_ref)
-            main_rows = matched_main_rows(fields, by_ref)
             try:
                 text = spoken_text(fields, raw, overrides)
-                non_lexeme_display = bool(re.search(r"\d|,", text))
                 note_item.update({"spoken_text": text, "request_key": canonical_hash({
                     "text": text, "pos": fields.get("POS", ""), "gender": fields.get("Gender", "")
-                }), "skip_duden": non_lexeme_display or (
-                    bool(main_rows) and all(row.get("status") in {"unresolved", "ambiguous"} for row in main_rows)
-                )})
+                }), "skip_duden": bool(pin and pin["provider"] != "duden")})
                 counts["needs_prepare"] += 1
+                if pin:
+                    counts["provider_pin"] += 1
             except WordAudioError as exc:
                 note_item["error"] = str(exc)
                 missing_overrides.append({
@@ -508,15 +542,38 @@ def request_groups(manifest: dict[str, Any]) -> dict[str, dict[str, Any]]:
         key = item["request_key"]
         group = groups.setdefault(key, {
             "request_key": key, "spoken_text": item["spoken_text"], "pos": item["pos"], "gender": item["gender"],
-            "note_ids": [], "skip_duden": True,
+            "note_ids": [], "skip_duden": True, "required_providers": set(),
         })
         group["note_ids"].append(item["note_id"])
         group["skip_duden"] = group["skip_duden"] and bool(item.get("skip_duden"))
+        if item.get("provider_pin"):
+            group["required_providers"].add(item["provider_pin"]["provider"])
+    for group in groups.values():
+        providers = group.pop("required_providers")
+        if len(providers) > 1:
+            raise WordAudioError(f"conflicting provider pins for {group['spoken_text']!r}")
+        group["required_provider"] = next(iter(providers), None)
     return groups
 
 
-async def prepare_duden(groups: dict[str, dict[str, Any]]) -> dict[str, Any]:
-    index = load_json(DUDEN_EXTRA_INDEX, {"schema_version": 1, "items": {}})
+def reuse_duden_cache(cached: dict[str, Any] | None, *, refresh_negative: bool) -> bool:
+    if not cached:
+        return False
+    if cached.get("status") == "ok":
+        return True
+    return (
+        not refresh_negative
+        and cached.get("status") in {"unresolved", "ambiguous"}
+        and cached.get("resolver_version") == DUDEN_RESOLVER_VERSION
+    )
+
+
+async def prepare_duden(
+    groups: dict[str, dict[str, Any]], *, refresh_negative: bool = False
+) -> dict[str, Any]:
+    index = load_json(DUDEN_EXTRA_INDEX, {"schema_version": 2, "items": {}})
+    index["schema_version"] = 2
+    index["resolver_version"] = DUDEN_RESOLVER_VERSION
     cooldown_raw = index.get("cooldown_until")
     if cooldown_raw:
         cooldown_until = datetime.fromisoformat(cooldown_raw)
@@ -530,35 +587,59 @@ async def prepare_duden(groups: dict[str, dict[str, Any]]) -> dict[str, Any]:
     duden.PAGE_REQUEST_MIN_INTERVAL = 5.0
     duden.CDN_REQUEST_MIN_INTERVAL = 2.0
     DUDEN_EXTRA_DIR.mkdir(parents=True, exist_ok=True)
+    pending: dict[str, tuple[int, dict[str, Any], duden.SourceRow]] = {}
+    for number, (key, group) in enumerate(sorted(groups.items()), 1):
+        if group.get("skip_duden"):
+            items[key] = {
+                "request_key": key, "spoken_text": group["spoken_text"],
+                "status": "unresolved", "reason": "provider policy excludes Duden",
+                "match_method": "provider-policy", "resolver_version": DUDEN_RESOLVER_VERSION,
+                "updated_utc": now_utc(),
+            }
+            continue
+        cached = items.get(key)
+        if cached and cached.get("status") == "ok":
+            try:
+                validate_audio(Path(cached["path"]), cached.get("sha256"), cached.get("size"))
+            except (KeyError, WordAudioError):
+                cached = None
+            else:
+                continue
+        if reuse_duden_cache(cached, refresh_negative=refresh_negative):
+            continue
+        pending[key] = (
+            number,
+            group,
+            duden.SourceRow(number, group["spoken_text"], group["pos"], group["gender"], "", "", ""),
+        )
+    atomic_json(DUDEN_EXTRA_INDEX, index)
+    if not pending:
+        return index
+
     timeout = aiohttp.ClientTimeout(total=45)
     async with aiohttp.ClientSession(timeout=timeout) as session:
         throttle = duden.RequestThrottle()
-        for number, (key, group) in enumerate(sorted(groups.items()), 1):
-            cached = items.get(key)
-            prior_technical_attempts = 0
-            if cached and cached.get("status") == "technical_error":
-                prior_technical_attempts = int(cached.get("technical_attempts") or 1)
-            if cached and cached.get("status") == "ok":
-                path = Path(cached["path"])
-                try:
-                    validate_audio(path, cached.get("sha256"), cached.get("size"))
-                    continue
-                except WordAudioError:
-                    pass
-            if cached and cached.get("status") in {"unresolved", "ambiguous"}:
-                continue
-            if group.get("skip_duden"):
-                items[key] = {
-                    "request_key": key, "spoken_text": group["spoken_text"], "status": "unresolved",
-                    "reason": "existing A1-B1 MAIN Duden audit found no accepted audio", "match_method": "main-audit-cache",
-                    "updated_utc": now_utc(),
-                }
-                atomic_json(DUDEN_EXTRA_INDEX, index)
-                continue
-            row = duden.SourceRow(number, group["spoken_text"], group["pos"], group["gender"], "", "", "")
-            resolution, _ = await duden.resolve_row(session, row, {}, throttle=throttle)
+        try:
+            lexeme_index = await duden.build_lexeme_index_for_rows(
+                session, [entry[2] for entry in pending.values()], throttle=throttle
+            )
+        except duden.TechnicalError as exc:
+            raise WordAudioError(f"Duden sitemap technical error: {exc}") from exc
+        for progress, (key, (number, group, row)) in enumerate(sorted(pending.items()), 1):
+            resolution, pages = await duden.resolve_exact_sitemap_row(
+                session, row, lexeme_index, throttle=throttle
+            )
             result = duden.resolution_to_row(resolution)
-            result.update({"request_key": key, "spoken_text": group["spoken_text"], "updated_utc": now_utc()})
+            result.update({
+                "request_key": key, "spoken_text": group["spoken_text"],
+                "resolver_version": DUDEN_RESOLVER_VERSION, "updated_utc": now_utc(),
+                "candidate_pages": [{
+                    "canonical_url": page.canonical_url, "headword": page.headword,
+                    "wordart": page.wordart, "pos_labels": list(page.pos_labels),
+                    "gender": page.h1_gender,
+                    "audio": list(page.audio_candidates),
+                } for page in pages],
+            })
             if resolution.status == "ok" and resolution.duden_audio_url:
                 target = DUDEN_EXTRA_DIR / f"{key}.mp3"
                 try:
@@ -569,21 +650,13 @@ async def prepare_duden(groups: dict[str, dict[str, Any]]) -> dict[str, Any]:
                     result.update({"status": "technical_error", "reason": str(exc)})
                 else:
                     result.update({"path": str(target), "size": size, "sha256": sha256, "content_type": content_type, "etag": etag})
-            if result["status"] == "technical_error":
-                result["technical_attempts"] = prior_technical_attempts + 1
-                if result["technical_attempts"] >= 2:
-                    result.update({
-                        "status": "unresolved",
-                        "match_method": "technical-fallback-after-two-cooldowns",
-                        "reason": f"Duden unavailable after two cooldowns: {result['reason']}",
-                    })
             items[key] = result
             if result["status"] == "technical_error":
                 index["cooldown_until"] = (datetime.now(timezone.utc) + timedelta(minutes=15)).isoformat()
             else:
                 index.pop("cooldown_until", None)
             atomic_json(DUDEN_EXTRA_INDEX, index)
-            print(console_text(f"duden {number}/{len(groups)} {group['spoken_text']!r}: {result['status']}"))
+            print(console_text(f"duden {progress}/{len(pending)} {group['spoken_text']!r}: {result['status']}"))
             if result["status"] == "technical_error":
                 raise WordAudioError(f"Duden technical error for {group['spoken_text']!r}: {result['reason']}")
     return index
@@ -862,8 +935,13 @@ async def prepare_wiktionary(groups: dict[str, dict[str, Any]], duden_index: dic
     items = index.setdefault("items", {})
     pending = {
         key: group for key, group in groups.items()
-        if duden_index["items"].get(key, {}).get("status") != "ok"
-        and commons_index["items"].get(key, {}).get("status") != "ok"
+        if (
+            group.get("required_provider") == "wiktionary"
+            or (
+                duden_index["items"].get(key, {}).get("status") != "ok"
+                and commons_index["items"].get(key, {}).get("status") != "ok"
+            )
+        )
         and items.get(key, {}).get("status") not in {"ok", "unresolved", "ambiguous"}
     }
     timeout = aiohttp.ClientTimeout(total=90)
@@ -984,6 +1062,85 @@ async def prepare_edge(groups: dict[str, dict[str, Any]], duden_index: dict[str,
     return index
 
 
+def word_audio_provider(value: str) -> str:
+    text = value.casefold()
+    for provider in ("duden", "commons", "wiktionary", "edge"):
+        if f"_goethe_word_{provider}_" in text or (provider == "duden" and "[sound:duden-" in text):
+            return provider
+    return "unknown"
+
+
+def assignment_provider(item: dict[str, Any]) -> str:
+    source = item["assignment"]["source"]
+    return "duden" if source.startswith("duden") else source
+
+
+def validate_change_set(manifest: dict[str, Any]) -> None:
+    for item in manifest["notes"].values():
+        desired = f"[sound:{item['assignment']['media_name']}]"
+        old = item.get("old_word_audio", "")
+        if old == desired:
+            continue
+        old_provider = word_audio_provider(old)
+        desired_provider = assignment_provider(item)
+        pin = item.get("provider_pin")
+        if pin and desired_provider == pin["provider"]:
+            continue
+        if old_provider in {"commons", "wiktionary", "edge"} and desired_provider == "duden":
+            continue
+        raise WordAudioError(
+            f"unapproved audio transition: note={item['note_id']} {old_provider}->{desired_provider}"
+        )
+
+
+def write_duden_rescan_report(manifest: dict[str, Any], duden_index: dict[str, Any]) -> dict[str, Any]:
+    rows = []
+    for item in manifest["notes"].values():
+        old_provider = word_audio_provider(item.get("old_word_audio", ""))
+        if old_provider == "duden" and not item.get("provider_pin"):
+            continue
+        duden_item = duden_index.get("items", {}).get(item.get("request_key", ""), {})
+        desired_provider = assignment_provider(item)
+        if item.get("provider_pin"):
+            decision = "intentional_fallback"
+        elif desired_provider == "duden":
+            decision = "duden_audio_found"
+        elif duden_item.get("status") == "ok":
+            decision = "duden_audio_found"
+        elif duden_item.get("status") == "ambiguous":
+            decision = "ambiguous"
+        elif duden_item.get("match_method") == "sitemap-page-no-audio":
+            decision = "exact_page_no_audio"
+        elif duden_item.get("match_method") == "sitemap-metadata-conflict":
+            decision = "metadata_conflict"
+        elif duden_item.get("status") == "technical_error":
+            decision = "technical_error"
+        else:
+            decision = "no_exact_lexeme"
+        rows.append({
+            "note_id": item["note_id"], "card_ids": item.get("card_ids", []),
+            "level": item["level"], "lemma": item["lemma"],
+            "spoken_text": item.get("spoken_text"), "current_provider": old_provider,
+            "desired_provider": desired_provider, "decision": decision,
+            "duden": {key: duden_item.get(key) for key in (
+                "status", "reason", "match_method", "duden_page_url", "duden_audio_url",
+                "file_id", "candidate_pages", "resolver_version",
+            )},
+            "provider_pin": item.get("provider_pin"),
+        })
+    report = {
+        "schema_version": 1, "created_utc": now_utc(),
+        "resolver_version": DUDEN_RESOLVER_VERSION,
+        "notes": len(rows), "requests": len({
+            item["request_key"] for item in manifest["notes"].values()
+            if word_audio_provider(item.get("old_word_audio", "")) != "duden" and item.get("request_key")
+        }),
+        "counts": dict(Counter(row["decision"] for row in rows)), "items": rows,
+    }
+    atomic_json(DUDEN_RESCAN_REPORT, report)
+    return report
+
+
 def finalize_manifest(manifest: dict[str, Any], duden_index: dict[str, Any], commons_index: dict[str, Any], edge_index: dict[str, Any], wiktionary_index: dict[str, Any] | None = None) -> dict[str, Any]:
     validate_manifest(manifest)
     wiktionary_index = wiktionary_index or {"items": {}}
@@ -993,6 +1150,16 @@ def finalize_manifest(manifest: dict[str, Any], duden_index: dict[str, Any], com
             counts[item["assignment"]["source"]] += 1
             continue
         key = item["request_key"]
+        pin = item.get("provider_pin")
+        if pin:
+            pinned = wiktionary_index["items"].get(key, {})
+            if pinned.get("status") != "ok":
+                raise WordAudioError(f"pinned Wiktionary audio is unavailable: {item['lemma']}")
+            if pinned.get("title") != pin["title"] or pinned.get("sha256") != pin["sha256"]:
+                raise WordAudioError(f"pinned Wiktionary provenance mismatch: {item['lemma']}")
+            item["assignment"] = assignment("wiktionary", Path(pinned["path"]), detail=pinned)
+            counts["wiktionary"] += 1
+            continue
         extra = duden_index["items"].get(key, {})
         if extra.get("status") == "ok":
             item["assignment"] = assignment("duden_extra", Path(extra["path"]), detail=extra)
@@ -1014,6 +1181,10 @@ def finalize_manifest(manifest: dict[str, Any], duden_index: dict[str, Any], com
         raise WordAudioError("prepared manifest is incomplete")
     manifest.update({"prepared_utc": now_utc(), "counts": dict(counts), "missing_overrides": []})
     validate_manifest(manifest, require_prepared=True)
+    validate_change_set(manifest)
+    report = write_duden_rescan_report(manifest, duden_index)
+    manifest["duden_rescan_report"] = str(DUDEN_RESCAN_REPORT)
+    manifest["duden_rescan_counts"] = report["counts"]
     atomic_json(MANIFEST_PATH, manifest)
     return manifest
 
@@ -1021,6 +1192,8 @@ def finalize_manifest(manifest: dict[str, Any], duden_index: dict[str, Any], com
 async def command_prepare(_: argparse.Namespace) -> None:
     if not _.confirm_commons_license:
         raise WordAudioError("Commons preparation requires --confirm-commons-license")
+    if _.offline and _.refresh_duden_fallbacks:
+        raise WordAudioError("Duden fallback refresh cannot run offline")
     manifest = load_json(MANIFEST_PATH, None) if _.offline else build_audit()
     if not manifest:
         raise WordAudioError("offline preparation requires a complete prior audit manifest")
@@ -1030,7 +1203,7 @@ async def command_prepare(_: argparse.Namespace) -> None:
             f"{len(manifest['missing_overrides'])} notes need spoken-text overrides; see {MANIFEST_PATH}"
         )
     groups = request_groups(manifest)
-    duden_index = await prepare_duden(groups)
+    duden_index = await prepare_duden(groups, refresh_negative=_.refresh_duden_fallbacks)
     commons_index = await prepare_commons(groups, duden_index)
     wiktionary_index = await prepare_wiktionary(groups, duden_index, commons_index)
     edge_index = await prepare_edge(groups, duden_index, commons_index, wiktionary_index)
@@ -1129,13 +1302,20 @@ def pilot_ids(manifest: dict[str, Any]) -> list[int]:
         scope.LEVEL_RANK[item["level"]], item["assignment"]["source"] != "commons",
         bool(item["old_word_audio"]), item["note_id"]
     ))
+    changes = [
+        item for item in candidates
+        if item.get("old_word_audio", "") != f"[sound:{item['assignment']['media_name']}]"
+    ]
     selected: list[int] = []
+    for item in changes:
+        if item.get("provider_pin") or item.get("lemma") == "alle":
+            selected.append(int(item["note_id"]))
     seen: set[tuple[str, str, bool]] = set()
     for level in scope.LEVELS:
-        item = next((candidate for candidate in candidates if candidate["level"] == level), None)
-        if item:
+        item = next((candidate for candidate in changes if candidate["level"] == level), None)
+        if item and int(item["note_id"]) not in selected:
             selected.append(int(item["note_id"]))
-    for item in candidates:
+    for item in changes + candidates:
         key = (item["level"], item["assignment"]["source"], bool(item["old_word_audio"]))
         if int(item["note_id"]) not in selected and key not in seen:
             selected.append(int(item["note_id"]))
@@ -1282,6 +1462,10 @@ def build_parser() -> argparse.ArgumentParser:
     prepare.add_argument("--confirm-duden-usage", action="store_true", required=True)
     prepare.add_argument("--confirm-commons-license", action="store_true")
     prepare.add_argument("--offline", action="store_true", help="Resume from the existing audit manifest without AnkiConnect.")
+    prepare.add_argument(
+        "--refresh-duden-fallbacks", action="store_true",
+        help="Re-probe cached non-Duden results through the exact Duden lexeme sitemap.",
+    )
     prepare.set_defaults(func=command_prepare)
     sub.add_parser("snapshot").set_defaults(func=command_snapshot)
     apply = sub.add_parser("apply")

@@ -211,6 +211,49 @@ def test_word_manifest_rejects_pre_b1_schema():
         gwa.validate_manifest({"schema_version": 2})
 
 
+def test_duden_negative_cache_is_versioned_and_refreshable():
+    current = {"status": "unresolved", "resolver_version": gwa.DUDEN_RESOLVER_VERSION}
+    stale = {"status": "unresolved", "resolver_version": gwa.DUDEN_RESOLVER_VERSION - 1}
+    positive = {"status": "ok", "resolver_version": 1}
+    assert gwa.reuse_duden_cache(current, refresh_negative=False)
+    assert not gwa.reuse_duden_cache(current, refresh_negative=True)
+    assert not gwa.reuse_duden_cache(stale, refresh_negative=False)
+    assert gwa.reuse_duden_cache(positive, refresh_negative=True)
+
+
+def test_provider_pin_for_keller_uses_stable_source_id(tmp_path, monkeypatch):
+    path = tmp_path / "overrides.json"
+    path.write_text(json.dumps({
+        "schema_version": 2,
+        "spoken_text": {},
+        "provider_pins": {
+            "A2-0521": {
+                "provider": "wiktionary",
+                "expected_lemma": "Keller",
+                "title": "File:De-Keller.ogg",
+                "sha256": "f" * 64,
+                "reason": "intentional",
+            }
+        },
+    }), encoding="utf-8")
+    monkeypatch.setattr(gwa, "OVERRIDES_PATH", path)
+    pins = gwa.load_provider_pins()
+    assert gwa.provider_pin_for({"SourceID": "A2-0521", "Lemma": "Keller"}, pins)["provider"] == "wiktionary"
+    with pytest.raises(gwa.WordAudioError, match="lemma mismatch"):
+        gwa.provider_pin_for({"SourceID": "A2-0521", "Lemma": "Kellner"}, pins)
+
+
+def test_change_set_guard_allows_only_duden_upgrades_and_provider_pins():
+    manifest = {"notes": {
+        "1": {"note_id": 1, "old_word_audio": "[sound:_goethe_word_commons_old.mp3]", "assignment": {"source": "duden_extra", "media_name": "_goethe_word_duden_new.mp3"}},
+        "2": {"note_id": 2, "old_word_audio": "[sound:_goethe_word_duden_old.mp3]", "provider_pin": {"provider": "wiktionary"}, "assignment": {"source": "wiktionary", "media_name": "_goethe_word_wiktionary_new.mp3"}},
+    }}
+    gwa.validate_change_set(manifest)
+    manifest["notes"]["1"]["assignment"] = {"source": "edge", "media_name": "_goethe_word_edge_new.mp3"}
+    with pytest.raises(gwa.WordAudioError, match="unapproved audio transition"):
+        gwa.validate_change_set(manifest)
+
+
 def test_word_pilot_covers_all_levels():
     notes = {}
     note_id = 1
@@ -218,11 +261,22 @@ def test_word_pilot_covers_all_levels():
         for source in ("duden_local", "edge", "commons", "wiktionary"):
             notes[str(note_id)] = {
                 "note_id": note_id, "level": level, "old_word_audio": "",
-                "assignment": {"source": source},
+                "assignment": {"source": source, "media_name": f"{source}-{note_id}.mp3"},
             }
             note_id += 1
     selected = set(gwa.pilot_ids({"notes": notes}))
     assert {notes[str(note_id)]["level"] for note_id in selected} == set(gwa.scope.LEVELS)
+
+
+def test_word_pilot_prioritizes_alle_and_provider_pins():
+    manifest = {"notes": {
+        "1": {"note_id": 1, "level": "A2", "lemma": "alle", "old_word_audio": "[sound:old.mp3]", "assignment": {"source": "duden_extra", "media_name": "alle.mp3"}},
+        "2": {"note_id": 2, "level": "A2", "lemma": "Keller", "old_word_audio": "[sound:old.mp3]", "provider_pin": {"provider": "wiktionary"}, "assignment": {"source": "wiktionary", "media_name": "keller.mp3"}},
+        "3": {"note_id": 3, "level": "A1", "lemma": "ab", "old_word_audio": "[sound:old.mp3]", "assignment": {"source": "duden_extra", "media_name": "ab.mp3"}},
+        "4": {"note_id": 4, "level": "B1", "lemma": "Ziel", "old_word_audio": "[sound:old.mp3]", "assignment": {"source": "duden_extra", "media_name": "ziel.mp3"}},
+    }}
+    selected = gwa.pilot_ids(manifest)
+    assert {1, 2} <= set(selected)
 
 
 def test_b1_media_shim_fails_fast_with_exactly_two_workflows(capsys):

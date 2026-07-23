@@ -953,6 +953,148 @@ async def audit_missing_row(
     return choose_audit_audio(row, accepted)
 
 
+async def resolve_exact_sitemap_row(
+    session: aiohttp.ClientSession,
+    row: SourceRow,
+    lexeme_index: dict[str, list[LexemeCandidate]],
+    *,
+    throttle: RequestThrottle | None = None,
+) -> tuple[Resolution, tuple[DudenPage, ...]]:
+    """Resolve one row from exact sitemap titles without guessing slug suffixes."""
+    candidates = [
+        candidate
+        for candidate in lexeme_index.get(normalize_text(row.word), [])
+        if exact_audit_headword_matches(row.word, candidate.title)
+    ]
+    if not candidates:
+        return (
+            Resolution(
+                row=row.row, word=row.word, pos=row.pos, gender=row.gender,
+                output_filename=filename_for_row(row), status="unresolved",
+                reason="no exact headword in Duden lexeme sitemap",
+                match_method="sitemap-not-found", duden_page_url=None,
+                duden_audio_url=None, file_id=None,
+            ),
+            (),
+        )
+
+    accepted: list[DudenPage] = []
+    rejected: list[str] = []
+    for candidate in candidates:
+        try:
+            status, html_text, headers = await fetch_page(
+                session, candidate.url, throttle=throttle
+            )
+        except Exception as exc:
+            return (
+                Resolution(
+                    row=row.row, word=row.word, pos=row.pos, gender=row.gender,
+                    output_filename=filename_for_row(row), status="technical_error",
+                    reason=f"network error while fetching {candidate.url}: {exc}",
+                    match_method="sitemap-technical-error",
+                    duden_page_url=candidate.url, duden_audio_url=None, file_id=None,
+                ),
+                tuple(accepted),
+            )
+        if status == 429:
+            retry_after = parse_retry_after(headers.get("retry-after"))
+            if retry_after is not None and retry_after <= MAX_RETRY_AFTER_SECONDS:
+                await asyncio.sleep(min(retry_after or 1.0, 10.0))
+                status, html_text, headers = await fetch_page(
+                    session, candidate.url, throttle=throttle
+                )
+        if status != 200:
+            return (
+                Resolution(
+                    row=row.row, word=row.word, pos=row.pos, gender=row.gender,
+                    output_filename=filename_for_row(row), status="technical_error",
+                    reason=f"HTTP {status} while fetching {candidate.url}",
+                    match_method="sitemap-technical-error",
+                    duden_page_url=candidate.url, duden_audio_url=None, file_id=None,
+                ),
+                tuple(accepted),
+            )
+        try:
+            page = parse_duden_page(html_text, requested_url=candidate.url)
+        except Exception as exc:
+            return (
+                Resolution(
+                    row=row.row, word=row.word, pos=row.pos, gender=row.gender,
+                    output_filename=filename_for_row(row), status="technical_error",
+                    reason=f"parse error while fetching {candidate.url}: {exc}",
+                    match_method="sitemap-technical-error",
+                    duden_page_url=candidate.url, duden_audio_url=None, file_id=None,
+                ),
+                tuple(accepted),
+            )
+        if not exact_audit_headword_matches(row.word, page.headword):
+            rejected.append(f"{candidate.url}: headword mismatch: {page.headword}")
+            continue
+        if row.pos and page.pos_labels and not pos_matches(row.pos, page.pos_labels):
+            rejected.append(f"{candidate.url}: POS mismatch: {page.wordart or page.pos_labels}")
+            continue
+        actual_gender = "pl" if "pluralwort" in normalize_text(page.wordart).lower() else page.h1_gender
+        if row.gender and actual_gender is not None and not gender_matches(row.gender, actual_gender):
+            rejected.append(f"{candidate.url}: gender mismatch: {actual_gender}")
+            continue
+        accepted.append(page)
+
+    if not accepted:
+        return (
+            Resolution(
+                row=row.row, word=row.word, pos=row.pos, gender=row.gender,
+                output_filename=filename_for_row(row), status="unresolved",
+                reason="; ".join(rejected[:5]) or "exact Duden pages conflict with metadata",
+                match_method="sitemap-metadata-conflict", duden_page_url=None,
+                duden_audio_url=None, file_id=None,
+            ),
+            (),
+        )
+
+    audio_by_url: dict[str, dict[str, str]] = {}
+    page_for_audio: dict[str, DudenPage] = {}
+    for page in accepted:
+        for audio in page.audio_candidates:
+            audio_by_url.setdefault(audio["audio_url"], audio)
+            page_for_audio.setdefault(audio["audio_url"], page)
+    if not audio_by_url:
+        return (
+            Resolution(
+                row=row.row, word=row.word, pos=row.pos, gender=row.gender,
+                output_filename=filename_for_row(row), status="unresolved",
+                reason="exact Duden page found but no audio",
+                match_method="sitemap-page-no-audio",
+                duden_page_url=accepted[0].canonical_url,
+                duden_audio_url=None, file_id=None,
+            ),
+            tuple(accepted),
+        )
+    if len(audio_by_url) > 1:
+        return (
+            Resolution(
+                row=row.row, word=row.word, pos=row.pos, gender=row.gender,
+                output_filename=filename_for_row(row), status="ambiguous",
+                reason="multiple exact Duden pages or pronunciations have different audio",
+                match_method="sitemap-ambiguous-audio",
+                duden_page_url=accepted[0].canonical_url,
+                duden_audio_url=None, file_id=None,
+            ),
+            tuple(accepted),
+        )
+    audio_url, audio = next(iter(audio_by_url.items()))
+    page = page_for_audio[audio_url]
+    return (
+        Resolution(
+            row=row.row, word=row.word, pos=row.pos, gender=row.gender,
+            output_filename=filename_for_row(row), status="ok",
+            reason="exact Duden sitemap headword with one distinct audio",
+            match_method="sitemap-exact", duden_page_url=page.canonical_url,
+            duden_audio_url=audio_url, file_id=audio.get("file_id") or None,
+        ),
+        tuple(accepted),
+    )
+
+
 def make_manifest_row(
     row: SourceRow,
     *,
