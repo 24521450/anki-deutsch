@@ -26,12 +26,13 @@ EXPECTED_CARDS = sum(EXPECTED_CARDS_BY_LEVEL.values())
 DUDEN_ROWS = {"A1": 685, "A2": 1147, "B1": 2969}
 
 # Canonical post-v4 example inventory. The reviewed A1 Lieblings- note retains
-# its additional Goethe A2 usage sentence, hence 995 A1 occurrences.
-EXPECTED_EXAMPLE_OCCURRENCES_BY_LEVEL = {"A1": 995, "A2": 1015, "B1": 2308}
+# its additional Goethe A2 usage sentence; all reviewed same-line A1 clauses
+# are represented as complete examples.
+EXPECTED_EXAMPLE_OCCURRENCES_BY_LEVEL = {"A1": 956, "A2": 1015, "B1": 2308}
 EXPECTED_EXAMPLE_OCCURRENCES = sum(EXPECTED_EXAMPLE_OCCURRENCES_BY_LEVEL.values())
 EXPECTED_EMPTY_NOTES_BY_LEVEL = {"A1": 53, "A2": 4, "B1": 199}
 EXPECTED_EMPTY_NOTES = sum(EXPECTED_EMPTY_NOTES_BY_LEVEL.values())
-EXPECTED_UNIQUE_EXAMPLE_AUDIO = 4153
+EXPECTED_UNIQUE_EXAMPLE_AUDIO = 4118
 
 ENGLISH_AUDITED_TAG = "goethe::quality::english_audited::v4::british"
 ENGLISH_REVIEW_TAG = "goethe::quality::translation_review_needed"

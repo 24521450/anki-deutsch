@@ -31,10 +31,10 @@ def test_v4_catalog_covers_the_fully_reviewed_canonical_a1_b1_corpus():
         "notes": audit.goethe_scope.EXPECTED_NOTES,
         "reviewed": audit.goethe_scope.EXPECTED_NOTES,
         "unreviewed": 0,
-        "keep": 1572,
-        "revise": 1921,
+        "keep": 1571,
+        "revise": 1922,
         "pending": 0,
-        "meaning_updates": 1584,
+        "meaning_updates": 1585,
         "example_updates": 1058,
         "no_examples": audit.goethe_scope.EXPECTED_EMPTY_NOTES,
         "b1_no_examples": audit.goethe_scope.EXPECTED_EMPTY_NOTES_BY_LEVEL["B1"],
@@ -118,6 +118,23 @@ def test_known_v3_reviewed_senses_survive_the_canonical_migration():
     assert len(entries["A1-84886454810"]["evidence"]) >= 2
 
 
+def test_heimat_boundary_correction_merges_the_two_expected_fragments():
+    entry = manifest()["entries"]["A1-84886454802"]
+
+    assert [item["de"] for item in entry["previous_examples"]] == [
+        "Ich komme aus der Schweiz.",
+        "Das ist meine Heimat.",
+    ]
+    corrected = [{
+        "de": "Ich komme aus der Schweiz. Das ist meine Heimat.",
+        "en": "I come from Switzerland. This is my home.",
+        "origin": "goethe",
+    }]
+    assert entry["expected_examples"] == corrected
+    assert entry["desired_examples"] == corrected
+    assert entry["decision"] == "KEEP"
+
+
 def test_confirmed_a2_translation_repairs_are_canonical():
     entries = manifest()["entries"]
 
@@ -164,11 +181,11 @@ def test_confirmed_a2_translation_repairs_are_canonical():
 
 def test_reviewed_lieblings_example_and_all_current_german_examples_are_retained():
     entries = manifest()["entries"]
-    assert sum(len(entry["desired_examples"]) for entry in entries.values()) == 4318
+    assert sum(len(entry["desired_examples"]) for entry in entries.values()) == 4279
     assert sum(
         len(entry["desired_examples"])
         for entry in entries.values() if entry["cefr"] == "A1"
-    ) == 995
+    ) == 956
     assert entries["A1-84886454917"]["desired_examples"][-1] == {
         "de": "Meine Lieblingsfarbe ist Blau.",
         "en": "My favourite colour is blue.",

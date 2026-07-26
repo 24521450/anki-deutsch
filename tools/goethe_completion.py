@@ -966,6 +966,57 @@ def english_audit_for_build() -> tuple[dict[str, Any] | None, dict[str, Any]]:
     return manifest, state
 
 
+def normalize_subsumed_audit_fragments(
+    records: dict[str, dict[str, Any]], manifest: dict[str, Any],
+) -> None:
+    """Drop source extras already assigned by the final reviewed audit."""
+    owners: dict[str, set[str]] = defaultdict(set)
+    for item in manifest["entries"].values():
+        for example in item.get("desired_examples", []):
+            owners[str(example.get("de", ""))].add(str(item.get("source_id", "")))
+    for record in records.values():
+        entry = english_audit.find_entry(record["fields"], manifest)
+        if not entry:
+            continue
+        desired = entry.get("desired_examples", [])
+        desired_de = [str(item.get("de", "")) for item in desired]
+        if len(desired_de) != len(set(desired_de)):
+            continue
+        previous_de = [
+            str(item.get("de", "")) for item in entry.get("previous_examples", [])
+        ]
+        subsumed = {
+            fragment
+            for fragment in previous_de
+            if fragment not in desired_de
+            and any(fragment and fragment in combined for combined in desired_de)
+        }
+        current = goethe_examples.parse_fields(record["fields"])
+        by_de: dict[str, dict[str, str]] = {}
+        duplicate = False
+        for example in current:
+            german = example["de"]
+            if german in by_de:
+                duplicate = True
+                break
+            by_de[german] = example
+        extras = set(by_de) - set(desired_de)
+        assigned_elsewhere = {
+            german
+            for german in extras
+            if owners.get(german, set()) - {str(entry.get("source_id", ""))}
+        }
+        if (
+            duplicate
+            or not extras
+            or not extras.issubset(subsumed | assigned_elsewhere)
+            or any(german not in by_de for german in desired_de)
+        ):
+            continue
+        record["examples"] = [by_de[german] for german in desired_de]
+        goethe_examples.render_fields(record["fields"], record["examples"])
+
+
 def apply_final_english_audit(
     records: dict[str, dict[str, Any]],
     manifest: dict[str, Any] | None,
@@ -975,6 +1026,7 @@ def apply_final_english_audit(
     if manifest is None:
         return state
     reviewed = copy.deepcopy(records)
+    normalize_subsumed_audit_fragments(reviewed, manifest)
     try:
         english_audit.apply_manifest_to_records(reviewed, manifest, strict=True)
     except english_audit.AuditError as exc:

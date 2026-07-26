@@ -4,8 +4,8 @@
 live `Goethe Werkstatt` notes with Edge TTS while preserving note IDs, card IDs,
 scheduling, review history, model templates, and styling.
 
-The all-level baseline is 3,493 notes, 6,986 cards, 4,318 example occurrences,
-and 4,153 content-addressed recordings. Identical spoken text is deduplicated
+The all-level baseline is 3,493 notes, 6,986 cards, 4,279 example occurrences,
+and 4,118 content-addressed recordings. Identical spoken text is deduplicated
 across A1, A2, and B1. Prepared manifests record the exact level set and
 per-level counts; manifests from the retired A1+A2 or B1-only workflows are
 rejected.

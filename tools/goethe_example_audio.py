@@ -95,6 +95,12 @@ def audio_html(media_name: str) -> str:
     )
 
 
+def audio_field_equivalent(actual: str, expected: str) -> bool:
+    """Treat Anki's two serialisations of the boolean ``controls`` attr alike."""
+    normalize = lambda value: str(value or "").replace(' controls=""', " controls")
+    return normalize(actual) == normalize(expected)
+
+
 def example_signature(fields: dict[str, str]) -> str:
     return canonical_hash([
         {"de": item["de"], "en": item["en"]}
@@ -514,9 +520,13 @@ def verify_baseline(records: dict[int, dict[str, Any]], manifest: dict[str, Any]
         if record["model"] != before["model"] or record["tags"] != before["tags"]:
             raise ExampleAudioError(f"model or tags changed: {note_id}")
         for name, value in before["fields"].items():
-            if name in AUDIO_FIELDS and record["fields"].get(name, "") in (value, expected[name]):
+            actual = record["fields"].get(name, "")
+            if name in AUDIO_FIELDS and any(
+                audio_field_equivalent(actual, candidate)
+                for candidate in (value, expected[name])
+            ):
                 continue
-            if record["fields"].get(name, "") != value:
+            if actual != value:
                 raise ExampleAudioError(f"field changed unexpectedly: note={note_id} field={name}")
 
 
@@ -558,7 +568,12 @@ def command_apply(args: argparse.Namespace) -> None:
     values = {}
     for note_id in note_ids:
         expected = expected_audio_fields(note_id, manifest, snapshot["notes"][str(note_id)]["fields"])
-        if any(records[note_id]["fields"].get(name, "") != value for name, value in expected.items()):
+        if any(
+            not audio_field_equivalent(
+                records[note_id]["fields"].get(name, ""), value
+            )
+            for name, value in expected.items()
+        ):
             values[note_id] = expected
     print(json.dumps({
         "scope": args.scope, "selected_notes": len(note_ids),
@@ -595,7 +610,13 @@ def verify_state(scope: str, baseline: bool = False) -> dict[str, Any]:
             raise ExampleAudioError(f"model or tags changed: {note_id}")
         for name, value in before["fields"].items():
             expected = expected_audio[name] if name in AUDIO_FIELDS and note_id in selected else value
-            if record["fields"].get(name, "") != expected:
+            actual = record["fields"].get(name, "")
+            matches = (
+                audio_field_equivalent(actual, expected)
+                if name in AUDIO_FIELDS
+                else actual == expected
+            )
+            if not matches:
                 raise ExampleAudioError(f"field mismatch: note={note_id} field={name}")
     cards = [card for record in records.values() for card in record["cards"]]
     if {str(card["cardId"]): word_audio.schedule_projection(card) for card in cards} != snapshot["cards"]:
@@ -628,7 +649,13 @@ def command_rollback(args: argparse.Namespace) -> None:
     values = {
         note_id: {name: snapshot["notes"][str(note_id)]["fields"][name] for name in AUDIO_FIELDS}
         for note_id in records
-        if any(records[note_id]["fields"][name] != snapshot["notes"][str(note_id)]["fields"][name] for name in AUDIO_FIELDS)
+        if any(
+            not audio_field_equivalent(
+                records[note_id]["fields"][name],
+                snapshot["notes"][str(note_id)]["fields"][name],
+            )
+            for name in AUDIO_FIELDS
+        )
     }
     update_notes(values)
     print(json.dumps(verify_state("full", baseline=True), indent=2))

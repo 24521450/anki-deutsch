@@ -884,6 +884,96 @@ def test_v4_audit_is_applied_atomically_as_final_authority(monkeypatch):
     assert records["1"]["fields"]["MeaningEN"] == "light-coloured"
 
 
+def test_v4_audit_drops_only_subsumed_source_fragments_before_strict_apply(monkeypatch):
+    record = gc.new_record("A1-X", "hören", "A1", "v.")
+    record["examples"] = [
+        {"de": "Ein anderes Beispiel.", "en": "Another example.", "audio": "a"},
+        {"de": "Was ist das?", "en": "What is that?", "audio": "old"},
+        {"de": "Hör mal! Was ist das?", "en": "Listen! What is that?", "audio": "new"},
+    ]
+    gc.render_examples(record)
+    entry = {
+        "source_id": "A1-X",
+        "previous_examples": [
+            {"de": "Ein anderes Beispiel.", "en": "Another example."},
+            {"de": "Hör mal!", "en": "Listen!"},
+            {"de": "Was ist das?", "en": "What is that?"},
+        ],
+        "desired_examples": [
+            {"de": "Ein anderes Beispiel.", "en": "Another example."},
+            {"de": "Hör mal! Was ist das?", "en": "Listen! What is that?"},
+        ],
+    }
+    records = {"1": record}
+    manifest = {"entries": {"A1-X": entry}}
+    state = {"ready": False, "error": "", "uncovered": 0}
+
+    def apply(reviewed, audit_manifest, *, strict):
+        assert strict is True
+        assert [
+            item["de"] for item in gc.goethe_examples.parse_fields(
+                reviewed["1"]["fields"]
+            )
+        ] == [
+            "Ein anderes Beispiel.",
+            "Hör mal! Was ist das?",
+        ]
+
+    monkeypatch.setattr(gc.english_audit, "apply_manifest_to_records", apply)
+    result = gc.apply_final_english_audit(records, manifest, state)
+
+    assert result["ready"] is True
+    assert [item["de"] for item in records["1"]["examples"]] == [
+        "Ein anderes Beispiel.",
+        "Hör mal! Was ist das?",
+    ]
+
+
+def test_v4_audit_drops_source_extra_owned_by_another_reviewed_note(monkeypatch):
+    record = gc.new_record("A1-MIT", "mit", "A1", "prep.")
+    record["examples"] = [
+        {"de": "Mit Milch?", "en": "With milk?", "audio": "keep"},
+        {
+            "de": "Ich gehe ins Kino. Kommst du mit?",
+            "en": "I am going to the cinema. Are you coming with me?",
+            "audio": "other",
+        },
+    ]
+    gc.render_examples(record)
+    manifest = {
+        "entries": {
+            "A1-MIT": {
+                "source_id": "A1-MIT",
+                "desired_examples": [{"de": "Mit Milch?", "en": "With milk?"}],
+            },
+            "A1-MITKOMMEN": {
+                "source_id": "A1-MITKOMMEN",
+                "desired_examples": [{
+                    "de": "Ich gehe ins Kino. Kommst du mit?",
+                    "en": "I am going to the cinema. Are you coming with me?",
+                }],
+            },
+        },
+    }
+    records = {"1": record}
+
+    def apply(reviewed, audit_manifest, *, strict):
+        assert strict is True
+        assert [
+            item["de"] for item in gc.goethe_examples.parse_fields(
+                reviewed["1"]["fields"]
+            )
+        ] == ["Mit Milch?"]
+
+    monkeypatch.setattr(gc.english_audit, "apply_manifest_to_records", apply)
+    result = gc.apply_final_english_audit(
+        records, manifest, {"ready": False, "error": "", "uncovered": 0}
+    )
+
+    assert result["ready"] is True
+    assert [item["de"] for item in records["1"]["examples"]] == ["Mit Milch?"]
+
+
 def test_strict_manifest_validation_blocks_incomplete_v4(monkeypatch):
     record = gc.new_record("A1-MAIN-0001", "testen", "A1", "v.")
     record.update({

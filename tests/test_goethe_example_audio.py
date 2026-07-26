@@ -53,6 +53,18 @@ def test_media_name_is_content_hash_scoped():
     assert f"_goethe_example_edge_{item['sha256']}.mp3" == "_goethe_example_edge_" + "a" * 64 + ".mp3"
 
 
+def test_audio_field_equivalence_accepts_anki_boolean_serialisation_only():
+    canonical = (
+        '<audio class="gw-example-player" controls preload="none" '
+        'src="example.mp3"></audio>'
+    )
+    anki = canonical.replace(" controls ", ' controls="" ')
+    assert audio.audio_field_equivalent(anki, canonical)
+    assert not audio.audio_field_equivalent(
+        anki.replace("example.mp3", "other.mp3"), canonical
+    )
+
+
 def record(note_id: int, level: str, sentence: str) -> dict:
     fields = {"CEFR": level}
     goethe_examples.render_fields(fields, [{"de": sentence, "en": sentence, "audio": ""}])

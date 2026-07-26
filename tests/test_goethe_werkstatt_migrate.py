@@ -139,6 +139,11 @@ def test_a1_achtung_is_one_pdf_faithful_example():
     assert row["examples"] == ["Achtung! Das dürfen Sie nicht tun."]
 
 
+def test_a1_heimat_same_line_pair_is_one_example():
+    row = next(item for item in gw.parse_markdown(gw.SOURCE_A1) if item["word"] == "Heimat")
+    assert row["examples"] == ["Ich komme aus der Schweiz. Das ist meine Heimat."]
+
+
 def test_card_flip_uses_staged_motion_with_reduced_motion_fallback():
     css = (gw.DESIGN / "styling.css").read_text(encoding="utf-8")
     assert "@keyframes gw-anchor-reveal" in css

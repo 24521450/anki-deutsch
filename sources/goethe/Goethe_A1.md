@@ -57,7 +57,7 @@ This word list is derived from the alphabetical word list on pages 9–27 of the
 | **auf** | prep. |  | A1 | Die Kinder spielen auf der Straße.<br>Auf Wiedersehen.<br>Wie heißt das auf Deutsch? |  |
 | **Aufgabe** | n. | f. | A1 | Das ist eine schwere Aufgabe. | source: die Aufgabe, -n |
 | **aufhören** | v. |  | A1 | Der Kurs hört in einer Woche auf.<br>Hier hört die Bahnhofstraße auf. |  |
-| **auf sein** | v. |  | A1 | Du brauchst den Schlüssel nicht.<br>Die Wohnung ist auf.<br>Das Fenster ist noch auf. | also listed under: sein |
+| **auf sein** | v. |  | A1 | Du brauchst den Schlüssel nicht. Die Wohnung ist auf.<br>Das Fenster ist noch auf. | also listed under: sein |
 | **aufstehen** | v. |  | A1 | Ich muss immer um vier Uhr aufstehen.<br>Soll ich aufstehen? |  |
 | **Aufzug** | n. | m. | A1 | In diesem Haus gibt es keinen Aufzug. | source: der Aufzug, -ü, e |
 | **Auge** | n. | n. | A1 | Er hat blaue Augen. | source: das Auge, -n |
@@ -79,7 +79,7 @@ This word list is derived from the alphabetical word list on pages 9–27 of the
 | **Auto** | n. | n. | A1 | Er kommt mit dem Auto. | source: das Auto, -s |
 | **Autobahn** | n. | f. | A1 | Wo geht‘s hier bitte zur Autobahn? | source: die Autobahn, -en |
 | **Automat** | n. | m. | A1 | Die Fahrkarten gibt es nur am Automaten. | source: der Automat |
-| **automatisch** | adj. |  | A1 | Du musst nichts machen.<br>Das geht automatisch. |  |
+| **automatisch** | adj. |  | A1 | Du musst nichts machen. Das geht automatisch. |  |
 
 ## B
 
@@ -122,7 +122,7 @@ This word list is derived from the alphabetical word list on pages 9–27 of the
 | **bezahlen** | v. |  | A1 | Wo muss ich bezahlen? |  |
 | **Bier** | n. | n. | A1 | Noch ein Bier bitte. | source: das Bier |
 | **Bild** | n. | n. | A1 | Hast du ein Bild von deinem Sohn? | source: das Bild, -er |
-| **billig** | adj. |  | A1 | Die Jacke kostet nur 10 Euro!<br>Die ist aber billig! |  |
+| **billig** | adj. |  | A1 | Die Jacke kostet nur 10 Euro! Die ist aber billig! |  |
 | **Birne** | n. | f. | A1 | Ein Kilo Birnen, bitte! | source: die Birne, -n |
 | **bis** | prep. |  | A1 | Ich fahre nur bis Stuttgart.<br>Ich warte bis morgen. |  |
 | **bisschen** | pron. |  | A1 | Ich spreche Englisch, Französisch und ein bisschen Deutsch. |  |
@@ -164,9 +164,9 @@ This word list is derived from the alphabetical word list on pages 9–27 of the
 
 | Word | POS | Gender | CEFR | Sentence | Note |
 |------|-----|:------:|:----:|----------|------|
-| **da** | adv. |  | A1 | Da hinten ist er ja.<br>Wir sprechen gerade über Paul.<br>Da kommt er ja gerade.<br>Ich nehme das da.<br>Ist Herr Klein schon da? |  |
+| **da** | adv. |  | A1 | Da hinten ist er ja.<br>Wir sprechen gerade über Paul. Da kommt er ja gerade.<br>Ich nehme das da.<br>Ist Herr Klein schon da? |  |
 | **Dame** | n. | f. | A1 | Damen (an der Toilette)<br>Sehr geehrte Damen und Herren! | source: die Dame, -n |
-| **daneben** | adv. |  | A1 | Du kennst doch die Post.<br>Daneben ist die Bank. |  |
+| **daneben** | adv. |  | A1 | Du kennst doch die Post. Daneben ist die Bank. |  |
 | **danken** | v. |  | A1 | Ich danke Ihnen für die Einladung. |  |
 | **Dank** | n. | m. | A1 | Vielen Dank!<br>Herzlichen Dank! | source: der Dank; derived from: danken |
 | **danke** | interj. |  | A1 | Soll ich Ihnen helfen?<br>- Nein, danke! | derived from: danken |
@@ -180,7 +180,7 @@ This word list is derived from the alphabetical word list on pages 9–27 of the
 | **dies-** | det. |  | A1 | Ich nehme lieber diesen Kuchen. |  |
 | **dir** | pron. |  | A1 | Gefallen dir die Blumen? |  |
 | **Disco** | n. | f. | A1 | Heute abend gehen wir in die Disco tanzen. | source: die Disco |
-| **Doktor** | n. | m. | A1 | Meine Tochter ist krank.<br>Wir gehen zum Doktor. | source: der Doktor |
+| **Doktor** | n. | m. | A1 | Meine Tochter ist krank. Wir gehen zum Doktor. | source: der Doktor |
 | **Doppelzimmer** | n. | n. | A1 | Wollen Sie ein Doppelzimmer oder ein Einzelzimmer? | source: das Doppelzimmer |
 | **Dorf** | n. | n. | A1 | Meine Familie lebt in einem Dorf. | source: das Dorf, -ö, er |
 | **dort** | adv. |  | A1 | Deine Tasche kannst du dorthin stellen.<br>Dort ist unser Haus. | source: dort, -her, -hin |
@@ -191,7 +191,7 @@ This word list is derived from the alphabetical word list on pages 9–27 of the
 | **durch** | prep. |  | A1 | Am besten gehen Sie durch die Breite Straße. |  |
 | **Durchsage** | n. | f. | A1 | Ich habe die Durchsage nicht verstanden. | source: die Durchsage, -n |
 | **dürfen** | v. |  | A1 | Sie dürfen hier nicht rauchen.<br>Darf ich Sie zu einem Kaffee einladen?<br>Es darf nicht mehr als 15 Euro kosten. |  |
-| **Durst** | n. | m. | A1 | Hast du etwas zu trinken?<br>Ich habe großen Durst. | source: der Durst |
+| **Durst** | n. | m. | A1 | Hast du etwas zu trinken? Ich habe großen Durst. | source: der Durst |
 | **duschen** | v. |  | A1 | Ich bade nicht so gern, ich dusche lieber. | source: (sich) duschen |
 | **Dusche** | n. | f. | A1 | Unsere Wohnung hat nur eine Dusche. | source: die Dusche; derived from: duschen |
 
@@ -204,7 +204,7 @@ This word list is derived from the alphabetical word list on pages 9–27 of the
 | **Ehemann** | n. | m. | A1 | Das ist mein (Ehe-) Mann/meine (Ehe-) Frau. | source: die Ehefrau, -en/ der Ehemann, ä, er |
 | **Ei** | n. | n. | A1 | Möchtest du ein Ei zum Frühstück? | source: das Ei, -er |
 | **eilig** | adj. |  | A1 | Hast du es eilig? |  |
-| **ein-** | det., pron. |  | A1 | Ich nehme ein Bier.<br>Willst du auch eins?<br>Ist hier einer, der das kann? |  |
+| **ein-** | det., pron. |  | A1 | Ich nehme ein Bier. Willst du auch eins?<br>Ist hier einer, der das kann? |  |
 | **einfach** | adj. |  | A1 | Die Prüfung ist ganz einfach.<br>Hin und zurück?<br>– Nein, bitte nur einfach.<br>Ich brauche nur ein einfaches Zimmer. |  |
 | **Eingang** | n. | m. | A1 | Der Eingang ist um die Ecke. | source: der Eingang |
 | **einkaufen** | v. |  | A1 | Ich muss noch für morgen einkaufen. |  |
@@ -258,17 +258,17 @@ This word list is derived from the alphabetical word list on pages 9–27 of the
 | **Film** | n. | m. | A1 | Ich möchte gern diesen Film sehen. | source: der Film, -e |
 | **finden** | v. |  | A1 | Wir müssen den Schlüssel finden. |  |
 | **Firma** | n. | f. | A1 | Er arbeitet jetzt bei einer anderen Firma. | source: die Firma |
-| **Fisch** | n. | m. | A1 | Ich esse gern Fisch.<br>Fleisch mag ich nicht. | source: der Fisch, -e |
+| **Fisch** | n. | m. | A1 | Ich esse gern Fisch. Fleisch mag ich nicht. | source: der Fisch, -e |
 | **Flasche** | n. | f. | A1 | Eine Flasche Bier, bitte. | source: die Flasche, -n |
 | **Fleisch** | n. | n. | A1 | Fleisch mag ich nicht. | source: das Fleisch |
-| **fliegen** | v. |  | A1 | Ich fliege nicht gern.<br>Deshalb fahre ich mit dem Zug. |  |
+| **fliegen** | v. |  | A1 | Ich fliege nicht gern. Deshalb fahre ich mit dem Zug. |  |
 | **abfliegen** | v. |  | A1 | Wann fliegst du ab? | derived from: fliegen |
 | **Abflug** | n. | m. | A1 | Der Abflug ist um 11.20 Uhr. | source: der Abflug; derived from: fliegen |
 | **Flughafen** | n. | m. | A1 | Kannst du mich zum Flughafen bringen? | source: der Flughafen |
 | **Flugzeug** | n. | n. | A1 | Das Flugzeug aus Berlin kommt heute später an. | source: das Flugzeug |
 | **Formular** | n. | n. | A1 | Sie müssen dieses Formular ausfüllen. | source: das Formular, -e |
 | **Foto** | n. | n. | A1 | Darf ich ein Foto machen? | source: das Foto, -s |
-| **fragen** | v. |  | A1 | Er möchte Sie etwas fragen.<br>Wann kommen Sie? |  |
+| **fragen** | v. |  | A1 | Er möchte Sie etwas fragen. Wann kommen Sie? |  |
 | **Frage** | n. | f. | A1 | Ich habe eine Frage. | source: die Frage, -n; derived from: fragen |
 | **Frau** | n. | f. | A1 | Das ist Frau Becker.<br>Guten Tag, Frau Schmitt!<br>Hier arbeiten mehr Frauen als Männer. | source: die Frau, -en |
 | **frei** | adj. |  | A1 | Ist der Platz noch frei? |  |
@@ -344,7 +344,7 @@ This word list is derived from the alphabetical word list on pages 9–27 of the
 | **Hähnchen** | n. | n. | A1 | Ein Hähnchen mit Pommes bitte! | source: das Hähnchen, - |
 | **Halbpension** | n. | f. | A1 | Möchten Sie Vollpension oder Halbpension? | source: die Halbpension |
 | **Halle** | n. | f. | A1 | Wir treffen uns in Halle B | source: die Halle |
-| **hallo** | interj. |  | A1 | Hallo Inge!<br>Wie geht’s? |  |
+| **hallo** | interj. |  | A1 | Hallo Inge! Wie geht’s? |  |
 | **halten** | v. |  | A1 | Dieser Zug hält nicht in Rüdesheim. |  |
 | **Haltestelle** | n. | f. | A1 | An der nächsten Haltestelle müssen Sie aussteigen. | source: die Haltestelle |
 | **Hand** | n. | f. | A1 | Er gibt mir die Hand. | source: die Hand, -ä, e |
@@ -353,7 +353,7 @@ This word list is derived from the alphabetical word list on pages 9–27 of the
 | **Hausaufgabe** | n. | f. | A1 | Kannst du mir bei den Hausaufgaben helfen? | source: die Hausaufgabe, -n |
 | **Hausfrau** | n. | f. | A1 | Die Hausfrau/der Hausmann wäscht, kocht und kauft ein. | source: die Hausfrau, -en/ der Hausmann |
 | **Hausmann** | n. | m. | A1 | Die Hausfrau/der Hausmann wäscht, kocht und kauft ein. | source: die Hausfrau, -en/ der Hausmann |
-| **Heimat** | n. | f. | A1 | Ich komme aus der Schweiz.<br>Das ist meine Heimat. | source: die Heimat |
+| **Heimat** | n. | f. | A1 | Ich komme aus der Schweiz. Das ist meine Heimat. | source: die Heimat |
 | **heiraten** | v. |  | A1 | Meine Schwester heiratet einen Japaner. |  |
 | **heißen** | v. |  | A1 | Ich heiße Charlotte Meier.<br>Wie heißt das auf Deutsch? |  |
 | **helfen** | v. |  | A1 | Können Sie mir helfen, bitte? |  |
@@ -363,16 +363,16 @@ This word list is derived from the alphabetical word list on pages 9–27 of the
 | **herzlich** | adj. |  | A1 | Herzlichen Glückwunsch! |  |
 | **heute** | adv. |  | A1 | Heute ist ein schöner Tag. |  |
 | **hier** | adv. |  | A1 | Hier ist 06131-553221, Pamela Linke.<br>Hier wohne ich. |  |
-| **Hilfe** | n. | f. | A1 | Hilfe!<br>Bitte helfen Sie mir!<br>Brauchen Sie meine Hilfe? | source: die Hilfe |
+| **Hilfe** | n. | f. | A1 | Hilfe! Bitte helfen Sie mir!<br>Brauchen Sie meine Hilfe? | source: die Hilfe |
 | **hinten** | adv. |  | A1 | Die Tür zum Aussteigen ist hinten. |  |
 | **Hobby** | n. | n. | A1 | Meine Hobbys sind Wandern und Schwimmen. | source: das Hobby, -s |
 | **hoch** | adj. |  | A1 | Der Mount Everest ist 8.880 Meter hoch. |  |
 | **Hochzeit** | n. | f. | A1 | Zur dieser Hochzeit kommen mehr als fünfzig Gäste. | source: die Hochzeit |
 | **holen** | v. |  | A1 | Ich hole zwei Flaschen Wasser aus der Küche. |  |
-| **hören** | v. |  | A1 | Hör mal!<br>Was ist das?<br>Ich habe das Lied schon mal gehört. |  |
+| **hören** | v. |  | A1 | Hör mal! Was ist das?<br>Ich habe das Lied schon mal gehört. |  |
 | **Hotel** | n. | n. | A1 | Im Urlaub sind wir in einem Hotel am Meer. | source: das Hotel, -s |
 | **Hund** | n. | m. | A1 | Der Hund ist noch jung. | source: der Hund, -e |
-| **Hunger** | n. | m. | A1 | Ich habe Hunger!<br>Wann ist das Essen fertig? | source: der Hunger |
+| **Hunger** | n. | m. | A1 | Ich habe Hunger! Wann ist das Essen fertig? | source: der Hunger |
 
 ## I
 
@@ -391,20 +391,20 @@ This word list is derived from the alphabetical word list on pages 9–27 of the
 | Word | POS | Gender | CEFR | Sentence | Note |
 |------|-----|:------:|:----:|----------|------|
 | **ja** | interj. |  | A1 | Sind Sie Herr Watanabe?<br>– Ja. |  |
-| **Jacke** | n. | f. | A1 | Zieh dir eine Jacke an.<br>Es ist kalt. | source: die Jacke, -n |
+| **Jacke** | n. | f. | A1 | Zieh dir eine Jacke an. Es ist kalt. | source: die Jacke, -n |
 | **jed-** | det. |  | A1 | Blumen kannst du in jedem Bahnhof kaufen. |  |
 | **jetzt** | adv. |  | A1 | Jetzt machen wir eine Pause. |  |
 | **Job** | n. | m. | A1 | Jenny hat einen neuen Job bei der Post. | source: der Job, -s |
 | **Jugendliche** | n. | m. | A1 | Viele Jugendliche kaufen gern ein. | source: der Jugendliche, -n |
-| **jung** | adj. |  | A1 | Claudia ist 21.<br>– Was?<br>Noch so jung? |  |
-| **Junge** | n. | m. | A1 | Ich habe zwei Kinder.<br>Einen Jungen und ein Mädchen. | source: der Junge, -n |
+| **jung** | adj. |  | A1 | Claudia ist 21.<br>– Was? Noch so jung? |  |
+| **Junge** | n. | m. | A1 | Ich habe zwei Kinder. Einen Jungen und ein Mädchen. | source: der Junge, -n |
 
 ## K
 
 | Word | POS | Gender | CEFR | Sentence | Note |
 |------|-----|:------:|:----:|----------|------|
 | **Kaffee** | n. | m. | A1 | Zum Frühstück trinke ich immer Kaffee. | source: der Kaffee |
-| **kaputt** | adj. |  | A1 | Das Glas war teuer.<br>Es geht sehr leicht kaputt. |  |
+| **kaputt** | adj. |  | A1 | Das Glas war teuer. Es geht sehr leicht kaputt. |  |
 | **Karte** | n. | f. | A1 | Ich schreibe meinen Bekannten eine Karte aus dem Urlaub.<br>Wollen wir Karten spielen?<br>Ich möchte auch etwas essen.<br>Bringen Sie mir die Karte, bitte. | source: die Karte, -n |
 | **Kreditkarte** | n. | f. | A1 | Kann ich auch mit Karte (be-) zahlen? | source: (Kredit)-Karte, -n; derived from: Karte |
 | **Kartoffel** | n. | f. | A1 | Für Pommes frites braucht man Kartoffeln. | source: die Kartoffel, -n |
@@ -412,7 +412,7 @@ This word list is derived from the alphabetical word list on pages 9–27 of the
 | **kaufen** | v. |  | A1 | Tim kauft sich ein neues Auto. |  |
 | **kein** | det. |  | A1 | Es gibt keine Eintrittskarten mehr. |  |
 | **kennen** | v. |  | A1 | Kennen Sie diese Frau?<br>– Nein, leider nicht. |  |
-| **kennenlernen** | v. |  | A1 | Wir sind neu hier.<br>Wir möchten Sie kennenlernen. | derived from: kennen |
+| **kennenlernen** | v. |  | A1 | Wir sind neu hier. Wir möchten Sie kennenlernen. | derived from: kennen |
 | **Kind** | n. | n. | A1 | Wie viele Kinder haben Sie? | source: das Kind, -er |
 | **Kindergarten** | n. | m. | A1 | Die kleine Laura geht schon in den Kindergarten. | source: der Kindergarten |
 | **Kino** | n. | n. | A1 | Wir sehen heute Abend im Kino einen schönen Film. | source: das Kino, -s |
@@ -435,9 +435,9 @@ This word list is derived from the alphabetical word list on pages 9–27 of the
 | **Kuchen** | n. | m. | A1 | Ich nehme ein Stück Kuchen. | source: der Kuchen |
 | **Kugelschreiber** | n. | m. | A1 | Hast du einen Kugelschreiber für mich? | source: der Kugelschreiber |
 | **Kühlschrank** | n. | m. | A1 | Haben wir noch Milch?<br>– Ja, im Kühlschrank. | source: der Kühlschrank |
-| **kulturell** | adj. |  | A1 | Ich bin kulturell interessiert.<br>Ich gehe oft ins Museum. |  |
+| **kulturell** | adj. |  | A1 | Ich bin kulturell interessiert. Ich gehe oft ins Museum. |  |
 | **sich kümmern** | v. |  | A1 | Jede Mutter kümmert sich um ihre kleinen Kinder. |  |
-| **Kunde** | n. | m. | A1 | Einen Moment, bitte.<br>Ich habe eine Kundin. | source: der Kunde, -n |
+| **Kunde** | n. | m. | A1 | Einen Moment, bitte. Ich habe eine Kundin. | source: der Kunde, -n |
 | **Kurs** | n. | m. | A1 | Der Deutschkurs geht bis zum Sommer. | source: der Kurs, -e |
 | **kurz** | adj. |  | A1 | Ricardo hat kurzes Haar. |  |
 
@@ -452,16 +452,16 @@ This word list is derived from the alphabetical word list on pages 9–27 of the
 | **lange** | adv. |  | A1 | Wie lange fährt der Zug von Hamburg nach Berlin? |  |
 | **langsam** | adj. |  | A1 | Könnten Sie bitte etwas langsamer sprechen? |  |
 | **laufen** | v. |  | A1 | Ich möchte nicht Auto fahren, ich möchte laufen. |  |
-| **laut** | adj. |  | A1 | Nicht so laut!<br>Das Baby schläft. |  |
+| **laut** | adj. |  | A1 | Nicht so laut! Das Baby schläft. |  |
 | **leben** | v. |  | A1 | Sie lebt bei ihrer Schwester.<br>Ihre Eltern leben nicht mehr. |  |
 | **Leben** | n. | n. | A1 | Das Leben in diesem Land ist teuer. | source: das Leben; derived from: leben |
 | **Lebensmittel** | n. | pl. | A1 | Lebensmittel bekommen Sie im Supermarkt. | source: die Lebensmittel (pl.); derived from: leben |
-| **ledig** | adj. |  | A1 | Sind Sie verheiratet?<br>– Nein.<br>Ledig. |  |
+| **ledig** | adj. |  | A1 | Sind Sie verheiratet?<br>– Nein. Ledig. |  |
 | **legen** | v. |  | A1 | Legen Sie das Buch auf den Tisch. |  |
 | **Lehrer** | n. | m. | A1 | Unsere Deutschlehrerin heißt Frau Müller. | source: der Lehrer, – |
 | **leicht** | adj. |  | A1 | Der Koffer ist leicht.<br>Deutsch ist nicht leicht. |  |
-| **leider** | adv. |  | A1 | Leider kann ich nicht kommen.<br>Ich muss zum Arzt. |  |
-| **leise** | adj. |  | A1 | Seid leise.<br>Die anderen schlafen schon. |  |
+| **leider** | adv. |  | A1 | Leider kann ich nicht kommen. Ich muss zum Arzt. |  |
+| **leise** | adj. |  | A1 | Seid leise. Die anderen schlafen schon. |  |
 | **lernen** | v. |  | A1 | Wie lange lernen Sie schon Deutsch? |  |
 | **lesen** | v. |  | A1 | Ich lese ein Buch von García Márquez. |  |
 | **letzt-** | adj. |  | A1 | Morgen ist der letzte Kurstag. |  |
@@ -477,7 +477,7 @@ This word list is derived from the alphabetical word list on pages 9–27 of the
 | **Lkw** | n. | m. | A1 | Dieser Lastkraftwagen ist sehr groß. | source: der Lkw, -s |
 | **Lokal** | n. | n. | A1 | In unserer Straße gibt es ein neues Lokal. | source: das Lokal |
 | **Lösung** | n. | f. | A1 | Die Lösung ist ganz einfach. | source: die Lösung, -en |
-| **lustig** | adj. |  | A1 | Frau Mertens ist lustig.<br>Sie lacht immer. |  |
+| **lustig** | adj. |  | A1 | Frau Mertens ist lustig. Sie lacht immer. |  |
 
 ## M
 
@@ -498,8 +498,8 @@ This word list is derived from the alphabetical word list on pages 9–27 of the
 | **Miete** | n. | f. | A1 | Die Miete für diese Wohnung ist 600 Euro. | source: die Miete; derived from: mieten |
 | **Milch** | n. | f. | A1 | Die Milch steht im Kühlschrank. | source: die Milch |
 | **mit** | prep. |  | A1 | Trinken Sie den Kaffee mit Milch? |  |
-| **mitbringen** | v. |  | A1 | Ich gehe einkaufen.<br>Soll ich dir was mitbringen? |  |
-| **mitkommen** | v. |  | A1 | Ich gehe ins Kino.<br>Kommst du mit? |  |
+| **mitbringen** | v. |  | A1 | Ich gehe einkaufen. Soll ich dir was mitbringen? |  |
+| **mitkommen** | v. |  | A1 | Ich gehe ins Kino. Kommst du mit? |  |
 | **mitmachen** | v. |  | A1 | Warum macht ihr nicht mit? |  |
 | **mitnehmen** | v. |  | A1 | Nehmen wir meine Schwester ins Kino mit? |  |
 | **Mitte** | n. | f. | A1 | Der Lehrer steht in der Mitte des Klassenzimmers. | source: die Mitte |
@@ -509,7 +509,7 @@ This word list is derived from the alphabetical word list on pages 9–27 of the
 | **möglich** | adj. |  | A1 | Mit dieser Fahrkarte ist die Fahrt ab 9 Uhr möglich. |  |
 | **Moment** | n. | m. | A1 | Moment mal bitte!<br>Einen Moment bitte. | source: der Moment |
 | **morgen** | adv. |  | A1 | Morgen beginnt die Schule um 10 Uhr. |  |
-| **müde** | adj. |  | A1 | Ich bin müde.<br>Ich gehe schlafen. |  |
+| **müde** | adj. |  | A1 | Ich bin müde. Ich gehe schlafen. |  |
 | **Mund** | n. | m. | A1 | Öffnen Sie den Mund. | source: der Mund |
 | **müssen** | v. |  | A1 | Ich muss jeden Tag von 8 Uhr bis 18 Uhr arbeiten. |  |
 | **Mutter** | n. | f. | A1 | Frau Berghäuser ist die Mutter von Michaela. | source: die Mutter, -ü |
@@ -521,14 +521,14 @@ This word list is derived from the alphabetical word list on pages 9–27 of the
 | **nach** | prep. |  | A1 | Ich gehe jetzt nach Hause.<br>Ich fliege nach München.<br>Es ist schon 5 nach 12. |  |
 | **nächst-** | adj. |  | A1 | Sehen wir uns nächste Woche? |  |
 | **Name** | n. | m. | A1 | Mein Name ist Thomas Schmidt.<br>Mein Vorname ist Thomas; Schmidt ist der Familienname. | source: der Name, -n |
-| **nehmen** | v. |  | A1 | Heute gibt es Hähnchen.<br>Das nehme ich.<br>Ich nehme den Bus. |  |
+| **nehmen** | v. |  | A1 | Heute gibt es Hähnchen. Das nehme ich.<br>Ich nehme den Bus. |  |
 | **nein** | interj. |  | A1 | Fährst du auch nach München?<br>– Nein, ich habe keine Zeit. |  |
 | **neu** | adj. |  | A1 | Ich bin der neue Kollege.<br>Wir haben eine neue Wohnung. |  |
 | **nicht** | part. |  | A1 | Das stimmt nicht.<br>Das ist doch schön, nicht? |  |
-| **nichts** | pron. |  | A1 | Das macht nichts.<br>Hier kaufe ich nichts.<br>Der Laden gefällt mir nicht. |  |
+| **nichts** | pron. |  | A1 | Das macht nichts.<br>Hier kaufe ich nichts. Der Laden gefällt mir nicht. |  |
 | **nie** | adv. |  | A1 | Er kommt nie pünktlich. |  |
 | **noch** | adv. |  | A1 | Vielleicht kommt er noch.<br>Wir warten noch fünf Minuten.<br>Ich habe noch 20 Euro. |  |
-| **normal** | adj. |  | A1 | 75 kg.<br>Sein Gewicht ist normal. |  |
+| **normal** | adj. |  | A1 | 75 kg. Sein Gewicht ist normal. |  |
 | **Nummer** | n. | f. | A1 | Sie haben Zimmer Nummer zwölf.<br>Welche Hausnummer haben Sie?<br>Können Sie mir Ihre Nummer geben? | source: die Nummer, -n |
 | **nur** | part. |  | A1 | Ich möchte nur ein Glas Wasser. |  |
 
@@ -677,7 +677,7 @@ This word list is derived from the alphabetical word list on pages 9–27 of the
 |------|-----|:------:|:----:|----------|------|
 | **tanzen** | v. |  | A1 | Tanzen Sie gern? |  |
 | **Tasche** | n. | f. | A1 | Ich habe die Schlüssel in der Tasche. | source: die Tasche, -n |
-| **Taxi** | n. | n. | A1 | Es gibt heute keinen Bus mehr.<br>Er fährt mit dem Taxi. | source: das Taxi, -s |
+| **Taxi** | n. | n. | A1 | Es gibt heute keinen Bus mehr. Er fährt mit dem Taxi. | source: das Taxi, -s |
 | **Tee** | n. | m. | A1 | Ich trinke morgens immer Tee. | source: der Tee |
 | **Teil** | n. | m. | A1 | Lies bitte auch den zweiten Teil. | source: der Teil, -e |
 | **telefonieren** | v. |  | A1 | Darf ich mal telefonieren? |  |
@@ -694,7 +694,7 @@ This word list is derived from the alphabetical word list on pages 9–27 of the
 | **Tomate** | n. | f. | A1 | Die Tomate ist noch grün. | source: die Tomate, -n |
 | **tot** | adj. |  | A1 | Sein Vater ist schon lange tot. |  |
 | **treffen** | v. |  | A1 | Ich treffe in der Stadt einen Kollegen.<br>Wir treffen uns immer freitags. | source: (sich) treffen |
-| **Treppe** | n. | f. | A1 | Die Toilette?<br>Die Treppe hoch und dann links. | source: die Treppe, -n |
+| **Treppe** | n. | f. | A1 | Die Toilette? Die Treppe hoch und dann links. | source: die Treppe, -n |
 | **trinken** | v. |  | A1 | Möchtest du etwas trinken? |  |
 | **tschüss** | interj. |  | A1 | Junge Leute sagen meistens „tschüss!“ und nicht „auf Wiedersehen“. |  |
 | **tun** | v. |  | A1 | Ich habe noch etwas zu tun.<br>Was tut Ihr Mann? |  |
@@ -730,7 +730,7 @@ This word list is derived from the alphabetical word list on pages 9–27 of the
 | **verkaufen** | v. |  | A1 | Er verkauft sein altes Auto. |  |
 | **Verkäufer** | n. | m. | A1 | Meine Mutter ist Verkäuferin im Kaufhaus. | source: der Verkäufer, –; derived from: verkaufen |
 | **vermieten** | v. |  | A1 | Die Wohnung ist schon vermietet. |  |
-| **Vermieter** | n. | m. | A1 | Unser Vermieter heißt Huber.<br>Er wohnt auch hier. | source: der Vermieter; derived from: vermieten |
+| **Vermieter** | n. | m. | A1 | Unser Vermieter heißt Huber. Er wohnt auch hier. | source: der Vermieter; derived from: vermieten |
 | **verstehen** | v. |  | A1 | Können Sie mich verstehen? |  |
 | **Verwandte** | n. | m. | A1 | Peter besucht seine Verwandten in Polen. | source: der Verwandte, -n |
 | **viel** | adv. |  | A1 | Hier regnet es viel. |  |
@@ -738,7 +738,7 @@ This word list is derived from the alphabetical word list on pages 9–27 of the
 | **von** | prep. |  | A1 | Das Auto von Felix ist kaputt.<br>Er kommt gerade von Köln/von zu Hause. |  |
 | **vor** | prep. |  | A1 | Der Termin war vor einer Stunde.<br>Das Auto steht vor der Tür. |  |
 | **Vorname** | n. | m. | A1 | Ich heiße Müller, mein Vorname ist Eva. | source: der Vorname, -n |
-| **Vorsicht** | n. | f. | A1 | Vorsicht!<br>Da kommt ein Auto. | source: die Vorsicht |
+| **Vorsicht** | n. | f. | A1 | Vorsicht! Da kommt ein Auto. | source: die Vorsicht |
 | **vorstellen** | v. |  | A1 | Wir wollen uns kennenlernen.<br>Können Sie sich bitte vorstellen? | source: (sich) vorstellen |
 | **Vorwahl** | n. | f. | A1 | Wie ist die Vorwahl von München? | source: die Vorwahl |
 
@@ -754,7 +754,7 @@ This word list is derived from the alphabetical word list on pages 9–27 of the
 | **was für ein** | det. |  | A1 | Was für eine Farbe möchten Sie? |  |
 | **waschen** | v. |  | A1 | Wo kann ich mir die Hände waschen?<br>Ich muss morgen waschen. | source: (sich) waschen |
 | **Wasser** | n. | n. | A1 | Ein Glas Wasser, bitte. | source: das Wasser |
-| **wehtun** | v. |  | A1 | Ich muss zum Arzt.<br>Mein Bein tut weh. | also: weh tun |
+| **wehtun** | v. |  | A1 | Ich muss zum Arzt. Mein Bein tut weh. | also: weh tun |
 | **weiblich** | adj. |  | A1 | Kreuzen Sie bitte an: „weiblich“ oder „männlich“. |  |
 | **Wein** | n. | m. | A1 | Nein danke, ich möchte keinen Wein. | source: der Wein |
 | **weit** | adj. |  | A1 | Zum Bahnhof ist es nicht weit. |  |

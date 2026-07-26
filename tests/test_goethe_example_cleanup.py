@@ -13,6 +13,48 @@ import goethe_examples  # noqa: E402
 import goethe_source_examples as source_examples  # noqa: E402
 
 
+BOUNDARY_MERGES = {
+    "A1-MAIN-0052": "Du brauchst den Schlüssel nicht. Die Wohnung ist auf.",
+    "A1-MAIN-0074": "Du musst nichts machen. Das geht automatisch.",
+    "A1-MAIN-0112": "Die Jacke kostet nur 10 Euro! Die ist aber billig!",
+    "A1-MAIN-0144": "Wir sprechen gerade über Paul. Da kommt er ja gerade.",
+    "A1-MAIN-0146": "Du kennst doch die Post. Daneben ist die Bank.",
+    "A1-MAIN-0160": "Meine Tochter ist krank. Wir gehen zum Doktor.",
+    "A1-MAIN-0171": "Hast du etwas zu trinken? Ich habe großen Durst.",
+    "A1-MAIN-0179": "Ich nehme ein Bier. Willst du auch eins?",
+    "A1-MAIN-0228": "Ich esse gern Fisch. Fleisch mag ich nicht.",
+    "A1-MAIN-0231": "Ich fliege nicht gern. Deshalb fahre ich mit dem Zug.",
+    "A1-MAIN-0238": "Er möchte Sie etwas fragen. Wann kommen Sie?",
+    "A1-MAIN-0304": "Hallo Inge! Wie geht’s?",
+    "A1-MAIN-0323": "Hilfe! Bitte helfen Sie mir!",
+    "A1-MAIN-0329": "Hör mal! Was ist das?",
+    "A1-MAIN-0332": "Ich habe Hunger! Wann ist das Essen fertig?",
+    "A1-MAIN-0341": "Zieh dir eine Jacke an. Es ist kalt.",
+    "A1-MAIN-0346": "Claudia ist 21.<br>– Was? Noch so jung?",
+    "A1-MAIN-0347": "Ich habe zwei Kinder. Einen Jungen und ein Mädchen.",
+    "A1-MAIN-0349": "Das Glas war teuer. Es geht sehr leicht kaputt.",
+    "A1-MAIN-0357": "Wir sind neu hier. Wir möchten Sie kennenlernen.",
+    "A1-MAIN-0380": "Ich bin kulturell interessiert. Ich gehe oft ins Museum.",
+    "A1-MAIN-0382": "Einen Moment, bitte. Ich habe eine Kundin.",
+    "A1-MAIN-0392": "Nicht so laut! Das Baby schläft.",
+    "A1-MAIN-0396": "Sind Sie verheiratet?<br>– Nein. Ledig.",
+    "A1-MAIN-0400": "Leider kann ich nicht kommen. Ich muss zum Arzt.",
+    "A1-MAIN-0401": "Seid leise. Die anderen schlafen schon.",
+    "A1-MAIN-0417": "Frau Mertens ist lustig. Sie lacht immer.",
+    "A1-MAIN-0433": "Ich gehe einkaufen. Soll ich dir was mitbringen?",
+    "A1-MAIN-0434": "Ich gehe ins Kino. Kommst du mit?",
+    "A1-MAIN-0444": "Ich bin müde. Ich gehe schlafen.",
+    "A1-MAIN-0451": "Heute gibt es Hähnchen. Das nehme ich.",
+    "A1-MAIN-0455": "Hier kaufe ich nichts. Der Laden gefällt mir nicht.",
+    "A1-MAIN-0458": "75 kg. Sein Gewicht ist normal.",
+    "A1-MAIN-0582": "Es gibt heute keinen Bus mehr. Er fährt mit dem Taxi.",
+    "A1-MAIN-0599": "Die Toilette? Die Treppe hoch und dann links.",
+    "A1-MAIN-0625": "Unser Vermieter heißt Huber. Er wohnt auch hier.",
+    "A1-MAIN-0633": "Vorsicht! Da kommt ein Auto.",
+    "A1-MAIN-0644": "Ich muss zum Arzt. Mein Bein tut weh.",
+}
+
+
 def fields(level: str, rows: list[dict[str, str]]) -> dict[str, str]:
     result = {"CEFR": level}
     goethe_examples.render_fields(result, rows)
@@ -21,7 +63,7 @@ def fields(level: str, rows: list[dict[str, str]]) -> dict[str, str]:
 
 def test_reviewed_overrides_define_canonical_level_whitelists():
     allowed = source_examples.allowed_examples_by_level()
-    assert len(allowed["A1"]) == 872
+    assert len(allowed["A1"]) == 837
     assert len(allowed["A2"]) == 1835
     assert len(allowed["B1"]) == 4554
     assert source_examples.sentence_key("Im Zug fahre ich immer 2. Klasse.") in allowed["A1"]
@@ -90,12 +132,12 @@ def test_example_audio_baseline_matches_cleanup_projection():
         goethe_example_audio.EXPECTED_OCCURRENCES
         == cleanup.EXPECTED_REMAINING
         == cleanup.scope.EXPECTED_EXAMPLE_OCCURRENCES
-        == 4318
+        == 4279
     )
     assert (
         goethe_example_audio.EXPECTED_UNIQUE
         == cleanup.scope.EXPECTED_UNIQUE_EXAMPLE_AUDIO
-        == 4153
+        == 4118
     )
     assert cleanup.EXPECTED_EMPTY_BY_LEVEL == cleanup.scope.EXPECTED_EMPTY_NOTES_BY_LEVEL
     assert cleanup.EXPECTED_EMPTY_BY_LEVEL["B1"] == 199
@@ -112,3 +154,93 @@ def test_exported_examples_obey_the_level_source_policy():
     assert {row["cefr"] for row in rows} == set(cleanup.scope.LEVELS)
     assert len(examples) == cleanup.EXPECTED_REMAINING
     assert all(source_examples.sentence_key(sentence) in allowed[level] for level, sentence in examples)
+
+
+def test_heimat_boundary_is_combined_in_the_a1_export_and_policy():
+    row = next(
+        json.loads(line)
+        for line in (ROOT / "data" / "build" / "anki_notes.jsonl").read_text(
+            encoding="utf-8"
+        ).splitlines()
+        if json.loads(line)["source_id"] == "A1-84886454802"
+    )
+    combined = "Ich komme aus der Schweiz. Das ist meine Heimat."
+    allowed = cleanup.reviewed_allowed_examples()["A1"]
+
+    assert row["cefr"] == "A1"
+    assert row["source_refs"] == [
+        "A1-84886454802",
+        "A1-MAIN-0313",
+        "A2-MAIN-0444",
+        "B1-MAIN-1139",
+    ]
+    assert source_examples.sentence_key(combined) in allowed
+    for excluded in (
+        "Ich komme aus der Schweiz.",
+        "Das ist meine Heimat.",
+        "Mein Heimatland ist Italien. Dort bin ich geboren.",
+        "Ich lebe jetzt hier in Deutschland. Das ist meine neue Heimat.",
+    ):
+        assert source_examples.sentence_key(excluded) not in allowed
+    assert [(item["de"], item["en"]) for item in row["examples"]] == [
+        (combined, "I come from Switzerland. This is my home."),
+    ]
+    assert row["example_target_spans"] == [[[41, 47]]]
+    assert source_examples.filter_examples("A1", row["examples"]) == row["examples"]
+
+
+def test_all_38_boundary_decisions_are_synced_across_source_review_translation_and_build():
+    source = {
+        f"A1-MAIN-{row['row']:04d}": row
+        for row in cleanup.gw.parse_markdown(cleanup.gw.SOURCE_A1)
+    }
+    audit_text = (
+        ROOT / "review" / "goethe_example_boundary_audit.md"
+    ).read_text(encoding="utf-8")
+    assert "pending" not in audit_text.casefold()
+
+    audit_entries = [
+        json.loads(line)
+        for line in (
+            ROOT / "review" / "goethe_english_audit_v4.jsonl"
+        ).read_text(encoding="utf-8").splitlines()
+    ]
+    translations = json.loads(
+        (ROOT / "review" / "goethe_completion_translations.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    build_rows = [
+        json.loads(line)
+        for line in (
+            ROOT / "data" / "build" / "anki_notes.jsonl"
+        ).read_text(encoding="utf-8").splitlines()
+    ]
+
+    assert len(BOUNDARY_MERGES) == 38
+    for source_id, combined in BOUNDARY_MERGES.items():
+        assert combined in source[source_id]["examples"]
+        assert f"| `{source_id}` " in audit_text
+        assert f"| `MERGE` | {combined} |" in audit_text
+
+        entries = [
+            entry
+            for entry in audit_entries
+            if source_id in entry.get("source_refs", [])
+        ]
+        assert len(entries) == 1
+        desired = [
+            item for item in entries[0]["desired_examples"]
+            if item["de"] == combined
+        ]
+        assert len(desired) == 1
+        assert translations[combined] == desired[0]["en"]
+
+        exported = [
+            row for row in build_rows if source_id in row["source_refs"]
+        ]
+        assert len(exported) == 1
+        assert [(item["de"], item["en"]) for item in exported[0]["examples"]
+                if item["de"] == combined] == [
+            (combined, desired[0]["en"])
+        ]
