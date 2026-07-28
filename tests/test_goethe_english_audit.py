@@ -22,20 +22,20 @@ def manifest() -> dict:
     return audit.load_json(audit.MANIFEST)
 
 
-def test_v4_catalog_covers_the_fully_reviewed_canonical_a1_b1_corpus():
+def test_v5_catalog_covers_the_fully_reviewed_canonical_a1_b1_corpus():
     catalog = manifest()
     audit.validate_scaffold(catalog)
 
-    assert catalog["schema_version"] == 4
+    assert catalog["schema_version"] == 5
     assert catalog["counts"] == {
         "notes": audit.goethe_scope.EXPECTED_NOTES,
         "reviewed": audit.goethe_scope.EXPECTED_NOTES,
         "unreviewed": 0,
-        "keep": 1571,
-        "revise": 1922,
+        "keep": 2170,
+        "revise": 1255,
         "pending": 0,
-        "meaning_updates": 1585,
-        "example_updates": 1058,
+        "meaning_updates": 85,
+        "example_updates": 1213,
         "no_examples": audit.goethe_scope.EXPECTED_EMPTY_NOTES,
         "b1_no_examples": audit.goethe_scope.EXPECTED_EMPTY_NOTES_BY_LEVEL["B1"],
         "ambiguous_prompt_groups": 0,
@@ -62,9 +62,12 @@ def test_every_row_has_one_stable_canonical_identity_without_note_id_guards():
 def test_a1_a2_v3_rows_are_collapsed_into_current_canonical_notes():
     entries = manifest()["entries"]
     lower = [entry for entry in entries.values() if entry["cefr"] in {"A1", "A2"}]
-    collapsed = [entry for entry in lower if len(entry["collapsed_v3_source_ids"]) > 1]
+    collapsed = [
+        entry for entry in lower
+        if len(entry.get("collapsed_v3_source_ids", [])) > 1
+    ]
 
-    assert len(lower) == 1525
+    assert len(lower) == 1484
     assert all(entry["review_status"] == "reviewed" for entry in lower)
     assert all(entry["evidence"] for entry in lower)
     assert len(collapsed) == 5
@@ -93,7 +96,7 @@ def test_b1_review_batches_are_bounded_and_preserve_no_example_exceptions():
     b1 = [entry for entry in manifest()["entries"].values() if entry["cefr"] == "B1"]
     batches = {entry["audit_batch"] for entry in b1}
 
-    assert batches == {f"B1-{index:02d}" for index in range(1, 9)}
+    assert batches == {f"V5-{index:02d}" for index in range(6, 15)}
     assert max(sum(entry["audit_batch"] == batch for entry in b1) for batch in batches) <= 250
     assert sum(not entry["desired_examples"] for entry in b1) == (
         audit.goethe_scope.EXPECTED_EMPTY_NOTES_BY_LEVEL["B1"]
@@ -104,7 +107,7 @@ def test_b1_wortgruppe_contrast_has_canonical_grammar_and_gloss():
     entry = manifest()["entries"]["B1-WG-0161"]
     assert entry["lemma"] == "hell-, dunkel-"
     assert entry["pos"] == "adj."
-    assert entry["desired_meaning_en"] == "light-; dark- (colour prefixes)"
+    assert entry["desired_meaning_en"] == "light-; dark- (color prefixes)"
 
 
 def test_known_v3_reviewed_senses_survive_the_canonical_migration():
@@ -130,8 +133,8 @@ def test_heimat_boundary_correction_merges_the_two_expected_fragments():
         "en": "I come from Switzerland. This is my home.",
         "origin": "goethe",
     }]
-    assert entry["expected_examples"] == corrected
-    assert entry["desired_examples"] == corrected
+    assert entry["expected_examples"][0] == corrected[0]
+    assert entry["desired_examples"] == entry["expected_examples"]
     assert entry["decision"] == "KEEP"
 
 
@@ -139,23 +142,22 @@ def test_confirmed_a2_translation_repairs_are_canonical():
     entries = manifest()["entries"]
 
     abitur = entries["A2-WG-0092"]
-    assert abitur["expected_meaning_en"] == "Abitur; school-leaving qualification"
+    assert abitur["expected_meaning_en"] == (
+        "German school-leaving examination; university entrance qualification"
+    )
     assert abitur["desired_meaning_en"] == (
         "German school-leaving examination; university entrance qualification"
     )
     assert abitur["desired_examples"] == [{
-        "de": "Nach dem Abitur möchte sie studieren.",
-        "en": (
-            "After taking her school-leaving examination, she would like to go "
-            "to university."
-        ),
-        "origin": "review-authored",
+        "de": "Meine Tochter hat gerade Abitur gemacht.",
+        "en": "My daughter has just completed her Abitur.",
+        "origin": "goethe",
     }]
 
     mailbox = entries["A2-0615"]
-    assert mailbox["expected_meaning_en"] == "mailbox"
+    assert mailbox["expected_meaning_en"] == "voicemail"
     assert mailbox["desired_meaning_en"] == "voicemail"
-    assert mailbox["decision"] == "REVISE"
+    assert mailbox["decision"] == "KEEP"
     assert mailbox["difficult"] is True
     assert {item["provider"] for item in mailbox["evidence"]} >= {"Cambridge", "Duden"}
 
@@ -163,32 +165,32 @@ def test_confirmed_a2_translation_repairs_are_canonical():
     assert museum["desired_examples"][0]["en"] == (
         "There is a new exhibition at the art museum."
     )
-    assert museum["decision"] == "REVISE"
+    assert museum["decision"] == "KEEP"
 
     consultation = entries["A2-0919"]
     assert consultation["desired_examples"][0]["en"] == (
         "Dr Weiß has office hours from 9:00 am to 12:30 pm."
     )
-    assert consultation["decision"] == "REVISE"
+    assert consultation["decision"] == "KEEP"
 
     jeans = entries["A2-0520"]
-    assert jeans["expected_meaning_en"] == "Jeans"
+    assert jeans["expected_meaning_en"] == "jeans"
     assert jeans["desired_meaning_en"] == "jeans"
-    assert jeans["decision"] == "REVISE"
+    assert jeans["decision"] == "KEEP"
 
     assert entries["A2-WG-0003"]["desired_meaning_en"] == "ICE"
 
 
 def test_reviewed_lieblings_example_and_all_current_german_examples_are_retained():
     entries = manifest()["entries"]
-    assert sum(len(entry["desired_examples"]) for entry in entries.values()) == 4279
+    assert sum(len(entry["desired_examples"]) for entry in entries.values()) == 5080
     assert sum(
         len(entry["desired_examples"])
         for entry in entries.values() if entry["cefr"] == "A1"
-    ) == 956
+    ) == 1579
     assert entries["A1-84886454917"]["desired_examples"][-1] == {
         "de": "Meine Lieblingsfarbe ist Blau.",
-        "en": "My favourite colour is blue.",
+        "en": "My favorite color is blue.",
         "origin": "goethe",
     }
 
@@ -320,7 +322,7 @@ def test_tag_transition_clears_all_legacy_english_and_review_tags():
         "keep-me", audit.OLD_VERIFIED_TAG, audit.OLD_AUDITED_TAG,
         audit.V3_AUDITED_TAG, audit.REVIEW_TAG,
     ]
-    assert audit.desired_tags(tags) == ["goethe::quality::english_audited::v4::british", "keep-me"]
+    assert audit.desired_tags(tags) == ["goethe::quality::english_audited::v5::american", "keep-me"]
 
 
 def test_uncovered_and_pending_records_are_marked_for_review_not_audited():
@@ -365,10 +367,12 @@ def test_review_validator_requires_two_domains_for_difficult_entries():
     assert "difficult_needs_two_domains" in audit._review_entry_errors(entry)
 
 
-def test_review_validator_rejects_known_us_spellings():
+def test_review_validator_accepts_us_and_rejects_known_british_spellings():
     entry = copy.deepcopy(manifest()["entries"]["A2-0851"])
     entry["desired_meaning_en"] = "favorite color"
-    assert "non_british_spelling" in audit._review_entry_errors(entry)
+    assert "non_american_english" not in audit._review_entry_errors(entry)
+    entry["desired_meaning_en"] = "favourite colour"
+    assert "non_american_english" in audit._review_entry_errors(entry)
 
 
 def test_evidence_validator_rejects_wrong_provider_host_and_missing_difficulty():
@@ -414,7 +418,7 @@ def test_batch_report_is_a_strict_row_and_collision_gate():
         "supports": "Direct bilingual entry used by this synthetic validation fixture.",
     }]
     for index, entry in enumerate(rows):
-        if entry.get("audit_batch") != "B1-01":
+        if entry.get("audit_batch") != "V5-01":
             continue
         meaning = (
             f"to review sense {index}"
@@ -433,10 +437,10 @@ def test_batch_report_is_a_strict_row_and_collision_gate():
             example["en"] = f"Reviewed example {index}-{example_index}."
     catalog = audit.manifest_from_rows(rows)
 
-    report = audit.batch_report(catalog, "B1-01")
+    report = audit.batch_report(catalog, "V5-01")
 
     assert report["rows"] == 250
-    assert report["examples"] == 320
+    assert report["examples"] == 518
     assert report["reviewed"] == 250
     assert report["blockers"] == {}
     assert report["internal_collision_groups"] == []
@@ -454,7 +458,7 @@ def test_scaffold_refuses_to_overwrite_reviewed_b1_without_force(tmp_path):
     audit.guard_scaffold_overwrite(output, force=True)
 
 
-def test_british_validator_allows_tire_as_a_verb_but_rejects_us_tyre_noun():
+def test_american_validator_accepts_tire_and_rejects_british_tyre():
     entry = copy.deepcopy(manifest()["entries"]["A2-0851"])
     entry["pos"] = "v."
     entry["desired_meaning_en"] = "to tire"
@@ -463,13 +467,13 @@ def test_british_validator_allows_tire_as_a_verb_but_rejects_us_tyre_noun():
         "en": "The work tires me.",
         "origin": "review-authored",
     }]
-    assert "non_british_spelling" not in audit._review_entry_errors(entry)
+    assert "non_american_english" not in audit._review_entry_errors(entry)
 
-    entry["desired_examples"][0]["en"] = "Check the front tires."
-    assert "non_british_spelling" in audit._review_entry_errors(entry)
+    entry["desired_examples"][0]["en"] = "Check the front tyres."
+    assert "non_american_english" in audit._review_entry_errors(entry)
 
 
-def test_reviewed_b1_rows_reject_additional_us_learner_vocabulary():
+def test_reviewed_b1_rows_accept_us_and_reject_british_learner_vocabulary():
     entry = copy.deepcopy(manifest()["entries"]["B1-MAIN-0002"])
     entry.update({
         "decision": "REVISE",
@@ -482,15 +486,14 @@ def test_reviewed_b1_rows_reject_additional_us_learner_vocabulary():
         }],
     })
     entry["desired_examples"][0]["en"] = "My neighbor took the elevator."
-    assert "non_british_spelling" in audit._review_entry_errors(entry)
+    assert "non_american_english" not in audit._review_entry_errors(entry)
 
-    entry["desired_meaning_en"] = "wallet; billfold"
-    entry["desired_examples"][0]["en"] = "The wallet is empty."
-    assert "non_british_spelling" in audit._review_entry_errors(entry)
+    entry["desired_examples"][0]["en"] = "My neighbour took the lift."
+    assert "non_american_english" in audit._review_entry_errors(entry)
 
     entry["desired_meaning_en"] = "car park"
     entry["desired_examples"][0]["en"] = "The parking lot is full."
-    assert "non_british_spelling" in audit._review_entry_errors(entry)
+    assert "non_american_english" in audit._review_entry_errors(entry)
 
 
 def test_reviewed_b1_rows_enforce_decision_verb_and_gender_gloss_conventions():
@@ -562,9 +565,116 @@ def test_verify_scope_requires_pilot_targets_and_preserves_other_notes(monkeypat
     ) == [2]
 
 
+def test_rebase_rows_uses_only_completion_owned_identities_and_reviewed_overrides():
+    old = {
+        "schema_version": 4,
+        "source_id": "A1-OLD",
+        "source_refs": ["A1-OLD", "A2-SPLIT"],
+        "stable_guid": "goethe:old",
+        "lemma": "zurück/zurück-",
+        "cefr": "A1",
+        "pos": "adv.",
+        "expected_meaning_en": "back",
+        "desired_meaning_en": "back",
+        "expected_examples": [{
+            "de": "Komm bitte zurück.",
+            "en": "Please come back.",
+            "origin": "goethe",
+        }],
+        "desired_examples": [{
+            "de": "Komm bitte zurück.",
+            "en": "Please come back.",
+            "origin": "goethe",
+        }],
+        "decision": "KEEP",
+        "review_status": "reviewed",
+        "difficult": False,
+        "reason": "Reviewed.",
+        "evidence": [{
+            "provider": "Cambridge",
+            "url": "https://dictionary.cambridge.org/dictionary/german-english/zuruck",
+            "supports": "The back sense.",
+        }],
+    }
+    completion = {"records": {
+        "1": {
+            "is_new": True,
+            "fields": {
+                "SourceID": "A2-SPLIT",
+                "SourceRefs": "A2-SPLIT",
+                "LegacyGUID": "goethe:split",
+                "Lemma": "zurück-",
+                "CEFR": "A2",
+                "POS": "adv.",
+                "MeaningEN": "back",
+            },
+            "examples": [{
+                "de": "Komm bitte zurück.",
+                "en": "",
+            }],
+        },
+    }}
+    overrides = {"version": 1, "entries": {
+        "A2-SPLIT": {
+            "meaning_en": "back (separable verb particle)",
+            "example_translations": {
+                "Komm bitte zurück.": "Please come back.",
+            },
+            "evidence": old["evidence"],
+            "reason": "Keep the bound form separate.",
+        },
+    }}
+
+    rows = audit.rebase_rows(
+        completion,
+        {"entries": {"A1-OLD": old}},
+        overrides,
+    )
+
+    assert [row["source_id"] for row in rows] == ["A2-SPLIT"]
+    assert rows[0]["lemma"] == "zurück-"
+    assert rows[0]["source_refs"] == ["A2-SPLIT"]
+    assert rows[0]["desired_meaning_en"] == "back (separable verb particle)"
+    assert rows[0]["decision"] == "REVISE"
+
+
+def test_rebase_rows_fails_closed_when_a_split_identity_has_no_review_override():
+    completion = {"records": {
+        "1": {
+            "is_new": True,
+            "fields": {
+                "SourceID": "A2-SPLIT",
+                "SourceRefs": "A1-OLD|A2-SPLIT",
+                "LegacyGUID": "goethe:split",
+                "Lemma": "zurück-",
+                "CEFR": "A2",
+                "POS": "adv.",
+                "MeaningEN": "back",
+            },
+            "examples": [],
+        },
+    }}
+    old = {
+        "source_id": "A1-OLD",
+        "source_refs": ["A1-OLD", "A2-SPLIT"],
+        "stable_guid": "goethe:old",
+        "desired_meaning_en": "back",
+        "desired_examples": [],
+        "expected_examples": [],
+        "evidence": [{"provider": "Duden", "url": "https://example.test"}],
+    }
+
+    with pytest.raises(audit.AuditError, match="split audit identity"):
+        audit.rebase_rows(
+            completion,
+            {"entries": {"A1-OLD": old}},
+            {"version": 1, "entries": {}},
+        )
+
+
 def test_cli_exposes_batch_gate_scaffold_guard_and_scoped_verify():
     parser = audit.build_parser()
-    assert parser.parse_args(["check-batch", "--batch", "B1-01"]).batch == "B1-01"
+    assert parser.parse_args(["check-batch", "--batch", "V5-01"]).batch == "V5-01"
     assert parser.parse_args(["verify"]).scope == "full"
     assert parser.parse_args(["verify", "--scope", "pilot"]).scope == "pilot"
     assert parser.parse_args([

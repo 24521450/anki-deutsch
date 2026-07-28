@@ -81,6 +81,9 @@ def test_lemma_identity_preserves_german_case_and_reflexive_variants():
     assert gc.lemma_key("arm") == "arm"
     assert gc.lemma_key("(sich) anmelden") == "anmelden"
     assert gc.lemma_key("sich anmelden") == "anmelden"
+    assert gc.lemma_key("zurück") != gc.lemma_key("zurück-")
+    assert gc.lemma_key("her") != gc.lemma_key("her-")
+    assert gc.lemma_key("her-") != gc.lemma_key("-her")
     assert "auf keinen Fall" in gc.source_variants("auf jeden/keinen Fall")
     assert "leid tun" in gc.source_variants("leidtun/leid tun")
 
@@ -121,6 +124,17 @@ def test_numeric_wortgruppe_uses_spoken_german_as_lemma():
     assert gc.wg_lemma(row) == "eins"
 
 
+def test_enriched_numeric_wortgruppe_uses_spoken_german_not_notation():
+    rows = {
+        row["id"]: row
+        for row in gc.parse_wortgruppen(gc.WG_FILES["B1"])
+    }
+    assert gc.wg_lemma(rows["B1-WG-0256"]) == "zwei"
+    assert gc.wg_answers(rows["B1-WG-0256"]) == ["zwei"]
+    assert gc.wg_lemma(rows["B1-WG-0296"]) == "zweitausend(und)vier"
+    assert gc.wg_answers(rows["B1-WG-0296"]) == ["zweitausend(und)vier"]
+
+
 def test_reviewed_measure_merges_delete_exact_b1_notes_and_route_collision():
     policy = gc.load_redundancy_policy()
     groups = policy["reviewed_note_merges"]
@@ -138,14 +152,18 @@ def test_reviewed_measure_merges_delete_exact_b1_notes_and_route_collision():
         1784075689985: 1584887177258,
         1784075690077: 1584887177259,
         1784075690172: 1584887177260,
+        1784075664324: 1497484861847,
     }
     assert {item["duplicate"]: item["survivor"] for item in groups} == expected
     merges = policy["merge_wortgruppen"]
+    routed_wg = [
+        item for item in groups if item["duplicate_source_ref"].startswith("B1-WG-")
+    ]
     assert {
         item["duplicate_source_ref"]: merges[item["duplicate_source_ref"]]["target_source_ref"]
-        for item in groups
+        for item in routed_wg
     } == {
-        item["duplicate_source_ref"]: item["survivor_source_ref"] for item in groups
+        item["duplicate_source_ref"]: item["survivor_source_ref"] for item in routed_wg
     }
 
     records = {}
@@ -390,13 +408,13 @@ def test_reindex_record_discards_stale_lemma_after_canonicalisation():
     assert gc.find_record(records, index, "ein Gramm") is None
 
 
-def test_b1_speed_unit_keeps_full_lemma_and_reviewed_translation():
+def test_b1_speed_unit_uses_spoken_lemma_and_reviewed_translation():
     row = next(
         item for item in gc.parse_wortgruppen(gc.WG_FILES["B1"])
         if item["id"] == "B1-WG-0254"
     )
     assert (gc.wg_lemma(row), gc.wg_answers(row), row["variants"]) == (
-        "1 km/h", ["1 km/h"], "",
+        "ein Kilometer pro Stunde", ["ein Kilometer pro Stunde"], "",
     )
     overrides = json.loads(gc.B1_ENGLISH_OVERRIDES.read_text(encoding="utf-8"))
     assert overrides["B1-WG-0254"]["meaning_en"] == "one kilometre per hour"
@@ -436,6 +454,49 @@ def test_variant_index_finds_reflexive_source_without_scanning_all_records():
     records = {"1": record}
     index = gc.variant_index(records)
     assert gc.find_record(records, index, "anmelden", "v.") == "1"
+
+
+def test_prefix_headword_never_falls_back_to_base_or_compound():
+    base = gc.new_record("A1-X", "zurück", "A1", "adv.")
+    compound = gc.new_record("A2-X", "zurückfahren", "A2", "v.")
+    records = {"1": base, "2": compound}
+    index = gc.variant_index(records)
+    assert gc.find_record(records, index, "zurück-", "adv.") is None
+
+
+def test_main_headword_lookup_preserves_combined_and_bound_identity():
+    records = {
+        "1": gc.new_record("A1-X", "zurück", "A1", "adv."),
+        "2": gc.new_record("A2-X", "zurück-", "A2", "adv."),
+        "3": gc.new_record("A2-Y", "her/her-/-her", "A2", "adv."),
+    }
+    index = gc.headword_index(records)
+    assert gc.find_headword_record(records, index, "zurück", "adv.") == "1"
+    assert gc.find_headword_record(records, index, "zurück-", "adv.") == "2"
+    assert gc.find_headword_record(records, index, "her/her-/-her", "adv.") == "3"
+    assert gc.find_headword_record(records, index, "her", "adv.") is None
+
+
+def test_drop_unclaimed_live_records_deletes_legacy_only_notes_and_stale_physical_refs():
+    survivor = live_record(1, "A1")
+    survivor["source_refs"] = ["A1-LEGACY", "A1-MAIN-0001", "A2-MAIN-0001"]
+    survivor["fields"]["SourceRefs"] = "|".join(survivor["source_refs"])
+    ghost = live_record(2, "A2")
+    ghost["fields"]["Lemma"] = "her kommen"
+    ghost["source_refs"] = ["A2-0483"]
+    ghost["fields"]["SourceRefs"] = "A2-0483"
+    records = {"1": survivor, "2": ghost}
+
+    deletions = gc.apply_source_claims(
+        records,
+        [],
+        {"1": ["A1-MAIN-0001"]},
+    )
+
+    assert list(records) == ["1"]
+    assert survivor["source_refs"] == ["A1-LEGACY", "A1-MAIN-0001"]
+    assert survivor["fields"]["SourceRefs"] == "A1-LEGACY|A1-MAIN-0001"
+    assert [item["note_id"] for item in deletions] == [2]
 
 
 def test_existing_same_spelling_is_preferred_over_creating_a_third_sense():
@@ -740,10 +801,12 @@ def test_redundancy_policy_preserves_reviewed_content_twins_and_routes_phrases()
 def test_redundancy_policy_routes_reviewed_main_source_aliases():
     policy = gc.load_redundancy_policy()
     aliases = policy["main_source_aliases"]
-    assert len(aliases) == 15
+    assert len(aliases) == 17
     assert aliases["B1-MAIN-0255"] == "B1-MAIN-0252"
     assert aliases["B1-MAIN-0539"] == "A1-MAIN-0159"
     assert aliases["B1-MAIN-1855"] == "A2-MAIN-0734"
+    assert aliases["B1-MAIN-1153"] == "A2-MAIN-0452"
+    assert aliases["B1-MAIN-2786"] == "A2-MAIN-1091"
 
 
 def test_configured_main_source_alias_fails_closed_until_target_exists():
@@ -801,22 +864,34 @@ def test_build_manifest_renders_filtered_examples_before_english_audit(monkeypat
         "main_source_aliases": {},
     })
     monkeypatch.setattr(gc, "load_source_text_overrides", lambda: {"examples": {}})
+    monkeypatch.setattr(gc, "load_supplemental_examples", lambda: [])
     monkeypatch.setattr(gc, "apply_headword_policy", lambda records, deletions: deletions)
-    monkeypatch.setattr(gc.gw, "parse_markdown", lambda path: [])
+    source_row = {
+        "row": 1,
+        "word": "Bekannte",
+        "pos": "n.",
+        "gender": "m./f.",
+        "examples": ["Keep me.", "Drop me."],
+        "note": "",
+    }
+    monkeypatch.setattr(
+        gc.gw,
+        "parse_markdown",
+        lambda path: [source_row] if path == gc.gw.SOURCE_A1 else [],
+    )
     monkeypatch.setattr(gc, "parse_wortgruppen", lambda path: [])
     monkeypatch.setattr(
         gc.goethe_source_examples,
         "allowed_examples_by_level",
-        lambda: {level: {} for level in gc.LEVELS},
-    )
-    monkeypatch.setattr(
-        gc.goethe_source_examples,
-        "filter_examples",
-        lambda level, examples, allowed: examples[:1],
+        lambda: {
+            "A1": {gc.goethe_source_examples.sentence_key("Keep me."): "Keep me."},
+            "A2": {},
+            "B1": {},
+        },
     )
     monkeypatch.setattr(gc.english_audit, "validate_manifest", lambda manifest: None)
     monkeypatch.setattr(gc.english_audit, "load_json", lambda path: {
-        "schema_version": 4,
+        "schema_version": gc.english_audit.SCHEMA_VERSION,
         "entries": {
             "A1-TEST": {
                 "source_id": "A1-TEST",
@@ -837,17 +912,134 @@ def test_build_manifest_renders_filtered_examples_before_english_audit(monkeypat
         lambda records: pytest.fail("legacy B1 English overrides must not be runtime authority"),
     )
     monkeypatch.setattr(gc, "apply_b1_data_overrides", lambda records: None)
+    monkeypatch.setattr(gc.review_policy, "apply_all", lambda records, **kwargs: 0)
     monkeypatch.setattr(gc, "finalize_template_fields", lambda records: None)
 
     gc.build_manifest()
 
 
-def test_incomplete_v4_audit_is_reported_but_not_applied(monkeypatch, tmp_path):
-    path = tmp_path / "goethe_english_audit_v4.jsonl"
+def test_supplemental_examples_survive_source_rebuild_with_authored_origin(tmp_path):
+    path = tmp_path / "supplemental.jsonl"
+    path.write_text(
+        json.dumps({
+            "schema_version": 1,
+            "source_id": "A1-WG-TEST",
+            "de": "Das bedeutet d. h. genau dasselbe.",
+            "en_us": "That means exactly the same thing.",
+            "origin": "review-authored",
+            "provenance": "new",
+            "review_status": "reviewed",
+            "reason": "The physical Wortgruppen row has no sentence column.",
+        }, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    entries = gc.load_supplemental_examples(path)
+    record = gc.new_record("A1-WG-TEST", "d. h.", "A1", "adv.")
+
+    gc.apply_supplemental_examples({"1": record}, entries)
+
+    assert record["examples"] == [{
+        "de": "Das bedeutet d. h. genau dasselbe.",
+        "en": "That means exactly the same thing.",
+        "audio": "",
+        "origin": "review-authored",
+    }]
+
+
+def test_reviewed_optional_reflexive_marker_controls_display_and_answers():
+    record = gc.new_record("A1-TEST", "waschen", "A1", "v.")
+    base_policy = {"schema_version": 1, "records": {}}
+    reflexive_policy = {
+        "schema_version": 1,
+        "records": {
+            "A1-TEST": {
+                "classification": "optional",
+                "expected_lemma": "waschen",
+                "source_refs": ["A1-TEST"],
+                "set": {
+                    "Lemma": "(sich) waschen",
+                    "AcceptedAnswersDE": "waschen|sich waschen",
+                    "AcceptedFullAnswersDE": "waschen|sich waschen|s waschen",
+                },
+                "reason": "The source examples demonstrate both uses.",
+            },
+        },
+    }
+
+    gc.review_policy.apply_all(
+        {"1": record},
+        policy=base_policy,
+        reflexive_policy=reflexive_policy,
+    )
+
+    assert record["fields"]["Lemma"] == "(sich) waschen"
+    assert gc.split_answers(record["fields"]["AcceptedAnswersDE"]) == [
+        "waschen", "sich waschen",
+    ]
+
+
+def test_reviewed_sense_split_partitions_source_backed_examples(monkeypatch):
+    record = gc.new_record("A1-MAIN-0001", "umziehen", "A1", "v.")
+    record.update({"note_id": 10, "is_new": False})
+    record["source_refs"] = ["A1-MAIN-0001", "B1-MAIN-0002"]
+    record["fields"]["SourceRefs"] = "|".join(record["source_refs"])
+    gc.add_example(record, "Nächsten Monat ziehen wir um.")
+    monkeypatch.setattr(
+        gc.goethe_source_examples,
+        "allowed_examples_by_level",
+        lambda: {
+            "A1": {gc.sentence_key("Nächsten Monat ziehen wir um."): ""},
+            "A2": {},
+            "B1": {gc.sentence_key("Ich muss mich noch umziehen."): ""},
+        },
+    )
+    split = [{
+        "source_ref": "A1-MAIN-0001",
+        "survivor_note_id": 10,
+        "expected_lemma": "umziehen",
+        "expected_source_refs": ["A1-MAIN-0001", "B1-MAIN-0002"],
+        "survivor_examples": ["Nächsten Monat ziehen wir um."],
+        "survivor": {
+            "source_id": "A1-MAIN-0001",
+            "source_refs": ["A1-MAIN-0001", "B1-MAIN-0002"],
+            "field_overrides": {
+                "Lemma": "umziehen",
+                "AcceptedAnswersDE": "umziehen",
+            },
+        },
+        "child": {
+            "source_id": "B1-MAIN-0002-CHANGE-CLOTHES",
+            "coverage_ref": "B1-MAIN-0002",
+            "source_refs": ["B1-MAIN-0002-CHANGE-CLOTHES"],
+            "cefr": "B1",
+            "examples": ["Ich muss mich noch umziehen."],
+            "field_overrides": {
+                "Lemma": "sich umziehen",
+                "AcceptedAnswersDE": "sich umziehen",
+                "OriginalOrder": "B1-MAIN-0002",
+                "SourceNoteRaw": "B1-MAIN-0002 change clothes",
+                "LegacyGUID": "goethe:B1-MAIN-0002-CHANGE-CLOTHES",
+            },
+        },
+    }]
+
+    records = {"10": record}
+    gc.apply_reviewed_note_splits(records, split)
+
+    assert [item["de"] for item in record["examples"]] == [
+        "Nächsten Monat ziehen wir um.",
+    ]
+    assert [
+        item["de"] for item in records["new:B1-MAIN-0002-CHANGE-CLOTHES"]["examples"]
+    ] == ["Ich muss mich noch umziehen."]
+
+
+def test_incomplete_v5_audit_is_reported_but_not_applied(monkeypatch, tmp_path):
+    path = tmp_path / "goethe_english_audit_v5.jsonl"
     path.write_text("{}\n", encoding="utf-8")
     monkeypatch.setattr(gc.english_audit, "MANIFEST", path)
     monkeypatch.setattr(gc.english_audit, "load_json", lambda path: {
-        "schema_version": 4,
+        "schema_version": gc.english_audit.SCHEMA_VERSION,
         "entries": {
             "B1-X": {"source_id": "B1-X", "review_status": "pending"},
         },
@@ -974,7 +1166,7 @@ def test_v4_audit_drops_source_extra_owned_by_another_reviewed_note(monkeypatch)
     assert [item["de"] for item in records["1"]["examples"]] == ["Mit Milch?"]
 
 
-def test_strict_manifest_validation_blocks_incomplete_v4(monkeypatch):
+def test_strict_manifest_validation_blocks_incomplete_v5(monkeypatch):
     record = gc.new_record("A1-MAIN-0001", "testen", "A1", "v.")
     record.update({
         "note_id": 1,
@@ -997,7 +1189,7 @@ def test_strict_manifest_validation_blocks_incomplete_v4(monkeypatch):
         "source_coverage_aliases": {},
         "ambiguous": [],
         "english_audit": {
-            "schema_version": 4,
+            "schema_version": gc.english_audit.SCHEMA_VERSION,
             "entries": 1,
             "uncovered": 1,
             "ready": False,
@@ -1009,7 +1201,7 @@ def test_strict_manifest_validation_blocks_incomplete_v4(monkeypatch):
         "A1": 1, "A2": 0, "B1": 0,
     })
 
-    with pytest.raises(gc.CompletionError, match="English audit v4 is not ready"):
+    with pytest.raises(gc.CompletionError, match="English audit v5 is not ready"):
         gc.validate_manifest(manifest)
 
     manifest["english_audit"].update({"uncovered": 0, "ready": True})

@@ -95,6 +95,8 @@ def test_result_state_hooks_and_hidden_contract_fields_exist() -> None:
     assert 'gw-result--" + state' in script
     assert 'gw-result-" + state' in script
     assert 'gw-result-title' in script
+    assert '"Expected answer: " + fullAnswers.join(" / ")' in script
+    assert '"Canonical: " + fullAnswers.join(" / ")' not in script
     css = read("styling.css")
     for state in ("correct", "partial", "incorrect"):
         assert f"gw-result--{state}" in css
@@ -142,6 +144,7 @@ def test_audio_markup_and_audio_css_hooks_remain_unchanged() -> None:
 
 def test_target_highlighter_has_precomputed_path_and_preserves_markup() -> None:
     script = read("target_highlighter.js")
+    css = read("styling.css")
     assert 'text("gw-example-target-spans")' in script
     assert "parsePrecomputed" in script
     assert "validateRanges" in script
@@ -150,6 +153,8 @@ def test_target_highlighter_has_precomputed_path_and_preserves_markup() -> None:
     assert "splitText" in script
     assert "replaceChildren" not in script
     assert 'setAttribute("lang", "de")' in script
+    assert "gw-target-fallback" not in script
+    assert "gw-target-fallback" not in css
 
 
 def test_target_highlighter_range_api_rejects_invalid_ranges() -> None:

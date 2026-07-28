@@ -1,6 +1,6 @@
-"""Build, validate, apply, and verify the canonical Goethe English audit v4.
+"""Build, validate, apply, and verify the canonical Goethe English audit v5.
 
-The checked-in v4 catalog is allowed to be an honest review scaffold.  Commands
+The checked-in v5 catalog is allowed to be an honest review scaffold. Commands
 that read or mutate live Anki state require the stricter evidence-backed
 validation and therefore fail closed until every row has been reviewed.
 """
@@ -14,6 +14,7 @@ import os
 import re
 import sys
 import tempfile
+import unicodedata
 from urllib.parse import urlparse
 from collections import Counter
 from datetime import datetime, timezone
@@ -23,17 +24,21 @@ from typing import Any
 import goethe_examples
 import goethe_apkg as apkg
 import goethe_scope
+import goethe_source_examples
 import goethe_target_highlights
 import goethe_werkstatt_migrate as gw
 
 
 ROOT = gw.ROOT
-MANIFEST = ROOT / "review" / "goethe_english_audit_v4.jsonl"
+SCHEMA_VERSION = 5
+MANIFEST = ROOT / "review" / "goethe_english_audit_v5.jsonl"
+V4_MANIFEST = ROOT / "review" / "goethe_english_audit_v4.jsonl"
 V3_MANIFEST = ROOT / "review" / "goethe_english_audit_v3.jsonl"
 COMPLETION_MANIFEST = ROOT / "tools" / ".goethe_completion" / "manifest.json"
 B1_LEGACY_AUDIT = ROOT / "review" / "goethe_b1_english_audit.jsonl"
 B1_LEGACY_OVERRIDES = ROOT / "review" / "goethe_b1_english_overrides.json"
-STATE = ROOT / "tools" / ".goethe_english_audit_v4"
+REBASE_OVERRIDES = ROOT / "review" / "goethe_english_rebase_overrides.json"
+STATE = ROOT / "tools" / ".goethe_english_audit_v5"
 SNAPSHOT = STATE / "snapshot.json"
 MODEL = gw.MODEL
 PARENT_DECK = "Goethe Institute"
@@ -42,13 +47,14 @@ EXPECTED_NOTES_BY_LEVEL = goethe_scope.EXPECTED_NOTES_BY_LEVEL
 EXPECTED_CATALOG_NOTES = goethe_scope.EXPECTED_NOTES
 EXPECTED_LIVE_NOTES = goethe_scope.EXPECTED_NOTES
 EXPECTED_LIVE_CARDS = goethe_scope.EXPECTED_CARDS
-B1_BATCH_COUNTS = {
-    **{f"B1-{index:02d}": 250 for index in range(1, 8)},
-    "B1-08": 218,
+BATCH_COUNTS = {
+    **{f"V5-{index:02d}": 250 for index in range(1, 14)},
+    "V5-14": 175,
 }
 OLD_VERIFIED_TAG = "goethe::quality::english_verified::british"
 OLD_AUDITED_TAG = "goethe::quality::english_audited::british"
 V3_AUDITED_TAG = "goethe::quality::english_audited::v3::british"
+V4_AUDITED_TAG = "goethe::quality::english_audited::v4::british"
 AUDITED_TAG = goethe_scope.ENGLISH_AUDITED_TAG
 
 EVIDENCE_HOSTS = {
@@ -82,8 +88,11 @@ def evidence_url_is_specific(provider: str, raw_url: str) -> bool:
         return bool(parsed.query)
     return False
 REVIEW_TAG = goethe_scope.ENGLISH_REVIEW_TAG
-LEGACY_ENGLISH_TAGS = {OLD_VERIFIED_TAG, OLD_AUDITED_TAG, V3_AUDITED_TAG, REVIEW_TAG}
-CONFIRMATION = "APPLY_GOETHE_ENGLISH_AUDIT_V4"
+LEGACY_ENGLISH_TAGS = {
+    OLD_VERIFIED_TAG, OLD_AUDITED_TAG, V3_AUDITED_TAG, V4_AUDITED_TAG, REVIEW_TAG,
+}
+CONFIRMATION = "APPLY_GOETHE_ENGLISH_AUDIT_V5"
+REBASE_CONFIRMATION = "REBASE_GOETHE_ENGLISH_AUDIT_V5"
 PILOT_SOURCE_IDS = [
     "A2-WG-0092",
     "A1-84886454810",
@@ -203,8 +212,14 @@ def manifest_from_rows(rows: list[dict[str, Any]]) -> dict[str, Any]:
     })
     return {
         "schema_version": schema_version,
-        "audit_id": "goethe-english-v4-2026-07" if schema_version == 4 else "goethe-english-v3-2026-07",
-        "standard": "British English",
+        "audit_id": (
+            "goethe-english-v5-american-2026-07"
+            if schema_version == SCHEMA_VERSION
+            else "goethe-english-v4-2026-07"
+            if schema_version == 4
+            else "goethe-english-v3-2026-07"
+        ),
+        "standard": "American English" if schema_version == SCHEMA_VERSION else "British English",
         "primary_source": "Cambridge German-English Dictionary",
         "entries": entries,
         "ambiguous_prompt_groups": collisions,
@@ -310,13 +325,13 @@ def _union_evidence(entries: list[dict[str, Any]]) -> list[dict[str, str]]:
     return evidence
 
 
-def build_v4_scaffold(
+def build_v5_scaffold(
     completion: dict[str, Any],
     v3_rows: list[dict[str, Any]],
     legacy_b1_rows: list[dict[str, Any]] | None = None,
     legacy_b1_overrides: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
-    """Build canonical v4 rows without promoting B1 hints to reviewed evidence."""
+    """Build canonical v5 rows without promoting B1 hints to reviewed evidence."""
     records = list(completion.get("records", {}).values())
     level_counts = Counter(record.get("fields", {}).get("CEFR") for record in records)
     cards = sum(len(record.get("cards", [])) for record in records)
@@ -351,7 +366,7 @@ def build_v4_scaffold(
             raise AuditError("completion record has no canonical source identity")
         examples = scaffold_examples(record)
         row: dict[str, Any] = {
-            "schema_version": 4,
+            "schema_version": SCHEMA_VERSION,
             "source_id": source_id,
             "source_refs": refs,
             "stable_guid": stable_guid(fields),
@@ -404,7 +419,7 @@ def build_v4_scaffold(
                 # cannot accidentally pass a null/implicit difficulty state.
                 "difficult": False,
                 "reason": (
-                    "Pending manual British-English review against Cambridge and Duden/Collins; "
+                    "Pending manual American-English review against Cambridge and Duden/Collins; "
                     "current English is copied only to make this scaffold diffable."
                 ),
                 "evidence": [],
@@ -455,10 +470,389 @@ def command_scaffold(args: argparse.Namespace) -> None:
     v3_rows = load_jsonl(args.v3_manifest)
     legacy_rows = load_jsonl(args.legacy_b1_audit) if args.legacy_b1_audit.exists() else []
     overrides = load_json(args.legacy_b1_overrides) if args.legacy_b1_overrides.exists() else {}
-    rows = build_v4_scaffold(completion, v3_rows, legacy_rows, overrides)
+    rows = build_v5_scaffold(completion, v3_rows, legacy_rows, overrides)
     atomic_jsonl(args.output, rows)
     manifest = manifest_from_rows(rows)
     print(json.dumps({"catalog": str(args.output), **manifest["counts"]}, ensure_ascii=False, indent=2))
+
+
+def _case_preserving_replacement(match: re.Match[str], replacement: str) -> str:
+    value = match.group(0)
+    if value.isupper():
+        return replacement.upper()
+    if value[:1].isupper():
+        return replacement[:1].upper() + replacement[1:]
+    return replacement
+
+
+AMERICAN_REPLACEMENTS = (
+    (r"\bat the weekend\b", "on the weekend"),
+    (r"\bcar parks\b", "parking lots"),
+    (r"\bcar park\b", "parking lot"),
+    (r"\bpetrol stations\b", "gas stations"),
+    (r"\bpetrol station\b", "gas station"),
+    (r"\brailway stations\b", "train stations"),
+    (r"\brailway station\b", "train station"),
+    (r"\breturn tickets\b", "round-trip tickets"),
+    (r"\breturn ticket\b", "round-trip ticket"),
+    (r"\bsingle tickets\b", "one-way tickets"),
+    (r"\bsingle ticket\b", "one-way ticket"),
+    (r"\bmobile phones\b", "cell phones"),
+    (r"\bmobile phone\b", "cell phone"),
+    (r"\bpostcodes\b", "ZIP codes"),
+    (r"\bpostcode\b", "ZIP code"),
+    (r"\bpavements\b", "sidewalks"),
+    (r"\bpavement\b", "sidewalk"),
+    (r"\bchemist['’]?s\b", "pharmacy"),
+    (r"\bmotorways\b", "highways"),
+    (r"\bmotorway\b", "highway"),
+    (r"\baeroplanes\b", "airplanes"),
+    (r"\baeroplane\b", "airplane"),
+    (r"\blorries\b", "trucks"),
+    (r"\blorry\b", "truck"),
+    (r"\btyres\b", "tires"),
+    (r"\btyre\b", "tire"),
+    (r"\bpetrol\b", "gas"),
+    (r"\brubbish\b", "trash"),
+    (r"\bmaths\b", "math"),
+    (r"\bper cent\b", "percent"),
+    (r"\bprogrammes\b", "programs"),
+    (r"\bprogramme\b", "program"),
+    (r"\bneighbourhoods\b", "neighborhoods"),
+    (r"\bneighbourhood\b", "neighborhood"),
+    (r"\bneighbours\b", "neighbors"),
+    (r"\bneighbour\b", "neighbor"),
+    (r"\bfavourites\b", "favorites"),
+    (r"\bfavourite\b", "favorite"),
+    (r"\bcolours\b", "colors"),
+    (r"\bcolour\b", "color"),
+    (r"\bcentimetres\b", "centimeters"),
+    (r"\bcentimetre\b", "centimeter"),
+    (r"\bkilometres\b", "kilometers"),
+    (r"\bkilometre\b", "kilometer"),
+    (r"\bmetres\b", "meters"),
+    (r"\bmetre\b", "meter"),
+    (r"\blitres\b", "liters"),
+    (r"\blitre\b", "liter"),
+    (r"\bcentres\b", "centers"),
+    (r"\bcentre\b", "center"),
+    (r"\btheatres\b", "theaters"),
+    (r"\btheatre\b", "theater"),
+    (r"\btravelling\b", "traveling"),
+    (r"\btravelled\b", "traveled"),
+    (r"\btravellers\b", "travelers"),
+    (r"\btraveller\b", "traveler"),
+    (r"\bcancelling\b", "canceling"),
+    (r"\bcancelled\b", "canceled"),
+    (r"\blabelling\b", "labeling"),
+    (r"\blabelled\b", "labeled"),
+    (r"\borganisations\b", "organizations"),
+    (r"\borganisation\b", "organization"),
+    (r"\borganised\b", "organized"),
+    (r"\borganising\b", "organizing"),
+    (r"\brecognised\b", "recognized"),
+    (r"\brecognising\b", "recognizing"),
+    (r"\bapologised\b", "apologized"),
+    (r"\bapologising\b", "apologizing"),
+    (r"\bbehaviour\b", "behavior"),
+    (r"\blabour\b", "labor"),
+    (r"\bjewellery\b", "jewelry"),
+    (r"\bcheques\b", "checks"),
+    (r"\bcheque\b", "check"),
+    (r"\blicences\b", "licenses"),
+    (r"\blicence\b", "license"),
+    (r"\bpractise\b", "practice"),
+    (r"\bgrey\b", "gray"),
+    (r"\bstoreys\b", "stories"),
+    (r"\bstorey\b", "story"),
+    (r"\bkerbs\b", "curbs"),
+    (r"\bkerb\b", "curb"),
+)
+
+
+def americanize_text(value: str) -> str:
+    result = str(value or "")
+    for pattern, replacement in AMERICAN_REPLACEMENTS:
+        result = re.sub(
+            pattern,
+            lambda match, replacement=replacement: _case_preserving_replacement(
+                match, replacement,
+            ),
+            result,
+            flags=re.I,
+        )
+    return result
+
+
+def americanize_context(german: str, english: str) -> str:
+    result = americanize_text(english)
+    german_fold = german.casefold()
+    german_ascii = unicodedata.normalize(
+        "NFKD", german_fold.replace("ß", "ss"),
+    ).encode("ascii", "ignore").decode("ascii")
+    contextual: list[tuple[str, str]] = []
+    if "urlaub" in german_ascii or "ferien" in german_ascii:
+        contextual.extend([(r"\bholidays\b", "vacations"), (r"\bholiday\b", "vacation")])
+    if "fussball" in german_ascii:
+        contextual.append((r"\bfootball\b", "soccer"))
+    if "wohnung" in german_ascii or "apartment" in german_ascii or "appartement" in german_ascii:
+        contextual.extend([(r"\bflats\b", "apartments"), (r"\bflat\b", "apartment")])
+    if "aufzug" in german_ascii or "fahrstuhl" in german_ascii:
+        contextual.extend([(r"\blifts\b", "elevators"), (r"\blift\b", "elevator")])
+    if "erdgeschoss" in german_ascii:
+        contextual.append((r"\bground floor\b", "first floor"))
+    if re.search(r"\b(?:ersten|1\.) stock\b", german_ascii):
+        contextual.append((r"\bfirst floor\b", "second floor"))
+    if re.search(r"\b(?:zweiten|2\.) stock\b", german_ascii):
+        contextual.append((r"\bsecond floor\b", "third floor"))
+    if "apotheke" in german_ascii:
+        contextual.extend([(r"\bdrugstore\b", "pharmacy"), (r"\bchemist['’]?s\b", "pharmacy")])
+    if "fuhrerschein" in german_ascii:
+        contextual.extend([
+            (r"\bdriving license\b", "driver's license"),
+            (r"\bdriver license\b", "driver's license"),
+        ])
+    if re.search(r"\b(?:handy|mobiltelefon)\b", german_ascii):
+        contextual.append((r"\bmobile phone\b", "cell phone"))
+    if "kino" in german_ascii:
+        contextual.extend([
+            (r"\bcinemas\b", "movie theaters"),
+            (r"\bcinema\b", "movie theater"),
+        ])
+    if "film" in german_ascii:
+        contextual.extend([(r"\bfilms\b", "movies"), (r"\bfilm\b", "movie")])
+    if "herbst" in german_ascii:
+        contextual.append((r"\bautumn\b", "fall"))
+    if "sussigkeit" in german_ascii:
+        contextual.append((r"\bsweets\b", "candy"))
+    if "pommes" in german_ascii:
+        contextual.append((r"\bchips\b", "fries"))
+    if "schulnote" in german_ascii or re.search(r"\bnoten?\b", german_ascii):
+        contextual.append((r"\bmarks\b", "grades"))
+    if "rechnung" in german_ascii or re.search(r"\bzahlen\b", german_ascii):
+        contextual.append((r"\bthe bill\b", "the check"))
+    for pattern, replacement in contextual:
+        result = re.sub(
+            pattern,
+            lambda match, replacement=replacement: _case_preserving_replacement(
+                match, replacement,
+            ),
+            result,
+            flags=re.I,
+        )
+    return result
+
+
+def rebase_rows(
+    completion: dict[str, Any],
+    current: dict[str, Any],
+    overrides: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """Rebase reviewed English rows onto a source-canonical completion snapshot."""
+    current_entries = current.get("entries", {})
+    if not isinstance(current_entries, dict):
+        raise AuditError("current English audit entries are invalid")
+    override_entries = overrides.get("entries", {})
+    if overrides.get("version") != 1 or not isinstance(override_entries, dict):
+        raise AuditError("unsupported English rebase override schema")
+
+    by_guid = {
+        str(entry.get("stable_guid", "")): entry
+        for entry in current_entries.values()
+        if str(entry.get("stable_guid", ""))
+    }
+    global_translation_candidates: dict[str, set[str]] = {}
+    for entry in current_entries.values():
+        for example in [
+            *entry.get("expected_examples", []),
+            *entry.get("desired_examples", []),
+        ]:
+            key = goethe_source_examples.sentence_key(example.get("de", ""))
+            translation = str(example.get("en", "")).strip()
+            if key and translation:
+                global_translation_candidates.setdefault(key, set()).add(translation)
+    global_translations = {
+        key: next(iter(values))
+        for key, values in global_translation_candidates.items()
+        if len(values) == 1
+    }
+    live_translation_by_note: dict[str, dict[str, str]] = {}
+    for note_id, note in completion.get("live_preimage", {}).get("notes", {}).items():
+        fields = note.get("fields", {})
+        translations: dict[str, str] = {}
+        for index in range(1, 5):
+            german_parts = str(fields.get(f"Example{index}DE", "")).split("<br>")
+            english_parts = str(fields.get(f"Example{index}EN", "")).split("<br>")
+            for german, english in zip(german_parts, english_parts):
+                key = goethe_source_examples.sentence_key(german)
+                if key and english.strip():
+                    translations[key] = english.strip()
+        live_translation_by_note[str(note_id)] = translations
+    rows: list[dict[str, Any]] = []
+    incomplete_examples: list[tuple[str, str]] = []
+    for record in completion.get("records", {}).values():
+        fields = record["fields"]
+        source_id = str(fields.get("SourceID", "")).strip()
+        refs = list(dict.fromkeys([source_id, *source_refs(fields, record)]))
+        guid = stable_guid(fields)
+        base = current_entries.get(source_id) or by_guid.get(guid)
+        if base is None:
+            candidates = [
+                entry for entry in current_entries.values()
+                if set(refs) & set(entry.get("source_refs", []))
+            ]
+            if candidates:
+                base = max(
+                    candidates,
+                    key=lambda entry: len(set(refs) & set(entry.get("source_refs", []))),
+                )
+        override = override_entries.get(source_id, {})
+        if base is None and not override:
+            raise AuditError(f"new audit identity needs a reviewed override: {source_id}")
+        if record.get("is_new") and source_id not in current_entries and not override:
+            raise AuditError(f"split audit identity needs a reviewed override: {source_id}")
+
+        base = copy.deepcopy(base or {})
+        old_desired = {
+            goethe_source_examples.sentence_key(item.get("de", "")): str(item.get("en", ""))
+            for item in base.get("desired_examples", [])
+        }
+        old_expected = {
+            goethe_source_examples.sentence_key(item.get("de", "")): str(item.get("en", ""))
+            for item in base.get("expected_examples", [])
+        }
+        live_translations = live_translation_by_note.get(str(record.get("note_id", "")), {})
+        translation_overrides = {
+            goethe_source_examples.sentence_key(de): en
+            for de, en in override.get("example_translations", {}).items()
+        }
+        expected_examples: list[dict[str, str]] = []
+        desired_examples: list[dict[str, str]] = []
+        for example in record.get("examples", []):
+            de = str(example.get("de", "")).strip()
+            key = goethe_source_examples.sentence_key(de)
+            expected_en = (
+                translation_overrides.get(key)
+                or str(example.get("en", "")).strip()
+                or live_translations.get(key)
+                or old_expected.get(key)
+                or old_desired.get(key)
+                or global_translations.get(key)
+            )
+            desired_en = americanize_context(de, (
+                translation_overrides.get(key)
+                or live_translations.get(key)
+                or old_desired.get(key)
+                or global_translations.get(key)
+                or expected_en
+            ))
+            if not de or not expected_en or not desired_en:
+                incomplete_examples.append((source_id, de))
+                continue
+            origin = str(example.get("origin") or "goethe")
+            expected_examples.append({"de": de, "en": expected_en, "origin": origin})
+            desired_examples.append({"de": de, "en": desired_en, "origin": origin})
+
+        authored_expected = {
+            goethe_source_examples.sentence_key(item["de"])
+            for item in expected_examples
+            if item["origin"] == "review-authored"
+        }
+        authored_desired = {
+            goethe_source_examples.sentence_key(item["de"])
+            for item in desired_examples
+            if item["origin"] == "review-authored"
+        }
+        expected_examples = goethe_examples.merge_dialogue_replies(expected_examples)
+        desired_examples = goethe_examples.merge_dialogue_replies(desired_examples)
+        for example in expected_examples:
+            example["origin"] = (
+                "review-authored"
+                if goethe_source_examples.sentence_key(example["de"]) in authored_expected
+                else "goethe"
+            )
+            example.pop("audio", None)
+        for example in desired_examples:
+            example["origin"] = (
+                "review-authored"
+                if goethe_source_examples.sentence_key(example["de"]) in authored_desired
+                else "goethe"
+            )
+            example.pop("audio", None)
+        expected_meaning = str(fields.get("MeaningEN", "")).strip()
+        desired_meaning = americanize_context(str(fields.get("Lemma", "")), str(
+            override.get("meaning_en")
+            or base.get("desired_meaning_en")
+            or expected_meaning
+        )).strip()
+        if not expected_meaning:
+            expected_meaning = desired_meaning
+        if not desired_meaning:
+            raise AuditError(f"English rebase meaning is missing: {source_id}")
+
+        row = base
+        row.update({
+            "schema_version": SCHEMA_VERSION,
+            "source_id": source_id,
+            "source_refs": refs,
+            "stable_guid": guid,
+            "lemma": fields.get("Lemma", ""),
+            "cefr": fields.get("CEFR", ""),
+            "pos": fields.get("POS", ""),
+            "expected_meaning_en": expected_meaning,
+            "desired_meaning_en": desired_meaning,
+            "expected_examples": expected_examples,
+            "desired_examples": desired_examples,
+            "review_status": "reviewed",
+            "english_variant": "American English",
+            "american_review_status": "reviewed",
+            "american_review_provenance": "goethe-english-v5-2026-07",
+            "difficult": bool(override.get("difficult", base.get("difficult", False))),
+            "reason": str(
+                override.get("reason")
+                or base.get("reason")
+                or "Rebased onto the reviewed source identity."
+            ),
+            "evidence": copy.deepcopy(override.get("evidence", base.get("evidence", []))),
+        })
+        changed = (
+            row["expected_meaning_en"] != row["desired_meaning_en"]
+            or example_pairs(row["expected_examples"]) != example_pairs(row["desired_examples"])
+        )
+        row["decision"] = "REVISE" if changed else "KEEP"
+        row["change_categories"] = ["american_english"] if changed else []
+        if not row["evidence"]:
+            raise AuditError(f"English rebase evidence is missing: {source_id}")
+        rows.append(row)
+
+    if incomplete_examples:
+        preview = ", ".join(
+            f"{source_id} {de!r}"
+            for source_id, de in incomplete_examples[:10]
+        )
+        raise AuditError(
+            "English rebase examples need reviewed translations: "
+            f"{len(incomplete_examples)} ({preview})"
+        )
+    rows.sort(key=lambda row: (
+        goethe_scope.LEVEL_RANK.get(row["cefr"], 99),
+        row["source_id"],
+    ))
+    for index, row in enumerate(rows):
+        row["audit_batch"] = f"V5-{(index // 250) + 1:02d}"
+    return rows
+
+
+def command_rebase(args: argparse.Namespace) -> None:
+    if args.confirmation != REBASE_CONFIRMATION:
+        raise AuditError(f"confirmation must equal {REBASE_CONFIRMATION}")
+    completion = load_json(args.completion_manifest)
+    current = load_json(args.current_manifest)
+    overrides = load_json(args.overrides)
+    rows = rebase_rows(completion, current, overrides)
+    atomic_jsonl(args.output, rows)
+    counts = manifest_from_rows(rows)["counts"]
+    print(json.dumps({"catalog": str(args.output), **counts}, ensure_ascii=False, indent=2))
 
 
 def command_inspect(_: argparse.Namespace) -> None:
@@ -479,9 +873,9 @@ def command_compile(_: argparse.Namespace) -> None:
 
 
 def batch_report(manifest: dict[str, Any], batch: str) -> dict[str, Any]:
-    expected_rows = B1_BATCH_COUNTS.get(batch)
+    expected_rows = BATCH_COUNTS.get(batch)
     if expected_rows is None:
-        raise AuditError(f"unknown B1 audit batch: {batch}")
+        raise AuditError(f"unknown v5 audit batch: {batch}")
     entries = [
         entry for entry in manifest.get("entries", {}).values()
         if entry.get("audit_batch") == batch
@@ -645,7 +1039,7 @@ def desired_fields(fields: dict[str, str], entry: dict[str, Any]) -> dict[str, s
     allowed_meanings = {
         entry["expected_meaning_en"], entry.get("previous_meaning_en", ""), entry["desired_meaning_en"],
     }
-    if current_meaning not in allowed_meanings and normalize_meaning(current_meaning) not in {
+    if current_meaning and current_meaning not in allowed_meanings and normalize_meaning(current_meaning) not in {
         normalize_meaning(value) for value in allowed_meanings
     }:
         raise AuditError(f"MeaningEN drift: {entry['source_id']} {current_meaning!r}")
@@ -770,22 +1164,22 @@ def anki_multi(actions: list[dict[str, Any]], size: int = 60) -> None:
 def validate_scaffold(manifest: dict[str, Any]) -> None:
     """Validate canonical coverage and identity without claiming review completion."""
     entries = manifest.get("entries", {})
-    if manifest.get("schema_version") != 4 or len(entries) != EXPECTED_CATALOG_NOTES:
-        raise AuditError("invalid or incomplete v4 scaffold")
+    if manifest.get("schema_version") != SCHEMA_VERSION or len(entries) != EXPECTED_CATALOG_NOTES:
+        raise AuditError("invalid or incomplete v5 scaffold")
     counts = manifest.get("counts", {})
     actual_levels = {level: counts.get(level.casefold()) for level in LEVELS}
     if counts.get("notes") != EXPECTED_CATALOG_NOTES or actual_levels != EXPECTED_NOTES_BY_LEVEL:
-        raise AuditError("v4 scaffold level counts are inconsistent")
+        raise AuditError("v5 scaffold level counts are inconsistent")
     if counts.get("reviewed", 0) + counts.get("unreviewed", 0) != EXPECTED_CATALOG_NOTES:
-        raise AuditError("v4 scaffold review counts are inconsistent")
+        raise AuditError("v5 scaffold review counts are inconsistent")
     if (
         counts.get("keep", 0) + counts.get("revise", 0) + counts.get("pending", 0)
         != EXPECTED_CATALOG_NOTES
     ):
-        raise AuditError("v4 scaffold decision counts are inconsistent")
+        raise AuditError("v5 scaffold decision counts are inconsistent")
     if counts.get("b1_no_examples") != goethe_scope.EXPECTED_EMPTY_NOTES_BY_LEVEL["B1"]:
         raise AuditError(
-            "v4 scaffold must preserve exactly "
+            "v5 scaffold must preserve exactly "
             f"{goethe_scope.EXPECTED_EMPTY_NOTES_BY_LEVEL['B1']} canonical B1 no-example notes"
         )
 
@@ -795,6 +1189,8 @@ def validate_scaffold(manifest: dict[str, Any]) -> None:
             "source_id", "source_refs", "stable_guid", "lemma", "cefr", "pos",
             "expected_meaning_en", "desired_meaning_en", "expected_examples",
             "desired_examples", "decision", "review_status", "evidence",
+            "english_variant", "american_review_status",
+            "american_review_provenance",
         }
         missing = sorted(required - set(entry))
         if missing:
@@ -890,55 +1286,41 @@ def _review_entry_errors(entry: dict[str, Any]) -> list[str]:
             or (gender_markers and misplaced_gender_marker)
         ):
             errors.append("noncanonical_gender_gloss")
-    british_text = " ".join([
+    american_text = " ".join([
         meaning,
         *(str(item.get("en", "")) for item in entry.get("desired_examples", [])),
     ]).casefold()
-    words = set(british_text.replace("-", " ").replace(";", " ").split())
-    american_spellings = {
-        "color", "colors", "favorite", "favorites", "center", "centers",
-        "theater", "theaters",
-    }
-    tyre_as_noun = (
-        bool(words & {"tire", "tires"})
-        and (
-            str(entry.get("pos", "")).casefold().startswith("n")
-            or bool(re.search(
-                r"\b(?:front|rear|flat|spare|car|bike|bicycle|vehicle|winter|summer) tires?\b"
-                r"|\btires? (?:pressure|tread|shop|dealer)\b"
-                r"|\b(?:change|replace|inflate|check|repair) (?:a |the |your |my |his |her |our |their )?tires?\b",
-                british_text,
-            ))
-        )
+    british_patterns = (
+        r"\b(?:colour|colours|favourite|favourites|neighbour|neighbours|"
+        r"neighbourhood|neighbourhoods|centre|centres|theatre|theatres|"
+        r"metre|metres|kilometre|kilometres|centimetre|centimetres|"
+        r"litre|litres|travelling|travelled|traveller|travellers|"
+        r"cancelled|cancelling|labelled|labelling|organisation|organisations|"
+        r"organised|organising|recognised|recognising|apologised|apologising|"
+        r"behaviour|labour|jewellery|cheque|cheques|licence|licences|"
+        r"grey|storey|storeys|kerb|kerbs|aeroplane|aeroplanes|"
+        r"programme|programmes|motorway|motorways|postcode|postcodes|"
+        r"pavement|pavements|lorry|lorries|petrol|rubbish|maths)\b"
     )
-    if words & american_spellings or tyre_as_noun:
-        errors.append("non_british_spelling")
-    if entry.get("cefr") == "B1" and entry.get("review_status") == "reviewed":
-        lexical_words = set(re.findall(r"[a-z]+", british_text))
-        strict_b1_american = {
-            "billfold", "billfolds", "canceled", "canceling", "cellphone",
-            "cellphones", "diaper", "diapers", "drugstore", "drugstores",
-            "elevator", "elevators", "faucet", "faucets", "flashlight",
-            "flashlights", "freeway", "freeways", "gasoline", "gray", "labor",
-            "neighbor", "neighbors", "neighborhood", "neighborhoods", "railroad",
-            "railroads", "restroom", "restrooms", "sidewalk", "sidewalks",
-            "sneaker", "sneakers", "takeout", "traveled", "traveler", "travelers",
-            "traveling", "vacation", "vacations",
-        }
-        strict_b1_american_phrase = bool(re.search(
-            r"\b(?:cell phone|gas station|parking lot|take-out|zip code)s?\b",
-            british_text,
-        ))
-        american_licence_noun = bool(re.search(
-            r"\b(?:a|the|your|my|his|her|our|their|driver'?s|driving) license\b",
-            british_text,
-        ))
-        if (
-            lexical_words & strict_b1_american
-            or strict_b1_american_phrase
-            or american_licence_noun
-        ):
-            errors.append("non_british_spelling")
+    british_phrases = (
+        r"\b(?:car park|railway station|return ticket|single ticket|"
+        r"mobile phone|driving licence|at the weekend)s?\b"
+    )
+    tyre_as_noun = bool(re.search(
+        r"\b(?:front|rear|flat|spare|car|bike|bicycle|vehicle|winter|summer) tyres?\b"
+        r"|\btyres? (?:pressure|tread|shop|dealer)\b"
+        r"|\b(?:change|replace|inflate|check|repair) "
+        r"(?:a |the |your |my |his |her |our |their )?tyres?\b",
+        american_text,
+    ))
+    if re.search(british_patterns, american_text) or re.search(british_phrases, american_text) or tyre_as_noun:
+        errors.append("non_american_english")
+    if entry.get("english_variant") != "American English":
+        errors.append("invalid_english_variant")
+    if entry.get("american_review_status") != "reviewed":
+        errors.append("american_review_incomplete")
+    if not str(entry.get("american_review_provenance", "")).strip():
+        errors.append("american_review_provenance_missing")
     for example in entry.get("desired_examples", []):
         if (
             example.get("origin") not in {"goethe", "review-authored"}
@@ -960,12 +1342,12 @@ def audit_blockers(manifest: dict[str, Any]) -> dict[str, int]:
 
 
 def validate_manifest(manifest: dict[str, Any]) -> None:
-    """Require the complete evidence-backed v4 audit before any live operation."""
+    """Require the complete evidence-backed v5 audit before any live operation."""
     validate_scaffold(manifest)
     blockers = audit_blockers(manifest)
     if blockers:
         detail = ", ".join(f"{name}={count}" for name, count in blockers.items())
-        raise AuditError(f"v4 audit is not ready: {detail}")
+        raise AuditError(f"v5 audit is not ready: {detail}")
 
 
 def identity_matches_reviewed_lemma(fields: dict[str, str], audited_lemma: str) -> bool:
@@ -1033,7 +1415,7 @@ def command_snapshot(_: argparse.Namespace) -> None:
     validate_records(records, manifest)
     STATE.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + f"_{datetime.now(timezone.utc).microsecond:06d}"
-    backup = STATE / f"Goethe_Institute_pre_english_audit_v4_{stamp}.apkg"
+    backup = STATE / f"Goethe_Institute_pre_english_audit_v5_{stamp}.apkg"
     if backup.exists():
         raise AuditError(f"backup destination already exists: {backup}")
     try:
@@ -1191,9 +1573,16 @@ def build_parser() -> argparse.ArgumentParser:
     scaffold.add_argument("--output", type=Path, default=MANIFEST)
     scaffold.add_argument("--force-overwrite-reviewed", action="store_true")
     scaffold.set_defaults(func=command_scaffold)
+    rebase = sub.add_parser("rebase")
+    rebase.add_argument("--completion-manifest", type=Path, default=COMPLETION_MANIFEST)
+    rebase.add_argument("--current-manifest", type=Path, default=V4_MANIFEST)
+    rebase.add_argument("--overrides", type=Path, default=REBASE_OVERRIDES)
+    rebase.add_argument("--output", type=Path, default=MANIFEST)
+    rebase.add_argument("--confirmation", required=True)
+    rebase.set_defaults(func=command_rebase)
     sub.add_parser("inspect").set_defaults(func=command_inspect)
     check_batch = sub.add_parser("check-batch")
-    check_batch.add_argument("--batch", choices=sorted(B1_BATCH_COUNTS), required=True)
+    check_batch.add_argument("--batch", choices=sorted(BATCH_COUNTS), required=True)
     check_batch.set_defaults(func=command_check_batch)
     sub.add_parser("compile").set_defaults(func=command_compile)
     sub.add_parser("dry-run").set_defaults(func=command_dry_run)

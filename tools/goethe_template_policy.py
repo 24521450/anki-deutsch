@@ -25,6 +25,9 @@ _ARTICLES = {"der", "die", "das"}
 _TAG_RE = re.compile(r"<[^>]*>")
 _ANNOTATION_RE = re.compile(r"\s+\((?:pl|sg)\.\)\s*$", re.I)
 _ARTICLE_RE = re.compile(r"^(der|die|das)\s+(.+)$", re.I)
+_SEMANTIC_DELIMITER_RE = re.compile(r"[\s,;/|]+")
+_SEMANTIC_DASH_RE = re.compile(r"[\u2010-\u2015\u2212]+")
+_WORD_BOUNDARY_RE = re.compile(r"[^\w\u00c0-\uFFFF]+", re.UNICODE)
 
 
 class PolicyError(ValueError):
@@ -45,6 +48,24 @@ def _normalise(value: Any) -> str:
     value = _TAG_RE.sub(" ", value)
     value = unicodedata.normalize("NFC", value)
     value = value.replace("’", "'")
+    return re.sub(r"\s+", " ", value).strip().casefold()
+
+
+def _normalise_semantic(value: Any) -> str:
+    """Normalise an English cue for cross-level semantic comparisons.
+
+    The production prompt is intentionally audited globally.  CEFR, POS,
+    gender, and example text are useful context, but they are not separate
+    meanings and therefore must not split a collision group.  English source
+    rows occasionally use a slash, comma, or semicolon for the same list of
+    senses; treating those delimiters uniformly prevents a false exemption.
+    """
+    value = html.unescape(_text(value))
+    value = _TAG_RE.sub(" ", value)
+    value = unicodedata.normalize("NFC", value)
+    value = value.replace("â€™", "'").replace("’", "'")
+    value = _SEMANTIC_DASH_RE.sub("-", value)
+    value = _SEMANTIC_DELIMITER_RE.sub(" ", value)
     return re.sub(r"\s+", " ", value).strip().casefold()
 
 
@@ -302,6 +323,30 @@ def visible_cue(fields: Mapping[str, Any]) -> tuple[str, ...]:
     )
 
 
+def semantic_cue(fields: Mapping[str, Any]) -> str:
+    """Return the global English meaning key used by ambiguity audits.
+
+    Only ``MeaningEN`` participates.  In particular, level, part of speech,
+    gender, and examples must not make two otherwise identical English cues
+    appear distinct.
+    """
+    if not isinstance(fields, Mapping):
+        raise PolicyError("record fields must be a mapping")
+    return _normalise_semantic(fields.get("MeaningEN", ""))
+
+
+def _audit_answers(fields: Mapping[str, Any]) -> tuple[str, ...]:
+    """Return the canonical accepted-answer set for semantic comparisons."""
+    raw = fields.get("AcceptedFullAnswersDE", "")
+    if isinstance(raw, str) and raw.strip():
+        forms = split_full_answers(raw)
+    elif isinstance(raw, (list, tuple)) and raw:
+        forms = split_full_answers(raw)
+    else:
+        forms = derive_full_answers(fields)
+    return tuple(sorted({_normalise(form) for form in forms if _normalise(form)}))
+
+
 def _record_fields(records: Any) -> list[MutableMapping[str, Any]]:
     """Extract mutable field dictionaries from common manifest shapes."""
     if isinstance(records, Mapping):
@@ -371,15 +416,197 @@ def audit_visible_cues(records: Any) -> dict[str, Any]:
     }
 
 
+def audit_semantic_ambiguity(
+    records: Any,
+    *,
+    strict: bool = False,
+) -> dict[str, Any]:
+    """Audit EN -> DE prompts across the complete A1-B1 corpus.
+
+    A group is formed from the normalized ``MeaningEN`` alone.  Groups with a
+    single accepted-answer set are safe (for example duplicated source rows
+    that intentionally point at the same German answer).  When answer sets
+    differ, every active member must have a non-empty, unique
+    ``ProductionHint`` that does not contain its German answer.  This keeps
+    distinctions such as ``Kuchen``/``Torte`` and ``Führung``/``Rundgang``
+    visible without changing the reviewed English meaning.
+
+    ``strict=False`` returns a report for review tooling.  ``strict=True``
+    raises :class:`PolicyError` when any group is unresolved, a hint leaks an
+    answer, or an active record has no English meaning.  The separate strict
+    switch lets level-specific/offline manifests be inspected before the full
+    reviewed corpus is available.
+    """
+    fields_list = _record_fields(records)
+    grouped: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    active = 0
+    disabled = 0
+    missing_meaning: list[str] = []
+
+    for index, fields in enumerate(fields_list):
+        enabled = fields.get("ProductionEnabled", ENABLED)
+        if enabled not in {ENABLED, DISABLED}:
+            raise PolicyError(
+                f"invalid ProductionEnabled encoding at record {index}: {enabled!r}"
+            )
+        source_id = (
+            _text(fields.get("SourceID", ""), field="SourceID").strip()
+            or f"record-{index}"
+        )
+        if enabled != ENABLED:
+            disabled += 1
+            continue
+        active += 1
+        cue = semantic_cue(fields)
+        if not cue:
+            missing_meaning.append(source_id)
+            continue
+        answers = _audit_answers(fields)
+        hint = _text(
+            fields.get("ProductionHint", ""), field=f"ProductionHint {source_id}"
+        ).strip()
+        grouped[cue].append(
+            {
+                "source_id": source_id,
+                "lemma": _text(fields.get("Lemma", ""), field="Lemma").strip(),
+                "answers": answers,
+                "hint": hint,
+            }
+        )
+
+    groups: list[dict[str, Any]] = []
+    collisions: list[dict[str, Any]] = []
+    invalid_hints: list[dict[str, Any]] = []
+    same_answer_exemptions = 0
+    hinted_groups = 0
+
+    for cue in sorted(grouped):
+        members = sorted(
+            grouped[cue],
+            key=lambda item: (item["source_id"], item["lemma"].casefold()),
+        )
+        answer_sets = sorted({tuple(item["answers"]) for item in members})
+        group_answers = tuple(
+            sorted({answer for member in members for answer in member["answers"]})
+        )
+        hint_keys: dict[str, list[str]] = defaultdict(list)
+        for member in members:
+            hint = member["hint"]
+            if hint:
+                hint_key = _normalise_semantic(hint)
+                hint_keys[hint_key].append(member["source_id"])
+                if _hint_reveals_answer(hint, group_answers):
+                    invalid_hints.append(
+                        {
+                            "source_id": member["source_id"],
+                            "hint": hint,
+                            "reason": "hint_contains_group_accepted_german_answer",
+                        }
+                    )
+            else:
+                hint_keys[""].append(member["source_id"])
+
+        duplicate_hints = {
+            key: source_ids
+            for key, source_ids in hint_keys.items()
+            if key and len(source_ids) > 1
+        }
+        distinct_answers = len(answer_sets) > 1
+        complete_hints = (
+            len(members) > 1
+            and all(member["hint"] for member in members)
+            and not duplicate_hints
+            and not any(
+                item["source_id"] == member["source_id"]
+                for item in invalid_hints
+                for member in members
+            )
+        )
+        if len(members) > 1 and not distinct_answers:
+            status = "same_answers"
+            same_answer_exemptions += 1
+        elif distinct_answers and complete_hints:
+            status = "hinted"
+            hinted_groups += 1
+        elif len(members) == 1:
+            status = "single"
+        else:
+            status = "unresolved"
+
+        group = {
+            "semantic_key": cue,
+            "source_ids": [member["source_id"] for member in members],
+            "lemmas": [member["lemma"] for member in members],
+            "answer_sets": [list(answer_set) for answer_set in answer_sets],
+            "hints": [member["hint"] for member in members],
+            "status": status,
+        }
+        if duplicate_hints:
+            group["duplicate_hints"] = duplicate_hints
+        groups.append(group)
+        if distinct_answers and status == "unresolved":
+            collisions.append(group)
+
+    report = {
+        "records": len(fields_list),
+        "active": active,
+        "disabled": disabled,
+        "groups": groups,
+        "semantic_groups": groups,
+        "collisions": collisions,
+        "collision_groups": collisions,
+        "invalid_hints": invalid_hints,
+        "missing_meaning": sorted(missing_meaning),
+        "same_answer_exemptions": same_answer_exemptions,
+        "hinted_groups": hinted_groups,
+    }
+    if strict and (collisions or invalid_hints or missing_meaning):
+        details: list[str] = []
+        if collisions:
+            details.append(
+                "unresolved semantic groups: "
+                + ", ".join(
+                    "/".join(group["source_ids"]) for group in collisions
+                )
+            )
+        if invalid_hints:
+            details.append(
+                "invalid production hints: "
+                + ", ".join(item["source_id"] for item in invalid_hints)
+            )
+        if missing_meaning:
+            details.append(
+                "active records without MeaningEN: " + ", ".join(missing_meaning)
+            )
+        raise PolicyError("; ".join(details))
+    return report
+
+
+def audit_global_ambiguity(records: Any, *, strict: bool = False) -> dict[str, Any]:
+    """Compatibility alias for callers that use the global-audit name."""
+    return audit_semantic_ambiguity(records, strict=strict)
+
+
 def _hint_reveals_answer(hint: str, answers: Sequence[str]) -> bool:
-    hint_key = _normalise(hint)
+    hint_key = _normalise_semantic(hint)
     if not hint_key:
         return False
     for answer in answers:
-        answer_key = _normalise(answer)
+        answer_key = _normalise_semantic(answer)
         article, lexical = _article_prefix(answer, explicit_metadata=True)
-        if hint_key in {answer_key, _normalise(lexical)}:
+        lexical_key = _normalise_semantic(lexical)
+        if hint_key in {answer_key, lexical_key}:
             return True
+        # A hint such as "the Kuchen entry" is just as answer-revealing as
+        # the bare word.  Ignore one-character forms (for example the
+        # reviewed regional hint ``A``), but reject complete lexical tokens
+        # and multi-word answer phrases.
+        for candidate in (answer_key, lexical_key):
+            if len(candidate) < 3:
+                continue
+            pattern = rf"(?<![\w\u00c0-\uFFFF]){re.escape(candidate)}(?![\w\u00c0-\uFFFF])"
+            if re.search(pattern, hint_key, flags=re.UNICODE):
+                return True
     return False
 
 
@@ -388,13 +615,16 @@ def apply_policy(
     policy: Mapping[str, Any] | str | Path | None = None,
     *,
     strict: bool = True,
+    semantic_strict: bool = False,
 ) -> dict[str, Any]:
     """Apply answer/production policy in place and return an audit report.
 
     ``strict=True`` additionally verifies that every reviewed SourceID occurs
     in the supplied record set.  Partial level-specific manifests can pass
-    ``strict=False``; all record-level validation and collision checks remain
-    enabled in either mode.
+    ``strict=False``; all record-level validation and legacy visible-cue
+    checks remain enabled in either mode.  ``semantic_strict=True`` enables
+    the cross-level EN -> DE audit; it is kept opt-in while a reviewed
+    full-corpus ambiguity catalog is being completed.
     """
     if policy is None:
         normalised = load_policy()
@@ -479,12 +709,19 @@ def apply_policy(
             ", ".join(group["source_ids"]) for group in report["collisions"]
         )
         raise PolicyError(f"active visible-cue collisions remain: {details}")
+    semantic_report = audit_semantic_ambiguity(staged_fields)
+    if semantic_strict:
+        # Re-run in strict mode so the error includes the exact unresolved
+        # source IDs and invalid hints rather than silently returning a
+        # partial completion manifest.
+        audit_semantic_ambiguity(staged_fields, strict=True)
     for fields, update in planned:
         fields.update(update)
     report.update({
         "enabled": enabled_count,
         "disabled": disabled_count,
         "overrides_applied": sorted(overrides_applied),
+        "semantic_ambiguity": semantic_report,
     })
     return report
 
@@ -495,9 +732,12 @@ __all__ = [
     "POLICY_PATH",
     "PolicyError",
     "apply_policy",
+    "audit_global_ambiguity",
+    "audit_semantic_ambiguity",
     "audit_visible_cues",
     "derive_full_answers",
     "load_policy",
     "split_full_answers",
+    "semantic_cue",
     "visible_cue",
 ]

@@ -1,0 +1,536 @@
+{
+  "version": 1,
+  "entries": {
+    "A1-84886454677": {
+      "example_translations": {
+        "Was ist deine Lieblingsfarbe?": "What is your favourite colour?"
+      },
+      "reason": "Use British spelling in the newly attached Goethe example."
+    },
+    "A1-84886454742": {
+      "example_translations": {
+        "Tomaten sind mein Lieblingsgemüse.": "Tomatoes are my favourite vegetables."
+      },
+      "reason": "Use British spelling in the newly attached Goethe example."
+    },
+    "A1-84886454614": {
+      "example_translations": {
+        "Wollen Sie ein Doppelzimmer oder ein Einzelzimmer?": "Would you like a double room or a single room?"
+      },
+      "reason": "Preserve the reviewed A1 translation when the sentence is also used by the bound Doppel- card."
+    },
+    "A1-MAIN-0026": {
+      "example_translations": {
+        "Wo kann ich mich anmelden?": "Where can I register or sign up?"
+      },
+      "reason": "The production verb keeps only the source example that actually contains anmelden."
+    },
+    "A2-0246": {
+      "meaning_en": "to enter one's name/details",
+      "example_translations": {
+        "Sie müssen Ihren Namen und Ihre Adresse eintragen.": "You must enter your name and address.",
+        "Tragen Sie sich bitte in diese Liste ein!": "Please enter your name on this list."
+      },
+      "difficult": true,
+      "reason": "The gloss follows the retained list/form contexts and distinguishes eintragen from anmelden.",
+      "evidence": [
+        {
+          "provider": "Cambridge",
+          "url": "https://dictionary.cambridge.org/dictionary/german-english/eintragen",
+          "supports": "German-English list, register and enter senses."
+        },
+        {
+          "provider": "Duden",
+          "url": "https://www.duden.de/rechtschreibung/eintragen",
+          "supports": "German verb sense, reflexive use and part of speech."
+        }
+      ]
+    },
+    "A2-0253": {
+      "meaning_en": "individually; separately",
+      "example_translations": {
+        "Dieses Mineralwasser gibt es nur als Sechserpack, nicht einzeln.": "This mineral water is only available in packs of six, not individually.",
+        "Die Schüler mussten einzeln zum Schularzt kommen.": "The pupils had to go to the school doctor one at a time."
+      },
+      "difficult": true,
+      "reason": "The adverb/adjective einzeln is kept distinct from the bound compound element Einzel-.",
+      "evidence": [
+        {
+          "provider": "Cambridge",
+          "url": "https://dictionary.cambridge.org/dictionary/german-english/einzeln",
+          "supports": "Individually and separately senses."
+        },
+        {
+          "provider": "Duden",
+          "url": "https://www.duden.de/rechtschreibung/einzeln",
+          "supports": "German adjective and adverb usage."
+        }
+      ]
+    },
+    "A2-0569": {
+      "meaning_en": "to quit; to resign",
+      "difficult": true,
+      "reason": "Only the employment sense supported by the retained Goethe example is kept.",
+      "evidence": [
+        {
+          "provider": "Cambridge",
+          "url": "https://dictionary.cambridge.org/dictionary/german-english/kundigen",
+          "supports": "German-English employment and notice senses; the Goethe context selects employment."
+        },
+        {
+          "provider": "Duden",
+          "url": "https://www.duden.de/rechtschreibung/kuendigen",
+          "supports": "German employment sense and verb usage."
+        }
+      ]
+    },
+    "A2-1059": {
+      "meaning_en": "to forbid; to prohibit; to be forbidden/prohibited",
+      "example_translations": {
+        "Hier ist Rauchen verboten.": "Smoking is prohibited here."
+      },
+      "difficult": true,
+      "reason": "The one physical Goethe row combines verbieten and verboten sein; the gloss covers both the action and state.",
+      "evidence": [
+        {
+          "provider": "Cambridge",
+          "url": "https://dictionary.cambridge.org/dictionary/german-english/verbieten",
+          "supports": "German-English forbid and prohibit senses."
+        },
+        {
+          "provider": "Duden",
+          "url": "https://www.duden.de/rechtschreibung/verbieten",
+          "supports": "German verb sense and conjugation."
+        }
+      ]
+    },
+    "A2-MAIN-0268": {
+      "meaning_en": "single- (compound first element)",
+      "difficult": true,
+      "reason": "The bound compound element Einzel- is kept distinct from einzeln.",
+      "evidence": [
+        {
+          "provider": "Cambridge",
+          "url": "https://dictionary.cambridge.org/dictionary/german-english/einzel",
+          "supports": "Single and individual meanings used in compounds."
+        },
+        {
+          "provider": "Duden",
+          "url": "https://www.duden.de/suchen/dudenonline/Einzel-",
+          "supports": "German compound-first-element usage."
+        }
+      ]
+    },
+    "A2-MAIN-0313": {
+      "meaning_en": "celebration",
+      "difficult": true,
+      "reason": "Standalone noun kept separate from the bound form Feier-.",
+      "evidence": [
+        {
+          "provider": "Cambridge",
+          "url": "https://dictionary.cambridge.org/dictionary/german-english/feier",
+          "supports": "Standalone noun meaning."
+        },
+        {
+          "provider": "Duden",
+          "url": "https://www.duden.de/rechtschreibung/Feier",
+          "supports": "German noun sense and gender."
+        }
+      ]
+    },
+    "A2-MAIN-0529": {
+      "meaning_en": "sure; of course; clear",
+      "difficult": true,
+      "reason": "The conversational klar prompt is distinguished from natürlich while retaining its literal clear sense.",
+      "evidence": [
+        {
+          "provider": "Cambridge",
+          "url": "https://dictionary.cambridge.org/dictionary/german-english/klar",
+          "supports": "Clear, sure and conversational of-course senses."
+        },
+        {
+          "provider": "Duden",
+          "url": "https://www.duden.de/rechtschreibung/klar",
+          "supports": "German adjective and interjection usage."
+        }
+      ]
+    },
+    "A2-MAIN-0374": {
+      "meaning_en": "birth- (compound first element)",
+      "difficult": true,
+      "reason": "Bound form retained exactly as printed instead of being collapsed into Geburtsort.",
+      "evidence": [
+        {
+          "provider": "Cambridge",
+          "url": "https://dictionary.cambridge.org/dictionary/german-english/geburt",
+          "supports": "Birth meaning underlying the compound first element."
+        },
+        {
+          "provider": "Duden",
+          "url": "https://www.duden.de/suchen/dudenonline/Geburts-",
+          "supports": "German compound-form usage."
+        }
+      ]
+    },
+    "A2-MAIN-1168": {
+      "meaning_en": "back (separable verb particle)",
+      "difficult": true,
+      "reason": "The bound Goethe headword is separate from the free adverb zurück.",
+      "evidence": [
+        {
+          "provider": "Cambridge",
+          "url": "https://dictionary.cambridge.org/dictionary/german-english/zuruck",
+          "supports": "Back meaning and separable-particle uses."
+        },
+        {
+          "provider": "Duden",
+          "url": "https://www.duden.de/rechtschreibung/zurueck",
+          "supports": "German adverb and verb-particle uses."
+        }
+      ]
+    },
+    "B1-MAIN-0304": {
+      "meaning_en": "both (inflected determiner stem)",
+      "example_translations": {
+        "Beide waren mit meinem Vorschlag einverstanden.": "Both agreed with my proposal.",
+        "Welche Bluse nehmen Sie, die rote oder die grüne? – Ich nehme beide.": "Which blouse are you taking, the red one or the green one? – I'll take both."
+      },
+      "difficult": true,
+      "reason": "Bound headword retained separately from beide.",
+      "evidence": [
+        {"provider": "Cambridge", "url": "https://dictionary.cambridge.org/dictionary/german-english/beide", "supports": "Both meaning."},
+        {"provider": "Duden", "url": "https://www.duden.de/rechtschreibung/beide", "supports": "German inflection and determiner use."}
+      ]
+    },
+    "B1-MAIN-0352": {
+      "meaning_en": "special (attributive adjective stem)",
+      "example_translations": {
+        "Meine Eltern wollten uns mit dieser Reise eine ganz besondere Freude machen.": "My parents wanted to give us a very special treat with this trip."
+      },
+      "difficult": true,
+      "reason": "Attributive besonder- is not the adverb besonders.",
+      "evidence": [
+        {"provider": "Cambridge", "url": "https://dictionary.cambridge.org/dictionary/german-english/besonders", "supports": "Special and especially senses."},
+        {"provider": "Duden", "url": "https://www.duden.de/rechtschreibung/besonders", "supports": "German adjective and adverb distinction."}
+      ]
+    },
+    "B1-MAIN-0918": {
+      "meaning_en": "earlier; former",
+      "difficult": true,
+      "reason": "Combined source headword covers the adverb and attributive stem.",
+      "evidence": [
+        {"provider": "Cambridge", "url": "https://dictionary.cambridge.org/dictionary/german-english/fruher", "supports": "Earlier and former senses."},
+        {"provider": "Duden", "url": "https://www.duden.de/rechtschreibung/frueher", "supports": "German adverb and adjective uses."}
+      ]
+    },
+    "B1-MAIN-1154": {
+      "meaning_en": "out (away from the speaker)",
+      "example_translations": {
+        "Hast du schon rausgefunden, wann und wo man sich für den Kurs anmelden muss?": "Have you already found out when and where you have to register for the course?"
+      },
+      "difficult": true,
+      "reason": "Bound directional form retained separately from heraus/raus.",
+      "evidence": [
+        {"provider": "Cambridge", "url": "https://dictionary.cambridge.org/dictionary/german-english/heraus", "supports": "Outward directional meaning."},
+        {"provider": "Duden", "url": "https://www.duden.de/rechtschreibung/heraus", "supports": "German directional particle use."}
+      ]
+    },
+    "B1-MAIN-1157": {
+      "meaning_en": "in (towards the speaker)",
+      "example_translations": {
+        "Kommt doch herein!": "Do come in!"
+      },
+      "difficult": true,
+      "reason": "Bound directional form retained separately from herein/rein.",
+      "evidence": [
+        {"provider": "Cambridge", "url": "https://dictionary.cambridge.org/dictionary/german-english/herein", "supports": "Inward directional meaning."},
+        {"provider": "Duden", "url": "https://www.duden.de/rechtschreibung/herein", "supports": "German directional particle use."}
+      ]
+    },
+    "B1-MAIN-1168": {
+      "meaning_en": "here; here- (compound element)",
+      "example_translations": {
+        "Hier wohne ich.": "I live here.",
+        "Von hier hat man eine herrliche Aussicht.": "There is a magnificent view from here.",
+        "Hier sind die Schlüssel für meine Wohnung. Kannst Du meine Blumen gießen?": "Here are the keys to my flat. Can you water my flowers?",
+        "Hier ist Pamela Linke. Bitte hinterlassen Sie eine Nachricht.": "This is Pamela Linke. Please leave a message."
+      },
+      "difficult": true,
+      "reason": "Combined source headword retained separately from plain hier.",
+      "evidence": [
+        {"provider": "Cambridge", "url": "https://dictionary.cambridge.org/dictionary/german-english/hier", "supports": "Here meaning."},
+        {"provider": "Duden", "url": "https://www.duden.de/rechtschreibung/hier", "supports": "German adverb and compound uses."}
+      ]
+    },
+    "B1-MAIN-1173": {
+      "meaning_en": "behind; rear-",
+      "example_translations": {
+        "Hinter dem Haus haben wir einen Garten.": "We have a garden behind the house.",
+        "Fahren Sie Ihren Wagen bitte hinter das Haus.": "Please park your car behind the house.",
+        "Auf den hinteren Plätzen kann man nicht sehr viel sehen.": "You cannot see very much from the seats at the back."
+      },
+      "difficult": true,
+      "reason": "Combined source headword retains free and bound uses.",
+      "evidence": [
+        {"provider": "Cambridge", "url": "https://dictionary.cambridge.org/dictionary/german-english/hinter", "supports": "Behind meaning."},
+        {"provider": "Duden", "url": "https://www.duden.de/rechtschreibung/hinter", "supports": "German preposition and bound uses."}
+      ]
+    },
+    "B1-MAIN-1311": {
+      "meaning_en": "no; not any (inflected determiner stem)",
+      "example_translations": {
+        "Ich habe leider heute keine Zeit.": "Unfortunately, I do not have any time today.",
+        "Jetzt habe ich noch keinen Hunger.": "I am not hungry yet.",
+        "Was für ein Auto haben Sie? – Ich habe keins.": "What kind of car do you have? – I do not have one."
+      },
+      "difficult": true,
+      "reason": "Bound determiner headword retained separately from kein.",
+      "evidence": [
+        {"provider": "Cambridge", "url": "https://dictionary.cambridge.org/dictionary/german-english/kein", "supports": "No and not-any meanings."},
+        {"provider": "Duden", "url": "https://www.duden.de/rechtschreibung/kein", "supports": "German determiner inflection."}
+      ]
+    },
+    "B1-MAIN-1527": {
+      "meaning_en": "left (attributive adjective stem)",
+      "example_translations": {
+        "Er hat sich das linke Bein gebrochen.": "He has broken his left leg.",
+        "Das Haus ist auf der linken Seite.": "The house is on the left-hand side."
+      },
+      "difficult": true,
+      "reason": "Attributive link- is separate from the directional adverb links.",
+      "evidence": [
+        {"provider": "Cambridge", "url": "https://dictionary.cambridge.org/dictionary/german-english/links", "supports": "Left-side meaning."},
+        {"provider": "Duden", "url": "https://www.duden.de/rechtschreibung/links", "supports": "German directional and adjective uses."}
+      ]
+    },
+    "B1-MAIN-1957": {
+      "meaning_en": "right (attributive adjective stem)",
+      "example_translations": {
+        "Ich habe mir den rechten Arm gebrochen.": "I have broken my right arm."
+      },
+      "difficult": true,
+      "reason": "Attributive recht- is separate from the directional adverb rechts.",
+      "evidence": [
+        {"provider": "Cambridge", "url": "https://dictionary.cambridge.org/dictionary/german-english/rechts", "supports": "Right-side meaning."},
+        {"provider": "Duden", "url": "https://www.duden.de/rechtschreibung/rechts", "supports": "German directional and adjective uses."}
+      ]
+    },
+    "B1-MAIN-2170": {
+      "meaning_en": "same; self- (bound stem)",
+      "example_translations": {
+        "Ich habe am selben Tag Geburtstag wie du.": "My birthday is on the same day as yours."
+      },
+      "difficult": true,
+      "reason": "The bound stem is reviewed independently of compounds that contain it.",
+      "evidence": [
+        {"provider": "Cambridge", "url": "https://dictionary.cambridge.org/dictionary/german-english/selbe", "supports": "Same/self meaning."},
+        {"provider": "Duden", "url": "https://www.duden.de/suchen/dudenonline/selb-", "supports": "German bound-stem usage."}
+      ]
+    },
+    "B1-MAIN-2352": {
+      "meaning_en": "piece; item; -piece",
+      "example_translations": {
+        "Ich nehme zwei Stück Zucker in den Kaffee.": "I take two lumps of sugar in my coffee.",
+        "Möchten Sie noch ein Stück Kuchen?": "Would you like another piece of cake?",
+        "Was kosten die Kulis? – Ein Euro pro Stück.": "How much are the ballpoint pens? – One euro each.",
+        "Er spielt in dem Stück die Hauptrolle.": "He plays the leading role in the play."
+      },
+      "difficult": true,
+      "reason": "Combined source headword covers the noun and compound-final element.",
+      "evidence": [
+        {"provider": "Cambridge", "url": "https://dictionary.cambridge.org/dictionary/german-english/stuck", "supports": "Piece and item meanings."},
+        {"provider": "Duden", "url": "https://www.duden.de/rechtschreibung/Stueck", "supports": "German noun and compound uses."}
+      ]
+    },
+    "B1-MAIN-2545": {
+      "meaning_en": "un-; not (negative prefix)",
+      "example_translations": {
+        "Der Verkäufer war sehr unfreundlich.": "The shop assistant was very unfriendly.",
+        "Dieses Geräusch ist mir unangenehm.": "I find this noise unpleasant.",
+        "Er kam wie immer unpünktlich.": "As usual, he arrived late."
+      },
+      "difficult": true,
+      "reason": "Negative prefix retained as a bound headword.",
+      "evidence": [
+        {"provider": "Cambridge", "url": "https://dictionary.cambridge.org/dictionary/german-english/un", "supports": "Negative prefix meaning."},
+        {"provider": "Duden", "url": "https://www.duden.de/suchen/dudenonline/un-", "supports": "German negative-prefix use."}
+      ]
+    },
+    "B1-MAIN-2559": {
+      "meaning_en": "lower; under- (bound form)",
+      "example_translations": {
+        "Mein Pass ist im unteren Regal.": "My passport is on the lower shelf."
+      },
+      "difficult": true,
+      "reason": "Bound unter- is separate from the free preposition/adverb unter.",
+      "evidence": [
+        {"provider": "Cambridge", "url": "https://dictionary.cambridge.org/dictionary/german-english/unter", "supports": "Under and lower meanings."},
+        {"provider": "Duden", "url": "https://www.duden.de/rechtschreibung/unter", "supports": "German free and bound uses."}
+      ]
+    },
+    "B1-MAIN-2724": {
+      "meaning_en": "past; over; past- (verb particle)",
+      "example_translations": {
+        "Die Linie 8 fährt am Krankenhaus vorbei.": "The number 8 goes past the hospital.",
+        "Keine Sorge! Die Schmerzen sind in ein paar Minuten vorbei.": "Do not worry! The pain will be over in a few minutes.",
+        "Kommst du um 3 Uhr bei mir vorbei?": "Will you come round to my place at three o'clock?"
+      },
+      "difficult": true,
+      "reason": "Combined source headword covers free and verb-particle uses.",
+      "evidence": [
+        {"provider": "Cambridge", "url": "https://dictionary.cambridge.org/dictionary/german-english/vorbei", "supports": "Past and over meanings."},
+        {"provider": "Duden", "url": "https://www.duden.de/rechtschreibung/vorbei", "supports": "German adverb and particle uses."}
+      ]
+    },
+    "B1-MAIN-2777": {
+      "meaning_en": "what kind of (inflected determiner)",
+      "example_translations": {
+        "Ich will mir ein Auto kaufen. – Was denn für eins?": "I want to buy a car. – What kind?"
+      },
+      "difficult": true,
+      "reason": "Bound determiner headword retained as printed.",
+      "evidence": [
+        {"provider": "Cambridge", "url": "https://dictionary.cambridge.org/dictionary/german-english/was-fur-ein", "supports": "What-kind-of construction."},
+        {"provider": "Duden", "url": "https://www.duden.de/suchen/dudenonline/was%20fuer%20ein", "supports": "German determiner construction."}
+      ]
+    },
+    "B1-MAIN-2796": {
+      "meaning_en": "further; on; continue (verb particle)",
+      "example_translations": {
+        "Ich möchte nicht stören. Bitte essen Sie ruhig weiter.": "I do not want to disturb you. Please carry on eating.",
+        "Haben Sie noch weitere Fragen?": "Do you have any further questions?"
+      },
+      "difficult": true,
+      "reason": "Combined source headword is distinct from plain weiter.",
+      "evidence": [
+        {"provider": "Cambridge", "url": "https://dictionary.cambridge.org/dictionary/german-english/weiter", "supports": "Further, on and continue meanings."},
+        {"provider": "Duden", "url": "https://www.duden.de/rechtschreibung/weiter", "supports": "German adverb and particle uses."}
+      ]
+    },
+    "B1-MAIN-2826": {
+      "meaning_en": "again; re- (repetition prefix)",
+      "example_translations": {
+        "Wann kommst du wieder?": "When are you coming back?",
+        "Meine Mutter war krank. Jetzt ist sie aber wieder gesund.": "My mother was ill, but now she is well again.",
+        "Mein Bruder kommt schon wieder zu spät.": "My brother is late again.",
+        "Meine Eltern sind zu Besuch gekommen. Morgen fahren sie wieder zurück.": "My parents have come to visit. They are going back tomorrow."
+      },
+      "difficult": true,
+      "reason": "Combined source headword is distinct from plain wieder.",
+      "evidence": [
+        {"provider": "Cambridge", "url": "https://dictionary.cambridge.org/dictionary/german-english/wieder", "supports": "Again and repetition meanings."},
+        {"provider": "Duden", "url": "https://www.duden.de/rechtschreibung/wieder", "supports": "German adverb and prefix uses."}
+      ]
+    },
+    "B1-MAIN-2744-IMAGINE": {
+      "meaning_en": "to imagine",
+      "example_translations": {
+        "So schwierig habe ich mir die Arbeit nicht vorgestellt.": "I hadn't imagined the work would be so difficult."
+      },
+      "difficult": false,
+      "reason": "This split keeps the mental-image sense separate from introducing a person.",
+      "evidence": [
+        {"provider": "Cambridge", "url": "https://dictionary.cambridge.org/dictionary/german-english/vorstellen", "supports": "German-English imagine sense."}
+      ]
+    },
+    "B1-MAIN-0047-ANNOY": {
+      "meaning_en": "to annoy",
+      "example_translations": {
+        "Mein Bruder hat mich schon als Kind immer geärgert.": "My brother always annoyed me, even when we were children."
+      },
+      "difficult": false,
+      "reason": "This split keeps the transitive annoy sense separate from sich ärgern.",
+      "evidence": [
+        {"provider": "Cambridge", "url": "https://dictionary.cambridge.org/dictionary/german-english/argern", "supports": "German-English annoy sense."}
+      ]
+    },
+    "A2-MAIN-0278-APOLOGIZE": {
+      "meaning_en": "to apologize",
+      "example_translations": {
+        "Ich möchte mich bei dir entschuldigen.": "I would like to apologize to you."
+      },
+      "difficult": false,
+      "reason": "This split keeps the reflexive apologize sense separate from excusing someone.",
+      "evidence": [
+        {"provider": "Cambridge", "url": "https://dictionary.cambridge.org/dictionary/german-english/entschuldigen", "supports": "German-English apologize sense."}
+      ]
+    },
+    "A2-MAIN-0282-REMIND": {
+      "meaning_en": "to remind someone",
+      "example_translations": {
+        "Kannst du mich morgen bitte an meinen Arzttermin erinnern?": "Could you please remind me about my doctor's appointment tomorrow?"
+      },
+      "difficult": false,
+      "reason": "This split keeps the transitive remind sense separate from sich erinnern.",
+      "evidence": [
+        {"provider": "Cambridge", "url": "https://dictionary.cambridge.org/dictionary/german-english/erinnern", "supports": "German-English remind sense."}
+      ]
+    },
+    "A2-MAIN-0947-CHANGE-CLOTHES": {
+      "meaning_en": "to change clothes",
+      "example_translations": {
+        "Warte bitte, ich muss mich noch umziehen.": "Please wait, I still need to change clothes."
+      },
+      "difficult": false,
+      "reason": "This split keeps the reflexive change-clothes sense separate from moving home.",
+      "evidence": [
+        {"provider": "Cambridge", "url": "https://dictionary.cambridge.org/dictionary/german-english/umziehen", "supports": "German-English change-clothes sense."}
+      ]
+    },
+    "B1-MAIN-0120": {
+      "meaning_en": "to make an effort",
+      "difficult": false,
+      "reason": "The survivor keeps only the reflexive effort sense after the transitive tire sense was split out.",
+      "evidence": [
+        {"provider": "Cambridge", "url": "https://dictionary.cambridge.org/dictionary/german-english/anstrengen", "supports": "German-English reflexive effort sense."}
+      ]
+    },
+    "B1-MAIN-0120-TIRE": {
+      "meaning_en": "to tire; to strain",
+      "example_translations": {
+        "Diese Arbeit strengt mich sehr an.": "This work tires me out."
+      },
+      "difficult": false,
+      "reason": "This split keeps the transitive tire or strain sense separate from sich anstrengen.",
+      "evidence": [
+        {"provider": "Cambridge", "url": "https://dictionary.cambridge.org/dictionary/german-english/anstrengen", "supports": "German-English tire and strain senses."}
+      ]
+    },
+    "B1-MAIN-2683-GET-ALONG": {
+      "meaning_en": "to get along",
+      "example_translations": {
+        "Unsere beiden Kinder verstehen sich sehr gut.": "Our two children get along very well."
+      },
+      "difficult": false,
+      "reason": "This split keeps the reciprocal get-along sense separate from understanding.",
+      "evidence": [
+        {"provider": "Cambridge", "url": "https://dictionary.cambridge.org/dictionary/german-english/verstehen", "supports": "German-English get-along sense."}
+      ]
+    },
+    "B1-MAIN-2871-SURPRISE": {
+      "meaning_en": "to surprise someone",
+      "example_translations": {
+        "Es hat mich gewundert, dass das Essen hier so günstig ist.": "It surprised me that the food here was so inexpensive."
+      },
+      "difficult": false,
+      "reason": "This split keeps the transitive surprise sense separate from sich wundern.",
+      "evidence": [
+        {"provider": "Cambridge", "url": "https://dictionary.cambridge.org/dictionary/german-english/wundern", "supports": "German-English surprise sense."}
+      ]
+    },
+    "B1-MAIN-2947": {
+      "meaning_en": "together; together- (verb particle)",
+      "example_translations": {
+        "Wir haben als Kinder oft zusammen gespielt.": "We often played together as children.",
+        "Zahlen bitte. - Zusammen oder getrennt?": "The bill, please. – Together or separately?",
+        "Fuß und Ball musst du zusammenschreiben – Fußball!": "You have to write Fuß and Ball together – Fußball!"
+      },
+      "difficult": true,
+      "reason": "Combined source headword is distinct from plain zusammen.",
+      "evidence": [
+        {"provider": "Cambridge", "url": "https://dictionary.cambridge.org/dictionary/german-english/zusammen", "supports": "Together meaning and verb-particle uses."},
+        {"provider": "Duden", "url": "https://www.duden.de/rechtschreibung/zusammen", "supports": "German adverb and particle uses."}
+      ]
+    }
+  }
+}

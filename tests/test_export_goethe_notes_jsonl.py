@@ -17,9 +17,9 @@ import export_goethe_notes_jsonl as export  # noqa: E402
 
 def test_export_contract_covers_all_three_canonical_decks():
     assert export.scope.LEVELS == ("A1", "A2", "B1")
-    assert export.scope.EXPECTED_NOTES_BY_LEVEL == {"A1": 818, "A2": 707, "B1": 1968}
-    assert export.EXPECTED_NOTES == export.scope.EXPECTED_NOTES == 3493
-    assert export.EXPECTED_CARDS == export.scope.EXPECTED_CARDS == 6986
+    assert export.scope.EXPECTED_NOTES_BY_LEVEL == {"A1": 804, "A2": 680, "B1": 1941}
+    assert export.EXPECTED_NOTES == export.scope.EXPECTED_NOTES == 3425
+    assert export.EXPECTED_CARDS == export.scope.EXPECTED_CARDS == 6850
     assert export.scope.DUDEN_ROWS == {"A1": 685, "A2": 1147, "B1": 2969}
 
 
@@ -247,7 +247,7 @@ def test_validate_rows_enforces_per_level_counts_and_canonical_order(monkeypatch
 
     pending = copy.deepcopy(rows)
     pending[2]["tags"] = [export.scope.ENGLISH_REVIEW_TAG]
-    with pytest.raises(export.ExportError, match="English audit v4 is not applied"):
+    with pytest.raises(export.ExportError, match="English audit v5 is not applied"):
         export.validate_rows(pending)
 
 

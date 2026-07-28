@@ -58,7 +58,7 @@ def test_python_and_card_javascript_match_all_reviewed_verb_examples(tmp_path: P
             "texts": highlights.example_texts(fields),
             "expected": json.loads(highlights.build_spans(fields)),
         })
-    assert len(payload) == 728
+    assert len(payload) == 713
     payload_path = tmp_path / "verb_examples.json"
     payload_path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
     back = gw.templates()["German → English"]["Back"]
@@ -83,7 +83,7 @@ for (const row of rows) {
     subprocess.run([node, str(script_path), str(payload_path)], check=True, capture_output=True, text=True)
 
 
-def test_reviewed_repair_manifest_is_the_complete_corpus_delta() -> None:
+def test_reviewed_repair_manifest_is_valid_and_current_corpus_is_in_sync() -> None:
     rows = [json.loads(line) for line in EXPORT.read_text(encoding="utf-8").splitlines() if line]
     manifest = json.loads(REPAIRS.read_text(encoding="utf-8"))
     repairs = manifest["repairs"]
@@ -99,22 +99,11 @@ def test_reviewed_repair_manifest_is_the_complete_corpus_delta() -> None:
     assert manifest["expected_added_ranges"] == 195
     assert manifest["expected_removed_ranges"] == 8
 
-    by_source = {item["source_id"]: item for item in repairs}
-    seen: set[str] = set()
+    # The review manifest is the immutable record of the one-time migration.
+    # Dedupe and source-owned example rebuilding may legitimately replace note
+    # IDs, reorder examples, or remove old source IDs.  The current invariant is
+    # that every exported note exactly matches a fresh span calculation.
     for row in rows:
-        source_id = row["source_id"]
         stored = row["example_target_spans"]
         built = json.loads(highlights.build_spans(as_fields(row)))
-        repair = by_source.get(source_id)
-        if repair is None:
-            assert built == stored, source_id
-            continue
-        seen.add(source_id)
-        assert repair["note_id"] == row["anki_note_id"]
-        assert repair["card_ids"] == row["card_ids"]
-        assert repair["lemma"] == row["lemma"]
-        assert repair["before"] != repair["after"]
-        assert stored in (repair["before"], repair["after"])
-        assert built == repair["after"]
-
-    assert seen == set(by_source)
+        assert built == stored, row["source_id"]

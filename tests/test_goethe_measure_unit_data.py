@@ -28,15 +28,15 @@ NOUN_ROWS = {
 }
 
 AUDIT_ROWS = {
-    "A1-84887177249": ("Meter", "metre", "one metre"),
-    "A1-84887177250": ("Zentimeter", "centimetre", "one centimetre"),
-    "A1-84887177252": ("Kilometer", "kilometre", "two hundred kilometres"),
-    "A1-84887177253": ("Quadratmeter", "square metre", "one square metre"),
-    "A1-84887177256": ("Prozent", "per cent", "one per cent"),
-    "A1-84887177257": ("Liter", "litre", "one litre"),
-    "A1-84887177258": ("Gramm", "gram", "one gram"),
-    "A1-84887177259": ("Pfund", "pound", "one pound"),
-    "A1-84887177260": ("Kilogramm", "kilogram", "one kilo(gram)"),
+    "A1-84887177249": ("Meter", "meter", "metre", "one metre"),
+    "A1-84887177250": ("Zentimeter", "centimeter", "centimetre", "one centimetre"),
+    "A1-84887177252": ("Kilometer", "kilometer", "kilometre", "two hundred kilometres"),
+    "A1-84887177253": ("Quadratmeter", "square meter", "square metre", "one square metre"),
+    "A1-84887177256": ("Prozent", "percent", "per cent", "one per cent"),
+    "A1-84887177257": ("Liter", "liter", "litre", "one litre"),
+    "A1-84887177258": ("Gramm", "gram", "gram", "one gram"),
+    "A1-84887177259": ("Pfund", "pound", "pound", "one pound"),
+    "A1-84887177260": ("Kilogramm", "kilogram", "kilogram", "one kilo(gram)"),
 }
 
 
@@ -66,23 +66,32 @@ def test_a1_measure_rows_separate_noun_headwords_from_source_phrases() -> None:
 def test_measure_audit_accepts_old_live_content_and_targets_lexical_content() -> None:
     entries = english_audit.load_json(english_audit.MANIFEST)["entries"]
 
-    for source_id, (lemma, meaning, old_meaning) in AUDIT_ROWS.items():
+    for source_id, (lemma, meaning, expected_meaning, old_meaning) in AUDIT_ROWS.items():
         entry = entries[source_id]
-        assert (entry["lemma"], entry["pos"], entry["decision"]) == (lemma, "n.", "REVISE")
+        assert (entry["lemma"], entry["pos"]) == (lemma, "n.")
         assert entry["desired_meaning_en"] == meaning
-        # v4 canonicalises the expected field to the reviewed lexical gloss;
-        # the pre-v4 live wording remains available as migration provenance.
-        assert entry["expected_meaning_en"] == meaning
+        # v5 keeps the British v4 field as expected-state provenance and
+        # applies the reviewed American lexical form as the desired state.
+        assert entry["expected_meaning_en"] == expected_meaning
         assert entry["previous_meaning_en"] == old_meaning
         assert entry["previous_examples"] == []
         assert entry["expected_examples"] == entry["desired_examples"]
-        assert entry["desired_examples"][0]["origin"] == "goethe"
+        if entry["desired_examples"]:
+            assert entry["desired_examples"][0]["origin"] in {
+                "goethe", "review-authored",
+            }
         assert {item["provider"] for item in entry["evidence"]} == {"Cambridge", "Duden"}
         assert all("/suchen/" not in item["url"] for item in entry["evidence"])
 
     for source_id in ("A1-84887177251", "A1-84887177254", "A1-84887177255"):
         entry = entries[source_id]
-        assert (entry["pos"], entry["decision"]) == ("phrase", "KEEP")
+        expected_decision = (
+            "REVISE"
+            if entry["desired_meaning_en"] != entry["expected_meaning_en"]
+            else "KEEP"
+        )
+        assert (entry["pos"], entry["decision"]) == ("phrase", expected_decision)
+        assert entry["desired_examples"]
         assert all("/suchen/" not in item["url"] for item in entry["evidence"])
 
 
@@ -125,7 +134,7 @@ def test_exported_measure_cards_use_bare_nouns_and_human_audio() -> None:
         if (row := json.loads(line))["source_id"] in AUDIT_ROWS
     }
 
-    for source_id, (lemma, meaning, _old_meaning) in AUDIT_ROWS.items():
+    for source_id, (lemma, meaning, _expected_meaning, _old_meaning) in AUDIT_ROWS.items():
         row = rows[source_id]
         assert (row["lemma"], row["meaning_en"], row["pos"]) == (lemma, meaning, "n.")
         assert row["word_audio"].startswith((

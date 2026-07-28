@@ -363,12 +363,6 @@
     }
     return nodes;
   }
-  function addFallback(node) {
-    var badge = document.createElement("span");
-    badge.className = "gw-target-fallback";
-    badge.textContent = "Target · " + text("gw-lemma");
-    node.parentNode.insertBefore(badge, node);
-  }
   function wrapRange(root, start, end) {
     var cursor = 0;
     collectTextNodes(root).forEach(function (entry) {
@@ -390,10 +384,7 @@
     });
   }
   function highlightRanges(node, ranges) {
-    if (!ranges || !ranges.length) {
-      addFallback(node);
-      return;
-    }
+    if (!ranges || !ranges.length) return;
     for (var index = ranges.length - 1; index >= 0; index -= 1) {
       wrapRange(node, ranges[index][0], ranges[index][1]);
     }

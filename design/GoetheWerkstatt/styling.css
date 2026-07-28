@@ -145,7 +145,6 @@
 .gw-example-main { color: var(--gw-text); font-size: 15px; font-weight: 610; line-height: 1.55; }
 .gw-example-sub { margin-top: 5px; color: var(--gw-muted); font-size: 13.5px; line-height: 1.55; }
 .gw-target-word { padding: 0 .08em; border-bottom: 2px solid var(--level); color: var(--gw-strong); background: var(--gw-target-bg); font-weight: 850; }
-.gw-target-fallback { display: inline-block; margin-bottom: 5px; color: var(--level); font: 750 11px "JetBrains Mono", "Cascadia Mono", monospace; letter-spacing: .08em; text-transform: uppercase; }
 .gw-example-audio { display: none; }
 .gw-example-playable { margin: -4px -6px; padding: 4px 6px; border-radius: 6px; cursor: pointer; transition: background-color 150ms ease, color 150ms ease; }
 .gw-example-playable::after { content: "  🔊"; color: var(--level); font-size: .78em; opacity: 0; transition: opacity 150ms ease; }

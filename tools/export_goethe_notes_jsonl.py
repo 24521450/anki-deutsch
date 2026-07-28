@@ -22,15 +22,15 @@ class ExportError(RuntimeError):
 
 
 def load_audit_entries() -> dict[str, dict[str, Any]]:
-    """Load the same complete v4 payload that was allowed to reach Anki."""
+    """Load the same complete v5 payload that was allowed to reach Anki."""
     try:
         manifest = english_audit.load_json(english_audit.MANIFEST)
         english_audit.validate_manifest(manifest)
     except (OSError, ValueError, english_audit.AuditError) as exc:
-        raise ExportError(f"English audit v4 is not ready: {exc}") from exc
+        raise ExportError(f"English audit v5 is not ready: {exc}") from exc
     entries = manifest.get("entries")
     if not isinstance(entries, dict):
-        raise ExportError("English audit v4 entries are missing")
+        raise ExportError("English audit v5 entries are missing")
     return entries
 
 
@@ -186,22 +186,22 @@ def validate_audited_content(rows: list[dict[str, Any]], entries: dict[str, dict
         entry = resolve_audit_entry(row, entries)
         matched.add(str(entry["source_id"]))
         if row["lemma"] != entry.get("lemma") or row["meaning_en"] != entry.get("desired_meaning_en"):
-            raise ExportError(f"English meaning drift from v4 audit: {row['anki_note_id']}")
+            raise ExportError(f"English meaning drift from v5 audit: {row['anki_note_id']}")
         expected_examples = [
             {"de": item.get("de", ""), "en": item.get("en", "")}
             for item in entry.get("desired_examples", [])
         ]
         actual_examples = [{"de": item["de"], "en": item["en"]} for item in row["examples"]]
         if actual_examples != expected_examples:
-            raise ExportError(f"English examples drift from v4 audit: {row['anki_note_id']}")
-        # Emit the canonical v4 identity even if a pre-unification live note
+            raise ExportError(f"English examples drift from v5 audit: {row['anki_note_id']}")
+        # Emit the canonical v5 identity even if a pre-unification live note
         # still carries a historical merged SourceID or ref order.
         row["guid"] = entry["stable_guid"]
         row["source_id"] = entry["source_id"]
         row["source_refs"] = list(entry["source_refs"])
     if matched != set(entries):
         missing = sorted(set(entries) - matched)
-        raise ExportError(f"live canonical source IDs do not match the v4 audit: {missing[:5]}")
+        raise ExportError(f"live canonical source IDs do not match the v5 audit: {missing[:5]}")
 
 
 def load_live_rows() -> list[dict[str, Any]]:
@@ -273,7 +273,7 @@ def validate_rows(rows: list[dict[str, Any]]) -> None:
             raise ExportError(f"expected two cards: {row['anki_note_id']}")
         tags = set(row["tags"])
         if scope.ENGLISH_AUDITED_TAG not in tags or scope.ENGLISH_REVIEW_TAG in tags:
-            raise ExportError(f"English audit v4 is not applied: {row['anki_note_id']}")
+            raise ExportError(f"English audit v5 is not applied: {row['anki_note_id']}")
         if not row["word_audio"]:
             raise ExportError(f"word audio missing: {row['anki_note_id']}")
         if any(not example["en"] or not example["audio"] for example in row["examples"]):

@@ -31,11 +31,39 @@
     "B1-MAIN-1596": "A2-MAIN-0634",
     "A2-MAIN-0672": "A1-MAIN-0449",
     "B1-MAIN-1201": "A1-MAIN-0301",
-    "B1-MAIN-1855": "A2-MAIN-0734"
+    "B1-MAIN-1855": "A2-MAIN-0734",
+    "B1-MAIN-1153": "A2-MAIN-0452",
+    "B1-MAIN-2786": "A2-MAIN-1091"
+  },
+  "main_source_routes": {
+    "B1-MAIN-2943": [
+      {
+        "target_source_ref": "A1-MAIN-0683",
+        "source_ref": "B1-MAIN-2943",
+        "coverage_ref": "B1-MAIN-2943",
+        "examples": [
+          "Bitte eine Fahrkarte nach Frankfurt und zurück!"
+        ]
+      },
+      {
+        "target_source_ref": "A2-MAIN-1168",
+        "source_ref": "B1-MAIN-2943-PREFIX",
+        "coverage_ref": "B1-MAIN-2943",
+        "examples": [
+          "Wann wirst du zurückkommen?",
+          "Wann muss ich das Buch zurückgeben?"
+        ]
+      }
+    ]
   },
   "main_source_example_overrides": {
     "A2-MAIN-0201": [
       "Darauf fällt mir keine Antwort ein."
+    ]
+  },
+  "record_example_exclusions": {
+    "A1-MAIN-0026": [
+      "Eine Anmeldung für diesen Kurs ist nicht mehr möglich."
     ]
   },
   "reviewed_note_merges": [
@@ -51,7 +79,8 @@
     {"survivor": 1584887177257, "survivor_source_ref": "A1-WG-0101", "duplicate": 1784075689892, "duplicate_source_ref": "B1-WG-0249"},
     {"survivor": 1584887177258, "survivor_source_ref": "A1-WG-0102", "duplicate": 1784075689985, "duplicate_source_ref": "B1-WG-0250"},
     {"survivor": 1584887177259, "survivor_source_ref": "A1-WG-0103", "duplicate": 1784075690077, "duplicate_source_ref": "B1-WG-0251"},
-    {"survivor": 1584887177260, "survivor_source_ref": "A1-WG-0104", "duplicate": 1784075690172, "duplicate_source_ref": "B1-WG-0252"}
+    {"survivor": 1584887177260, "survivor_source_ref": "A1-WG-0104", "duplicate": 1784075690172, "duplicate_source_ref": "B1-WG-0252"},
+    {"survivor": 1497484861847, "survivor_source_ref": "A2-1130", "duplicate": 1784075664324, "duplicate_source_ref": "B1-MAIN-2786"}
   ],
   "skip_wortgruppen": [
     "A1-WG-0044",
@@ -80,7 +109,16 @@
     "A2-WG-0160",
     "A2-WG-0161",
     "A2-WG-0162",
-    "A2-WG-0212"
+    "A2-WG-0212",
+    "B1-WG-0237",
+    "B1-WG-0267",
+    "B1-WG-0269",
+    "B1-WG-0297",
+    "B1-WG-0298",
+    "B1-WG-0329",
+    "B1-WG-0330",
+    "B1-WG-0331",
+    "B1-WG-0332"
   ],
   "reviewed_note_splits": [
     {
@@ -208,6 +246,283 @@
           }
         }
       ]
+    },
+    {
+      "source_ref": "A1-84886455189",
+      "survivor_note_id": 1584886455189,
+      "expected_lemma": "vorstellen",
+      "expected_source_refs": ["A1-84886455189", "A1-MAIN-0634", "A2-MAIN-1070", "B1-MAIN-2744"],
+      "survivor_examples": [
+        "Wir wollen uns kennenlernen.",
+        "Können Sie sich bitte vorstellen?",
+        "Wir wollen uns kennenlernen. Können Sie sich bitte vorstellen?",
+        "Darf ich Ihnen meine Frau vorstellen?"
+      ],
+      "survivor": {
+        "source_id": "A1-84886455189",
+        "source_refs": ["A1-84886455189", "A1-MAIN-0634", "A2-MAIN-1070", "B1-MAIN-2744"],
+        "field_overrides": {
+          "Lemma": "(sich) vorstellen",
+          "POS": "v.",
+          "AcceptedAnswersDE": "vorstellen|sich vorstellen",
+          "AcceptedFullAnswersDE": "vorstellen|sich vorstellen|s vorstellen"
+        }
+      },
+      "child": {
+        "source_id": "B1-MAIN-2744-IMAGINE",
+        "coverage_ref": "B1-MAIN-2744",
+        "source_refs": ["B1-MAIN-2744-IMAGINE"],
+        "cefr": "B1",
+        "examples": ["So schwierig habe ich mir die Arbeit nicht vorgestellt."],
+        "field_overrides": {
+          "Lemma": "sich etwas vorstellen",
+          "POS": "v.",
+          "AcceptedAnswersDE": "sich etwas vorstellen",
+          "AcceptedFullAnswersDE": "sich etwas vorstellen|s etwas vorstellen",
+          "WordAudio": "",
+          "OriginalOrder": "B1-MAIN-2744",
+          "SourceNoteRaw": "B1-MAIN-2744 sense split: sich etwas vorstellen",
+          "LegacyGUID": "goethe:B1-MAIN-2744-IMAGINE"
+        }
+      }
+    },
+    {
+      "source_ref": "A2-0051",
+      "survivor_note_id": 1497484860768,
+      "expected_lemma": "sich ärgern",
+      "expected_source_refs": ["A2-0051", "A2-MAIN-0047", "B1-MAIN-0047"],
+      "survivor_examples": ["Warum ärgerst du dich? - Ich ärgere mich, weil das Wetter schlecht ist."],
+      "survivor": {
+        "source_id": "A2-0051",
+        "source_refs": ["A2-0051", "A2-MAIN-0047", "B1-MAIN-0047"],
+        "field_overrides": {
+          "Lemma": "sich ärgern",
+          "POS": "v.",
+          "AcceptedAnswersDE": "sich ärgern",
+          "AcceptedFullAnswersDE": "sich ärgern|s ärgern"
+        }
+      },
+      "child": {
+        "source_id": "B1-MAIN-0047-ANNOY",
+        "coverage_ref": "B1-MAIN-0047",
+        "source_refs": ["B1-MAIN-0047-ANNOY"],
+        "cefr": "B1",
+        "examples": ["Mein Bruder hat mich schon als Kind immer geärgert."],
+        "field_overrides": {
+          "Lemma": "ärgern",
+          "POS": "v.",
+          "AcceptedAnswersDE": "ärgern",
+          "AcceptedFullAnswersDE": "ärgern",
+          "WordAudio": "",
+          "OriginalOrder": "B1-MAIN-0047",
+          "SourceNoteRaw": "B1-MAIN-0047 sense split: jemanden ärgern",
+          "LegacyGUID": "goethe:B1-MAIN-0047-ANNOY"
+        }
+      }
+    },
+    {
+      "source_ref": "A1-84886454657",
+      "survivor_note_id": 1584886454657,
+      "expected_lemma": "entschuldigen",
+      "expected_source_refs": ["A1-84886454657", "A1-MAIN-0195", "A2-MAIN-0278", "B1-MAIN-0689"],
+      "survivor_examples": ["Entschuldigen Sie bitte!"],
+      "survivor": {
+        "source_id": "A1-84886454657",
+        "source_refs": ["A1-84886454657", "A1-MAIN-0195", "A2-MAIN-0278", "B1-MAIN-0689"],
+        "field_overrides": {
+          "Lemma": "entschuldigen",
+          "POS": "v.",
+          "AcceptedAnswersDE": "entschuldigen",
+          "AcceptedFullAnswersDE": "entschuldigen"
+        }
+      },
+      "child": {
+        "source_id": "A2-MAIN-0278-APOLOGIZE",
+        "coverage_ref": "A2-MAIN-0278",
+        "source_refs": ["A2-MAIN-0278-APOLOGIZE"],
+        "cefr": "A2",
+        "examples": ["Ich möchte mich bei dir entschuldigen."],
+        "field_overrides": {
+          "Lemma": "sich entschuldigen",
+          "POS": "v.",
+          "AcceptedAnswersDE": "sich entschuldigen",
+          "AcceptedFullAnswersDE": "sich entschuldigen|s entschuldigen",
+          "WordAudio": "",
+          "OriginalOrder": "A2-MAIN-0278",
+          "SourceNoteRaw": "A2-MAIN-0278 sense split: sich entschuldigen",
+          "LegacyGUID": "goethe:A2-MAIN-0278-APOLOGIZE"
+        }
+      }
+    },
+    {
+      "source_ref": "A2-0284",
+      "survivor_note_id": 1497484861001,
+      "expected_lemma": "sich erinnern",
+      "expected_source_refs": ["A2-0284", "A2-MAIN-0282", "B1-MAIN-0721"],
+      "survivor_examples": ["Erinnerst du dich an José? - Nein, ich erinnere mich nicht an ihn, tut mir leid."],
+      "survivor": {
+        "source_id": "A2-0284",
+        "source_refs": ["A2-0284", "A2-MAIN-0282", "B1-MAIN-0721"],
+        "field_overrides": {
+          "Lemma": "sich erinnern",
+          "POS": "v.",
+          "AcceptedAnswersDE": "sich erinnern",
+          "AcceptedFullAnswersDE": "sich erinnern|s erinnern"
+        }
+      },
+      "child": {
+        "source_id": "A2-MAIN-0282-REMIND",
+        "coverage_ref": "A2-MAIN-0282",
+        "source_refs": ["A2-MAIN-0282-REMIND"],
+        "cefr": "A2",
+        "examples": ["Kannst du mich morgen bitte an meinen Arzttermin erinnern?"],
+        "field_overrides": {
+          "Lemma": "jemanden erinnern",
+          "POS": "v.",
+          "AcceptedAnswersDE": "erinnern|jemanden erinnern",
+          "AcceptedFullAnswersDE": "erinnern|jemanden erinnern",
+          "WordAudio": "",
+          "OriginalOrder": "A2-MAIN-0282",
+          "SourceNoteRaw": "A2-MAIN-0282 sense split: jemanden an etwas erinnern",
+          "LegacyGUID": "goethe:A2-MAIN-0282-REMIND"
+        }
+      }
+    },
+    {
+      "source_ref": "A1-84886455160",
+      "survivor_note_id": 1584886455160,
+      "expected_lemma": "umziehen",
+      "expected_source_refs": ["A1-84886455160", "A1-MAIN-0608", "A2-MAIN-0947", "A2-MAIN-1012", "B1-MAIN-2543"],
+      "survivor_examples": ["Nächsten Monat ziehen wir um."],
+      "survivor": {
+        "source_id": "A1-84886455160",
+        "source_refs": ["A1-84886455160", "A1-MAIN-0608", "A2-MAIN-0947", "A2-MAIN-1012", "B1-MAIN-2543"],
+        "field_overrides": {
+          "Lemma": "umziehen",
+          "POS": "v.",
+          "AcceptedAnswersDE": "umziehen",
+          "AcceptedFullAnswersDE": "umziehen"
+        }
+      },
+      "child": {
+        "source_id": "A2-MAIN-0947-CHANGE-CLOTHES",
+        "coverage_ref": "A2-MAIN-0947",
+        "source_refs": ["A2-MAIN-0947-CHANGE-CLOTHES"],
+        "cefr": "A2",
+        "examples": ["Warte bitte, ich muss mich noch umziehen."],
+        "field_overrides": {
+          "Lemma": "sich umziehen",
+          "POS": "v.",
+          "AcceptedAnswersDE": "sich umziehen",
+          "AcceptedFullAnswersDE": "sich umziehen|s umziehen",
+          "WordAudio": "",
+          "OriginalOrder": "A2-MAIN-0947",
+          "SourceNoteRaw": "A2-MAIN-0947 sense split: sich umziehen",
+          "LegacyGUID": "goethe:A2-MAIN-0947-CHANGE-CLOTHES"
+        }
+      }
+    },
+    {
+      "source_ref": "B1-MAIN-0120",
+      "survivor_note_id": 1784075502480,
+      "expected_lemma": "anstrengen",
+      "expected_source_refs": ["B1-MAIN-0120"],
+      "survivor_examples": ["Wenn du die Prüfung schaffen willst, musst du dich mehr anstrengen."],
+      "survivor": {
+        "source_id": "B1-MAIN-0120",
+        "source_refs": ["B1-MAIN-0120"],
+        "field_overrides": {
+          "Lemma": "sich anstrengen",
+          "POS": "v.",
+          "AcceptedAnswersDE": "sich anstrengen",
+          "AcceptedFullAnswersDE": "sich anstrengen|s anstrengen"
+        }
+      },
+      "child": {
+        "source_id": "B1-MAIN-0120-TIRE",
+        "coverage_ref": "B1-MAIN-0120",
+        "source_refs": ["B1-MAIN-0120-TIRE"],
+        "cefr": "B1",
+        "examples": ["Diese Arbeit strengt mich sehr an."],
+        "field_overrides": {
+          "Lemma": "anstrengen",
+          "POS": "v.",
+          "AcceptedAnswersDE": "anstrengen",
+          "AcceptedFullAnswersDE": "anstrengen",
+          "WordAudio": "",
+          "OriginalOrder": "B1-MAIN-0120",
+          "SourceNoteRaw": "B1-MAIN-0120 sense split: jemanden anstrengen",
+          "LegacyGUID": "goethe:B1-MAIN-0120-TIRE"
+        }
+      }
+    },
+    {
+      "source_ref": "A1-84886455178",
+      "survivor_note_id": 1584886455178,
+      "expected_lemma": "verstehen",
+      "expected_source_refs": ["A1-84886455178", "A1-MAIN-0626", "A2-MAIN-1052", "B1-MAIN-2683"],
+      "survivor_examples": ["Können Sie mich verstehen?", "Ich verstehe diese Aufgabe nicht."],
+      "survivor": {
+        "source_id": "A1-84886455178",
+        "source_refs": ["A1-84886455178", "A1-MAIN-0626", "A2-MAIN-1052", "B1-MAIN-2683"],
+        "field_overrides": {
+          "Lemma": "verstehen",
+          "POS": "v.",
+          "AcceptedAnswersDE": "verstehen",
+          "AcceptedFullAnswersDE": "verstehen"
+        }
+      },
+      "child": {
+        "source_id": "B1-MAIN-2683-GET-ALONG",
+        "coverage_ref": "B1-MAIN-2683",
+        "source_refs": ["B1-MAIN-2683-GET-ALONG"],
+        "cefr": "B1",
+        "examples": ["Unsere beiden Kinder verstehen sich sehr gut."],
+        "field_overrides": {
+          "Lemma": "sich verstehen",
+          "POS": "v.",
+          "AcceptedAnswersDE": "sich verstehen",
+          "AcceptedFullAnswersDE": "sich verstehen|s verstehen",
+          "WordAudio": "",
+          "OriginalOrder": "B1-MAIN-2683",
+          "SourceNoteRaw": "B1-MAIN-2683 sense split: sich verstehen",
+          "LegacyGUID": "goethe:B1-MAIN-2683-GET-ALONG"
+        }
+      }
+    },
+    {
+      "source_ref": "B1-MAIN-2871",
+      "survivor_note_id": 1784075668544,
+      "expected_lemma": "wundern",
+      "expected_source_refs": ["B1-MAIN-2871"],
+      "survivor_examples": ["Ich wundere mich, dass du schon so früh aus der Schule kommst. Was ist los?"],
+      "survivor": {
+        "source_id": "B1-MAIN-2871",
+        "source_refs": ["B1-MAIN-2871"],
+        "field_overrides": {
+          "Lemma": "sich wundern",
+          "POS": "v.",
+          "AcceptedAnswersDE": "sich wundern",
+          "AcceptedFullAnswersDE": "sich wundern|s wundern"
+        }
+      },
+      "child": {
+        "source_id": "B1-MAIN-2871-SURPRISE",
+        "coverage_ref": "B1-MAIN-2871",
+        "source_refs": ["B1-MAIN-2871-SURPRISE"],
+        "cefr": "B1",
+        "examples": ["Es hat mich gewundert, dass das Essen hier so günstig ist."],
+        "field_overrides": {
+          "Lemma": "jemanden wundern",
+          "POS": "v.",
+          "AcceptedAnswersDE": "wundern|jemanden wundern",
+          "AcceptedFullAnswersDE": "wundern|jemanden wundern",
+          "WordAudio": "",
+          "OriginalOrder": "B1-MAIN-2871",
+          "SourceNoteRaw": "B1-MAIN-2871 sense split: jemanden wundern",
+          "LegacyGUID": "goethe:B1-MAIN-2871-SURPRISE"
+        }
+      }
     }
   ],
   "merge_wortgruppen": {
@@ -240,6 +555,27 @@
     "B1-WG-0250": {"target_source_ref": "A1-WG-0102"},
     "B1-WG-0251": {"target_source_ref": "A1-WG-0103"},
     "B1-WG-0252": {"target_source_ref": "A1-WG-0104"},
-    "B1-WG-0255": {"target_source_ref": "A1-WG-0001"}
+    "B1-WG-0255": {"target_source_ref": "A1-WG-0001"},
+    "B1-WG-0256": {"target_source_ref": "A1-WG-0002"},
+    "B1-WG-0257": {"target_source_ref": "A1-WG-0003"},
+    "B1-WG-0258": {"target_source_ref": "A1-WG-0004"},
+    "B1-WG-0259": {"target_source_ref": "A1-WG-0005"},
+    "B1-WG-0260": {"target_source_ref": "A1-WG-0006"},
+    "B1-WG-0261": {"target_source_ref": "A1-WG-0007"},
+    "B1-WG-0262": {"target_source_ref": "A1-WG-0008"},
+    "B1-WG-0263": {"target_source_ref": "A1-WG-0009"},
+    "B1-WG-0264": {"target_source_ref": "A1-WG-0010"},
+    "B1-WG-0265": {"target_source_ref": "A1-WG-0011"},
+    "B1-WG-0266": {"target_source_ref": "A1-WG-0012"},
+    "B1-WG-0268": {"target_source_ref": "A1-WG-0021"},
+    "B1-WG-0270": {"target_source_ref": "A1-WG-0029"},
+    "B1-WG-0271": {"target_source_ref": "A1-WG-0030"},
+    "B1-WG-0272": {"target_source_ref": "A1-WG-0031"},
+    "B1-WG-0273": {"target_source_ref": "A1-WG-0032"},
+    "B1-WG-0274": {"target_source_ref": "A1-WG-0033"},
+    "B1-WG-0275": {"target_source_ref": "A1-WG-0034"},
+    "B1-WG-0292": {"target_source_ref": "A1-WG-0040"},
+    "B1-WG-0294": {"target_source_ref": "A1-WG-0041"},
+    "B1-WG-0295": {"target_source_ref": "A1-WG-0042"}
   }
 }

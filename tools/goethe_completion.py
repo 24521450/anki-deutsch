@@ -41,6 +41,7 @@ TRANSLATIONS = ROOT / "review" / "goethe_completion_translations.json"
 REDUNDANCY_POLICY = ROOT / "review" / "goethe_redundancy_policy.json"
 HEADWORD_POLICY = ROOT / "review" / "goethe_headword_merges.json"
 SOURCE_TEXT_OVERRIDES = ROOT / "review" / "goethe_source_text_overrides.json"
+SUPPLEMENTAL_EXAMPLES = ROOT / "review" / "goethe_supplemental_examples.jsonl"
 B1_ENGLISH_OVERRIDES = ROOT / "review" / "goethe_b1_english_overrides.json"
 B1_DATA_OVERRIDES = ROOT / "review" / "goethe_b1_data_overrides.json"
 MANIFEST = STATE / "manifest.json"
@@ -66,7 +67,8 @@ QUALITY_TRANSLATION = "goethe::quality::translation_review_needed"
 CONFIRMATION = "COMPLETE_GOETHE_A1_A2_B1"
 REVIEWED_SPLIT_FIELDS = frozenset({
     "Lemma", "POS", "Article", "Gender", "NounFormsRaw",
-    "AcceptedAnswersDE", "AcceptedArticlesDE", "WordAudio", "FormOrVariantNote",
+    "AcceptedAnswersDE", "AcceptedArticlesDE", "AcceptedFullAnswersDE",
+    "WordAudio", "FormOrVariantNote",
 })
 REVIEWED_SPLIT_CHILD_FIELDS = REVIEWED_SPLIT_FIELDS | {
     "OriginalOrder", "SourceNoteRaw", "LegacyGUID",
@@ -93,6 +95,13 @@ def lemma_key(value: str, *, fold: bool = False) -> str:
     value = re.sub(r"^(der|die|das)\s+", "", value, flags=re.I)
     value = value.replace("(Kredit)-", "Kredit").replace("(e)", "")
     return value.casefold() if fold else value
+
+
+def has_bound_headword_component(value: str) -> bool:
+    return any(
+        part.strip().startswith("-") or part.strip().endswith("-")
+        for part in clean(value).split("/")
+    )
 
 
 def compatible_pos(source: str, target: str) -> bool:
@@ -159,7 +168,27 @@ def category_slug(value: str) -> str:
     return re.sub(r"[^a-z0-9]+", "_", normalized.casefold()).strip("_")
 
 
+def notation_dominant_wortgruppe(row: dict[str, str]) -> bool:
+    entry = clean(row.get("entry", ""))
+    canonical = clean(row.get("canonical", ""))
+    detail = clean(row.get("detail", ""))
+    return bool(
+        detail
+        and canonical
+        and canonical == entry
+        and re.search(r"\d|[½⅓¼€%°²]", entry)
+    )
+
+
+def spoken_wortgruppe_detail(row: dict[str, str]) -> str:
+    value = clean(re.split(r";", row.get("detail", ""), maxsplit=1)[0])
+    value = value.replace("...", "").replace("…", "").strip()
+    return re.sub(r",\s*(?:[-=Â¨].*)$", "", value).strip()
+
+
 def wg_lemma(row: dict[str, str]) -> str:
+    if notation_dominant_wortgruppe(row):
+        return spoken_wortgruppe_detail(row)
     if row.get("canonical"):
         return row["canonical"]
     if row["match"]:
@@ -172,6 +201,8 @@ def wg_lemma(row: dict[str, str]) -> str:
 
 
 def wg_answers(row: dict[str, str]) -> list[str]:
+    if notation_dominant_wortgruppe(row):
+        return [spoken_wortgruppe_detail(row)]
     if row.get("canonical"):
         variants = [
             item.strip() for item in re.split(r"<br\s*/?>", row.get("variants", ""), flags=re.I)
@@ -369,15 +400,14 @@ def configured_wortgruppe_key(
     by_source_ref: dict[str, str],
 ) -> str | None:
     """Resolve an explicitly reviewed Wortgruppe route by source identity."""
-    current = by_source_ref.get(ref)
     target_ref = clean(merge_spec.get("target_source_ref", ""))
     if not target_ref:
-        return current
+        return by_source_ref.get(ref)
     target = by_source_ref.get(target_ref)
     if target is None:
         raise CompletionError(f"Wortgruppe source target missing: {ref} -> {target_ref}")
-    if current is not None and current != target:
-        raise CompletionError(f"Wortgruppe source route conflicts: {ref} -> {target_ref}")
+    # A reviewed route intentionally supersedes stale live ownership.  The
+    # unclaimed legacy note is removed after all physical rows are assigned.
     return target
 
 
@@ -405,7 +435,7 @@ def configured_main_source_key(
         if configured_target not in records:
             raise CompletionError(f"configured source target missing: {ref} -> {configured_target}")
         return configured_target
-    return by_source_ref.get(ref)
+    return None
 
 
 def main_source_examples(
@@ -432,6 +462,92 @@ def load_source_text_overrides() -> dict[str, Any]:
     return overrides
 
 
+def load_supplemental_examples(
+    path: Path = SUPPLEMENTAL_EXAMPLES,
+) -> list[dict[str, Any]]:
+    if not path.exists():
+        return []
+    entries: list[dict[str, Any]] = []
+    source_ids: set[str] = set()
+    for line_number, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        if not raw.strip():
+            continue
+        try:
+            entry = json.loads(raw)
+        except json.JSONDecodeError as exc:
+            raise CompletionError(
+                f"invalid supplemental example JSONL line {line_number}"
+            ) from exc
+        required = {
+            "schema_version", "source_id", "de", "en_us", "origin",
+            "provenance", "review_status", "reason",
+        }
+        if (
+            not isinstance(entry, dict)
+            or entry.get("schema_version") != 1
+            or required - set(entry)
+            or entry.get("origin") != "review-authored"
+            or entry.get("provenance") not in {"recovered-v3", "new", "historical"}
+            or entry.get("review_status") != "reviewed"
+            or not all(
+                isinstance(entry.get(name), str) and clean(entry[name])
+                for name in ("source_id", "de", "en_us", "reason")
+            )
+            or not isinstance(entry.get("allow_nonempty", False), bool)
+        ):
+            raise CompletionError(
+                f"invalid supplemental example entry on line {line_number}"
+            )
+        source_id = clean(entry["source_id"])
+        if source_id in source_ids:
+            raise CompletionError(f"duplicate supplemental source ID: {source_id}")
+        source_ids.add(source_id)
+        normalized = copy.deepcopy(entry)
+        normalized["source_id"] = source_id
+        normalized["de"] = clean(entry["de"])
+        normalized["en_us"] = clean(entry["en_us"])
+        normalized["reason"] = clean(entry["reason"])
+        entries.append(normalized)
+    return entries
+
+
+def apply_supplemental_examples(
+    records: dict[str, dict[str, Any]],
+    entries: list[dict[str, Any]],
+) -> int:
+    applied = 0
+    for entry in entries:
+        source_id = entry["source_id"]
+        matches = [
+            record for record in records.values()
+            if source_id in {
+                clean(record["fields"].get("SourceID", "")),
+                *map(clean, record.get("source_refs", [])),
+            }
+        ]
+        if len(matches) != 1:
+            raise CompletionError(
+                f"supplemental source target is not unique: {source_id} ({len(matches)})"
+            )
+        record = matches[0]
+        if record["examples"] and not entry.get("allow_nonempty", False):
+            raise CompletionError(
+                f"supplemental source is no longer empty: {source_id}"
+            )
+        key = sentence_key(entry["de"])
+        if any(sentence_key(example["de"]) == key for example in record["examples"]):
+            raise CompletionError(f"duplicate supplemental sentence: {source_id}")
+        record["examples"].append({
+            "de": entry["de"],
+            "en": entry["en_us"],
+            "audio": "",
+            "origin": entry["origin"],
+        })
+        record["translated"] = True
+        applied += 1
+    return applied
+
+
 def record_variants(record: dict[str, Any]) -> set[str]:
     values = [record["fields"]["Lemma"]] + split_answers(record["fields"].get("AcceptedAnswersDE", ""))
     return {variant for value in values for variant in source_variants(value)}
@@ -444,6 +560,63 @@ def variant_index(records: dict[str, dict[str, Any]]) -> dict[str, set[str]]:
             index[variant].add(key)
             index["~" + variant.casefold()].add(key)
     return index
+
+
+def headword_index(records: dict[str, dict[str, Any]]) -> dict[str, set[str]]:
+    """Index only canonical headwords, preserving bound/combined punctuation."""
+    index: dict[str, set[str]] = defaultdict(set)
+    for key, record in records.items():
+        lemma = lemma_key(record["fields"].get("Lemma", ""))
+        if lemma:
+            index[lemma].add(key)
+            index["~" + lemma.casefold()].add(key)
+    return index
+
+
+def reindex_headword_record(
+    index: dict[str, set[str]], key: str, record: dict[str, Any],
+) -> None:
+    for identity, keys in list(index.items()):
+        keys.discard(key)
+        if not keys:
+            del index[identity]
+    lemma = lemma_key(record["fields"].get("Lemma", ""))
+    if lemma:
+        index[lemma].add(key)
+        index["~" + lemma.casefold()].add(key)
+
+
+def find_headword_record(
+    records: dict[str, dict[str, Any]],
+    index: dict[str, set[str]],
+    word: str,
+    pos: str = "",
+    gender: str = "",
+) -> str | None:
+    """Find an exact physical headword without expanding slash/prefix forms."""
+    identity = lemma_key(word)
+    exact = sorted(index.get(identity, set()))
+    if not exact and pos:
+        exact = sorted(index.get("~" + identity.casefold(), set()))
+    candidates = [
+        key for key in exact
+        if compatible_pos(pos, records[key]["fields"].get("POS", ""))
+    ]
+    if pos and exact and not candidates:
+        return None
+    if not candidates:
+        candidates = exact
+    if gender:
+        narrowed = [
+            key for key in candidates
+            if not records[key]["fields"].get("Gender")
+            or records[key]["fields"]["Gender"] == gender
+        ]
+        if narrowed:
+            candidates = narrowed
+    if candidates:
+        return min(candidates, key=lambda key: record_preference(key, records[key]))
+    return None
 
 
 def index_record(index: dict[str, set[str]], key: str, record: dict[str, Any]) -> None:
@@ -479,9 +652,6 @@ def find_record(
     exact = sorted({key for variant in variants for key in index.get(variant, set())})
     if not exact and pos:
         exact = sorted({key for variant in variants for key in index.get("~" + variant.casefold(), set())})
-    if not exact and clean(word).endswith("-"):
-        prefix = lemma_key(word)[:-1]
-        exact = sorted({key for variant, keys in index.items() if not variant.startswith("~") and variant.startswith(prefix) for key in keys})
     candidates = [key for key in exact if compatible_pos(pos, records[key]["fields"].get("POS", ""))]
     if pos and exact and not candidates:
         return None
@@ -507,6 +677,41 @@ def find_record(
     if candidates:
         return min(candidates, key=lambda key: record_preference(key, records[key]))
     return None
+
+
+def apply_source_claims(
+    records: dict[str, dict[str, Any]],
+    deletions: list[dict[str, Any]],
+    claimed_refs: dict[str, list[str]],
+) -> list[dict[str, Any]]:
+    """Replace stale physical ownership and delete records no source row claimed."""
+    scheduled = {int(item["note_id"]) for item in deletions if item.get("note_id") is not None}
+    for key, record in list(records.items()):
+        claims = list(dict.fromkeys(claimed_refs.get(key, [])))
+        if not claims:
+            if not record.get("is_new") and record.get("note_id") not in scheduled:
+                deletions.append({
+                    "note_id": record["note_id"],
+                    "survivor": None,
+                    "cards": record.get("cards", []),
+                    "fields": record.get("fields", {}),
+                    "tags": record.get("tags", []),
+                })
+                scheduled.add(int(record["note_id"]))
+            del records[key]
+            continue
+
+        legacy_refs = [
+            ref for ref in record.get("source_refs", [])
+            if not SOURCE_REF_PREFIX.match(ref)
+        ]
+        refs = list(dict.fromkeys([*legacy_refs, *claims]))
+        record["source_refs"] = refs
+        record["fields"]["SourceRefs"] = "|".join(refs)
+        source_id = clean(record["fields"].get("SourceID", ""))
+        if not source_id or SOURCE_REF_PREFIX.match(source_id):
+            record["fields"]["SourceID"] = refs[0]
+    return deletions
 
 
 def new_record(ref: str, lemma: str, level: str, pos: str = "", gender: str = "") -> dict[str, Any]:
@@ -885,6 +1090,82 @@ def apply_reviewed_note_splits(
         survivor["fields"]["SourceID"] = survivor_source_id
         survivor["fields"]["SourceRefs"] = "|".join(survivor_refs)
         survivor["fields"].update(survivor_overrides)
+        survivor_audio_lemma = lemma_key(survivor["fields"].get("Lemma", "")).split()
+        for child_spec in child_specs:
+            child = next(
+                record for record in records.values()
+                if record["fields"].get("SourceID") == child_spec["source_id"]
+            )
+            child_audio_lemma = lemma_key(child["fields"].get("Lemma", "")).split()
+            if (
+                not child["fields"].get("WordAudio")
+                and survivor["fields"].get("WordAudio")
+                and survivor_audio_lemma
+                and child_audio_lemma
+                and survivor_audio_lemma[-1] == child_audio_lemma[-1]
+            ):
+                child["fields"]["WordAudio"] = survivor["fields"]["WordAudio"]
+        has_example_partition = (
+            "survivor_examples" in group
+            or any("examples" in child_spec for child_spec in child_specs)
+        )
+        if has_example_partition:
+            survivor_examples = group.get("survivor_examples")
+            if (
+                not isinstance(survivor_examples, list)
+                or not all(isinstance(example, str) and clean(example) for example in survivor_examples)
+            ):
+                raise CompletionError("invalid reviewed split survivor examples")
+            survivor_levels = {
+                ref.split("-", 1)[0]
+                for ref in survivor["source_refs"]
+                if ref.split("-", 1)[0] in LEVELS
+            } or {survivor["fields"]["CEFR"]}
+            assignments: list[tuple[dict[str, Any], set[str], list[str]]] = [
+                (survivor, survivor_levels, survivor_examples),
+            ]
+            for child_spec in child_specs:
+                child_examples = child_spec.get("examples")
+                if (
+                    not isinstance(child_examples, list)
+                    or not all(isinstance(example, str) and clean(example) for example in child_examples)
+                ):
+                    raise CompletionError("invalid reviewed split child examples")
+                child = next(
+                    record for record in records.values()
+                    if record["fields"].get("SourceID") == child_spec["source_id"]
+                )
+                assignments.append((child, {child_spec["cefr"]}, child_examples))
+
+            assigned_keys = [
+                sentence_key(example)
+                for _, _, examples in assignments
+                for example in examples
+            ]
+            if len(assigned_keys) != len(set(assigned_keys)):
+                raise CompletionError("reviewed split examples overlap")
+            existing = {
+                sentence_key(example["de"]): example
+                for record in [survivor, *[item[0] for item in assignments[1:]]]
+                for example in record["examples"]
+            }
+            if not set(existing).issubset(assigned_keys):
+                raise CompletionError("reviewed split leaves source examples unassigned")
+            allowed = goethe_source_examples.allowed_examples_by_level()
+            for record, levels, examples in assignments:
+                allowed_keys = {
+                    key for level in levels for key in allowed[level]
+                }
+                if any(sentence_key(example) not in allowed_keys for example in examples):
+                    raise CompletionError(
+                        "reviewed split example is not physical source text"
+                    )
+                record["examples"] = [
+                    copy.deepcopy(existing.get(sentence_key(example)))
+                    if sentence_key(example) in existing
+                    else {"de": clean(example), "en": "", "audio": ""}
+                    for example in examples
+                ]
     return coverage_aliases
 
 
@@ -930,14 +1211,14 @@ def apply_headword_policy(records: dict[str, dict[str, Any]], deletions: list[di
 
 
 def english_audit_for_build() -> tuple[dict[str, Any] | None, dict[str, Any]]:
-    """Load a complete v4 audit without making an incomplete scaffold authoritative."""
+    """Load a complete current audit without making an incomplete scaffold authoritative."""
     state: dict[str, Any] = {
         "path": str(english_audit.MANIFEST),
         "schema_version": None,
         "entries": 0,
         "uncovered": scope.EXPECTED_NOTES,
         "ready": False,
-        "error": "English audit v4 artifact is missing",
+        "error": "English audit v5 artifact is missing",
     }
     if not english_audit.MANIFEST.exists():
         return None, state
@@ -949,8 +1230,8 @@ def english_audit_for_build() -> tuple[dict[str, Any] | None, dict[str, Any]]:
             "schema_version": manifest.get("schema_version"),
             "entries": len(entries) if isinstance(entries, dict) else 0,
         })
-        if manifest.get("schema_version") != 4:
-            raise english_audit.AuditError("English audit artifact is not schema v4")
+        if manifest.get("schema_version") != english_audit.SCHEMA_VERSION:
+            raise english_audit.AuditError("English audit artifact is not schema v5")
         english_audit.validate_manifest(manifest)
     except (english_audit.AuditError, KeyError, TypeError, ValueError) as exc:
         missing = max(scope.EXPECTED_NOTES - state["entries"], 0)
@@ -1022,7 +1303,7 @@ def apply_final_english_audit(
     manifest: dict[str, Any] | None,
     state: dict[str, Any],
 ) -> dict[str, Any]:
-    """Apply v4 last and atomically so a coverage failure leaves no partial audit."""
+    """Apply the current audit last and atomically so failures leave no partial audit."""
     if manifest is None:
         return state
     reviewed = copy.deepcopy(records)
@@ -1038,11 +1319,35 @@ def apply_final_english_audit(
     return state
 
 
-def build_manifest() -> dict[str, Any]:
+def build_manifest(*, finalize_production: bool = True) -> dict[str, Any]:
     records, _ = load_live()
+    record_word_audio = {
+        key: (
+            record["fields"].get("Lemma", ""),
+            record["fields"].get("WordAudio", ""),
+        )
+        for key, record in records.items()
+    }
+    audio_candidates: dict[str, set[str]] = defaultdict(set)
+    record_example_audio: dict[str, dict[str, str]] = {}
+    for key, record in records.items():
+        local_audio: dict[str, str] = {}
+        for example in record["examples"]:
+            audio = clean(example.get("audio", ""))
+            if audio:
+                sentence = goethe_source_examples.sentence_key(example["de"])
+                audio_candidates[sentence].add(audio)
+                local_audio[sentence] = audio
+        record_example_audio[key] = local_audio
+    reusable_example_audio = {
+        key: next(iter(values))
+        for key, values in audio_candidates.items()
+        if len(values) == 1
+    }
     live_preimage = build_live_preimage(records)
     redundancy_policy = load_redundancy_policy()
     source_text_overrides = load_source_text_overrides()
+    supplemental_examples = load_supplemental_examples()
     skipped_source_refs = set(redundancy_policy.get("skip_wortgruppen", []))
     merge_wortgruppen = redundancy_policy.get("merge_wortgruppen", {})
     reviewed_note_merges = redundancy_policy.get("reviewed_note_merges", [])
@@ -1052,16 +1357,27 @@ def build_manifest() -> dict[str, Any]:
     main_source_aliases = {
         str(ref): str(target) for ref, target in redundancy_policy.get("main_source_aliases", {}).items()
     }
+    main_source_routes = redundancy_policy.get("main_source_routes", {})
     main_source_example_overrides = redundancy_policy.get("main_source_example_overrides", {})
+    record_example_exclusions = redundancy_policy.get("record_example_exclusions", {})
     deletions = merge_exact_duplicates(records, preserve_note_ids)
     deletions = apply_reviewed_note_merges(records, deletions, reviewed_note_merges)
     # Stored merge-policy snapshots are an A1/A2 baseline. Apply them before
     # adding B1 provenance so they cannot erase freshly attached B1 refs.
     deletions = apply_headword_policy(records, deletions)
+    # Live examples are output from an older compiler run, not source evidence.
+    # Rebuild them exclusively from the physical Markdown rows below so a note
+    # cannot retain a sentence after its source owner changes.
+    for record in records.values():
+        record["examples"] = []
     index = variant_index(records)
+    main_index = headword_index(records)
     by_source_ref = {
         ref: key for key, record in records.items() for ref in record["source_refs"]
     }
+    claimed_refs: dict[str, list[str]] = defaultdict(list)
+    claimed_headwords: dict[str, str] = {}
+    routed_coverage_aliases: dict[str, str] = {}
     ambiguous: list[dict[str, Any]] = []
     source_counts = {f"{level}_{kind}": 0 for level in LEVELS for kind in ("MAIN", "WG")}
     main_files = {"A1": gw.SOURCE_A1, "A2": gw.SOURCE_A2, "B1": gw.SOURCE_B1}
@@ -1069,18 +1385,93 @@ def build_manifest() -> dict[str, Any]:
         for row in gw.parse_markdown(path):
             source_counts[f"{level}_MAIN"] += 1
             ref = f"{level}-MAIN-{row['row']:04d}"
-            key = configured_main_source_key(
+            explicit_routes = main_source_routes.get(ref)
+            if explicit_routes is not None:
+                if not isinstance(explicit_routes, list) or len(explicit_routes) < 2:
+                    raise CompletionError(f"invalid split main-source route: {ref}")
+                routed_examples: list[str] = []
+                for route in explicit_routes:
+                    target_ref = clean(route.get("target_source_ref", ""))
+                    target_key = by_source_ref.get(target_ref)
+                    if target_key is None:
+                        raise CompletionError(
+                            f"split main-source target missing: {ref} -> {target_ref}"
+                        )
+                    assigned_ref = clean(route.get("source_ref", ref))
+                    coverage_ref = clean(route.get("coverage_ref", ref))
+                    examples = route.get("examples", [])
+                    if (
+                        not assigned_ref
+                        or not isinstance(examples, list)
+                        or not all(isinstance(example, str) for example in examples)
+                        or coverage_ref != ref
+                    ):
+                        raise CompletionError(f"invalid split main-source route entry: {ref}")
+                    if assigned_ref != ref:
+                        if not assigned_ref.startswith(f"{ref}-"):
+                            raise CompletionError(f"invalid derived main-source ref: {assigned_ref}")
+                        routed_coverage_aliases[assigned_ref] = ref
+                    record = records[target_key]
+                    add_ref(record, assigned_ref, level)
+                    claimed_refs[target_key].append(assigned_ref)
+                    by_source_ref[assigned_ref] = target_key
+                    for example in examples:
+                        add_example(record, example)
+                    routed_examples.extend(examples)
+                expected_examples = main_source_examples(
+                    ref, row, source_text_overrides["examples"], main_source_example_overrides,
+                )
+                if sorted(map(sentence_key, routed_examples)) != sorted(map(sentence_key, expected_examples)):
+                    raise CompletionError(f"split main-source examples are not an exact partition: {ref}")
+                continue
+            configured_key = configured_main_source_key(
                 ref, main_source_aliases, source_targets, records, by_source_ref,
-            ) or find_record(
-                records, index, row["word"], row["pos"], row["gender"], row["examples"],
             )
+            identity = lemma_key(row["word"])
+            if configured_key is not None:
+                key = configured_key
+            elif has_bound_headword_component(row["word"]):
+                key = find_headword_record(
+                    records, main_index, row["word"], row["pos"], row["gender"],
+                )
+                stale_key = by_source_ref.get(ref)
+                if (
+                    key is None
+                    and stale_key in records
+                    and claimed_headwords.get(stale_key, identity) == identity
+                ):
+                    key = stale_key
+                    fields = records[key]["fields"]
+                    if lemma_key(fields.get("Lemma", "")) != identity:
+                        fields["Lemma"] = row["word"]
+                        fields["AcceptedAnswersDE"] = row["word"]
+                        fields["WordAudio"] = ""
+                        reindex_record(index, key, records[key])
+                        reindex_headword_record(main_index, key, records[key])
+            else:
+                key = find_record(
+                    records, index, row["word"], row["pos"], row["gender"], row["examples"],
+                )
+                stale_key = by_source_ref.get(ref)
+                if (
+                    key is None
+                    and stale_key in records
+                    and not has_bound_headword_component(
+                        records[stale_key]["fields"].get("Lemma", "")
+                    )
+                ):
+                    key = stale_key
             if key is None:
                 key = f"new:{ref}"
                 records[key] = new_record(ref, row["word"], level, row["pos"], row["gender"])
                 index_record(index, key, records[key])
+                main_index[identity].add(key)
+                main_index["~" + identity.casefold()].add(key)
             record = records[key]
+            claimed_headwords.setdefault(key, identity)
             prior_level = record["fields"].get("CEFR") or level
             add_ref(record, ref, level)
+            claimed_refs[key].append(ref)
             by_source_ref[ref] = key
             if ref in main_source_aliases:
                 accepted = split_answers(record["fields"].get("AcceptedAnswersDE", ""))
@@ -1089,7 +1480,11 @@ def build_manifest() -> dict[str, Any]:
                         accepted.append(variant)
                 record["fields"]["AcceptedAnswersDE"] = "|".join(accepted)
                 index_record(index, key, record)
-            if level == "B1" and LEVEL_RANK[prior_level] < LEVEL_RANK[level]:
+            claimed_lower_level = any(
+                LEVEL_RANK.get(source_ref.split("-", 1)[0], 99) < LEVEL_RANK[level]
+                for source_ref in claimed_refs[key]
+            )
+            if level == "B1" and claimed_lower_level:
                 # Lower-level ownership wins. Overlaps gain provenance only;
                 # B1 examples and metadata must not expand the A1/A2 note.
                 continue
@@ -1118,9 +1513,22 @@ def build_manifest() -> dict[str, Any]:
                 continue
             lemma = wg_lemma(row)
             merge_spec = merge_wortgruppen.get(row["id"], {})
-            key = configured_wortgruppe_key(row["id"], merge_spec, by_source_ref) or find_record(
+            configured_key = configured_wortgruppe_key(row["id"], merge_spec, by_source_ref)
+            if notation_dominant_wortgruppe(row) and not merge_spec:
+                configured_key = None
+            key = configured_key or find_record(
                 records, index, merge_spec.get("target") or row["match"] or lemma,
             )
+            if (
+                key is None
+                and notation_dominant_wortgruppe(row)
+                and by_source_ref.get(row["id"]) in records
+            ):
+                key = by_source_ref[row["id"]]
+                fields = records[key]["fields"]
+                fields["Lemma"] = lemma
+                fields["AcceptedAnswersDE"] = "|".join(wg_answers(row))
+                reindex_record(index, key, records[key])
             if key is None:
                 if merge_spec:
                     raise CompletionError(f"redundancy merge target missing: {row['id']} -> {merge_spec.get('target')}")
@@ -1130,6 +1538,7 @@ def build_manifest() -> dict[str, Any]:
             record = records[key]
             prior_level = record["fields"].get("CEFR") or level
             add_ref(record, row["id"], level)
+            claimed_refs[key].append(row["id"])
             by_source_ref[row["id"]] = key
             if level == "B1" and LEVEL_RANK[prior_level] < LEVEL_RANK[level]:
                 continue
@@ -1162,10 +1571,48 @@ def build_manifest() -> dict[str, Any]:
                     record["fields"].get("FormOrVariantNote", "") + " | " + grammar_note
                 )
 
-    source_coverage_aliases = apply_reviewed_note_splits(records, reviewed_note_splits)
+    source_coverage_aliases = {
+        **routed_coverage_aliases,
+        **apply_reviewed_note_splits(records, reviewed_note_splits),
+    }
+    if reviewed_note_splits:
+        split_source_ids = {
+            spec["source_id"]
+            for group in reviewed_note_splits
+            for spec in [
+                group["survivor"],
+                *group.get("children", [group.get("child", {})]),
+            ]
+            if spec
+        }
+        for key, record in records.items():
+            if record["fields"].get("SourceID") not in split_source_ids:
+                continue
+            for owner_key, refs in claimed_refs.items():
+                claimed_refs[owner_key] = [
+                    ref for ref in refs if ref not in record["source_refs"]
+                ]
+            claimed_refs[key].extend(record["source_refs"])
+    if sum(source_counts.values()):
+        deletions = apply_source_claims(records, deletions, claimed_refs)
     deletions.extend(merge_exact_duplicates(records, preserve_note_ids))
+    for record in records.values():
+        excluded = {
+            sentence_key(sentence)
+            for ref in record["source_refs"]
+            for sentence in record_example_exclusions.get(ref, [])
+        }
+        if excluded:
+            record["examples"] = [
+                example for example in record["examples"]
+                if sentence_key(example["de"]) not in excluded
+            ]
     allowed_examples = goethe_source_examples.allowed_examples_by_level()
-    audit_manifest, audit_state = english_audit_for_build()
+    audit_manifest, audit_state = (
+        english_audit_for_build()
+        if finalize_production
+        else (None, {"ready": False, "reason": "source-canonical audit input"})
+    )
     if audit_manifest is not None:
         for entry in audit_manifest["entries"].values():
             for example in entry["desired_examples"]:
@@ -1179,9 +1626,25 @@ def build_manifest() -> dict[str, Any]:
         if refs:
             record["fields"]["SourceID"] = refs[0]
         level = record["fields"]["CEFR"]
-        record["examples"] = goethe_source_examples.filter_examples(
-            level, record["examples"], allowed_examples,
-        )
+        source_levels = {
+            ref.split("-", 1)[0]
+            for ref in record["source_refs"]
+            if ref.split("-", 1)[0] in LEVELS
+        } or {level}
+        allowed_keys = {
+            key
+            for source_level in source_levels
+            for key in allowed_examples[source_level]
+        }
+        record["examples"] = [
+            example for example in record["examples"]
+            if goethe_source_examples.sentence_key(example.get("de", "")) in allowed_keys
+        ]
+        for example in record["examples"]:
+            if not example.get("audio"):
+                example["audio"] = reusable_example_audio.get(
+                    goethe_source_examples.sentence_key(example.get("de", "")), ""
+                )
         goethe_examples.render_fields(record["fields"], record["examples"])
         record["deck"] = LEVEL_DECK[level]
         record["tags"] = sorted(
@@ -1189,11 +1652,35 @@ def build_manifest() -> dict[str, Any]:
             | {LEVEL_TAG[level], "goethe::migration::completed"}
             | {f"goethe::wortgruppe::{category}" for category in record["categories"]}
     )
+    apply_supplemental_examples(records, supplemental_examples)
+    for record in records.values():
+        goethe_examples.render_fields(record["fields"], record["examples"])
     apply_translation_cache(records)
     apply_b1_data_overrides(records)
-    review_policy.apply_all(records)
-    audit_state = apply_final_english_audit(records, audit_manifest, audit_state)
-    finalize_template_fields(records)
+    review_policy.apply_all(records, strict_reflexive=True)
+    if audit_manifest is not None:
+        audit_state = apply_final_english_audit(records, audit_manifest, audit_state)
+        for key, record in records.items():
+            for example in record["examples"]:
+                if not example.get("audio"):
+                    sentence = goethe_source_examples.sentence_key(example.get("de", ""))
+                    example["audio"] = (
+                        record_example_audio.get(key, {}).get(sentence)
+                        or reusable_example_audio.get(sentence, "")
+                    )
+    for key, record in records.items():
+        initial_lemma, initial_audio = record_word_audio.get(key, ("", ""))
+        if (
+            not record["fields"].get("WordAudio")
+            and initial_audio
+            and lemma_key(record["fields"].get("Lemma", "")) == lemma_key(initial_lemma)
+        ):
+            record["fields"]["WordAudio"] = initial_audio
+    if finalize_production:
+        finalize_template_fields(records)
+    else:
+        for record in records.values():
+            render_examples(record)
     manifest = {
         "version": MANIFEST_VERSION, "records": records, "deletions": deletions,
         "live_preimage": live_preimage,
@@ -1514,7 +2001,7 @@ def apply_translation_cache(records: dict[str, dict[str, Any]]) -> None:
 def apply_b1_english_overrides(records: dict[str, dict[str, Any]]) -> None:
     """Retained for forensic compatibility; never part of the build path.
 
-    B1 legacy overrides are triage hints only. The v4 audit is the sole
+    B1 legacy overrides are triage hints only. The v5 audit is the sole
     English authority, and ``build_manifest`` deliberately does not call this
     helper.
     """
@@ -1575,6 +2062,20 @@ def command_build(_: argparse.Namespace) -> None:
         "untranslated_examples": sum(not example["en"] for record in records for example in record["examples"]),
         "source_counts": manifest["source_counts"], "ambiguous": len(manifest["ambiguous"]),
         "english_audit": manifest["english_audit"],
+    }, ensure_ascii=False, indent=2))
+
+
+def command_build_audit_input(_: argparse.Namespace) -> None:
+    """Write an ignored source-canonical snapshot before English re-audit."""
+    manifest = build_manifest(finalize_production=False)
+    save_manifest(manifest)
+    records = list(manifest["records"].values())
+    print(json.dumps({
+        "manifest": str(MANIFEST),
+        "records": len(records),
+        "new": sum(record["is_new"] for record in records),
+        "delete": len(manifest["deletions"]),
+        "english_audit_ready": manifest["english_audit"].get("ready", False),
     }, ensure_ascii=False, indent=2))
 
 
@@ -1646,7 +2147,11 @@ def finalize_template_fields(records: dict[str, dict[str, Any]]) -> None:
     for record in records.values():
         render_examples(record)
     try:
-        production_policy.apply_policy(records, strict=True)
+        production_policy.apply_policy(
+            records,
+            strict=True,
+            semantic_strict=True,
+        )
     except production_policy.PolicyError as exc:
         raise CompletionError(f"production template policy failed: {exc}") from exc
     for record in records.values():
@@ -1741,13 +2246,13 @@ def validate_manifest(
         audit_state = manifest.get("english_audit", {})
         if not (
             isinstance(audit_state, dict)
-            and audit_state.get("schema_version") == 4
+            and audit_state.get("schema_version") == english_audit.SCHEMA_VERSION
             and audit_state.get("ready") is True
             and audit_state.get("entries") == scope.EXPECTED_NOTES
             and audit_state.get("uncovered") == 0
         ):
             reason = audit_state.get("error", "missing audit status") if isinstance(audit_state, dict) else "missing audit status"
-            raise CompletionError(f"English audit v4 is not ready: {reason}")
+            raise CompletionError(f"English audit v5 is not ready: {reason}")
     return summary
 
 
@@ -2036,6 +2541,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("build").set_defaults(func=command_build)
+    sub.add_parser("build-audit-input").set_defaults(func=command_build_audit_input)
     sub.add_parser("translate").set_defaults(func=command_translate)
     sub.add_parser("dry-run").set_defaults(func=command_dry_run)
     apply = sub.add_parser("apply")

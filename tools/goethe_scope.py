@@ -16,7 +16,7 @@ LEVEL_DECK = {
 }
 LEVEL_TAG = {level: f"goethe::level::{level.casefold()}" for level in LEVELS}
 
-EXPECTED_NOTES_BY_LEVEL = {"A1": 818, "A2": 707, "B1": 1968}
+EXPECTED_NOTES_BY_LEVEL = {"A1": 804, "A2": 680, "B1": 1941}
 EXPECTED_CARDS_BY_LEVEL = {
     level: count * 2 for level, count in EXPECTED_NOTES_BY_LEVEL.items()
 }
@@ -25,16 +25,15 @@ EXPECTED_CARDS = sum(EXPECTED_CARDS_BY_LEVEL.values())
 
 DUDEN_ROWS = {"A1": 685, "A2": 1147, "B1": 2969}
 
-# Canonical post-v4 example inventory. The reviewed A1 Lieblings- note retains
-# its additional Goethe A2 usage sentence; all reviewed same-line A1 clauses
-# are represented as complete examples.
-EXPECTED_EXAMPLE_OCCURRENCES_BY_LEVEL = {"A1": 956, "A2": 1015, "B1": 2308}
+# Canonical post-v5 example inventory, including one reviewed supplemental
+# sentence for every source-only Wortgruppen note and reviewed sense splits.
+EXPECTED_EXAMPLE_OCCURRENCES_BY_LEVEL = {"A1": 1579, "A2": 1002, "B1": 2499}
 EXPECTED_EXAMPLE_OCCURRENCES = sum(EXPECTED_EXAMPLE_OCCURRENCES_BY_LEVEL.values())
-EXPECTED_EMPTY_NOTES_BY_LEVEL = {"A1": 53, "A2": 4, "B1": 199}
+EXPECTED_EMPTY_NOTES_BY_LEVEL = {"A1": 0, "A2": 0, "B1": 0}
 EXPECTED_EMPTY_NOTES = sum(EXPECTED_EMPTY_NOTES_BY_LEVEL.values())
-EXPECTED_UNIQUE_EXAMPLE_AUDIO = 4118
+EXPECTED_UNIQUE_EXAMPLE_AUDIO = 4922
 
-ENGLISH_AUDITED_TAG = "goethe::quality::english_audited::v4::british"
+ENGLISH_AUDITED_TAG = "goethe::quality::english_audited::v5::american"
 ENGLISH_REVIEW_TAG = "goethe::quality::translation_review_needed"
 
 

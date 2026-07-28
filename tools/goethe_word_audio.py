@@ -42,6 +42,7 @@ DUDEN_EXTRA_DIR = WORK_AUDIO / "duden"
 EDGE_DIR = WORK_AUDIO / "edge"
 COMMONS_DIR = WORK_AUDIO / "commons"
 WIKTIONARY_DIR = WORK_AUDIO / "wiktionary"
+PROTECTED_DIR = ROOT / "audio" / "protected"
 MANIFEST_PATH = STATE / "manifest.json"
 DUDEN_EXTRA_INDEX = STATE / "duden_extra.json"
 DUDEN_RESCAN_REPORT = STATE / "duden_fallback_rescan.json"
@@ -54,7 +55,7 @@ COMMONS_ATTRIBUTION_PATH = ROOT / "review" / "wikimedia_commons_audio_attributio
 MODEL = "Goethe Werkstatt"
 PARENT_DECK = "Goethe Institute"
 LEVEL_DECKS = scope.LEVEL_DECK
-MANIFEST_SCHEMA_VERSION = 4
+MANIFEST_SCHEMA_VERSION = 6
 DUDEN_RESOLVER_VERSION = 2
 APPLY_CONFIRMATION = "APPLY_GOETHE_WORD_AUDIO"
 ROLLBACK_CONFIRMATION = "ROLLBACK_GOETHE_WORD_AUDIO"
@@ -101,6 +102,52 @@ def now_utc() -> str:
 
 def clean(value: Any) -> str:
     return unicodedata.normalize("NFC", re.sub(r"\s+", " ", html.unescape(str(value or ""))).strip())
+
+
+def _dedupe_spoken_atoms(values: list[str]) -> list[str]:
+    result: list[str] = []
+    seen: set[str] = set()
+    for value in values:
+        value = clean(value)
+        key = value.casefold()
+        if value and key not in seen:
+            seen.add(key)
+            result.append(value)
+    return result
+
+
+def canonical_spoken_identity(value: Any) -> str:
+    """Return the literal pronunciation represented by bound notation.
+
+    Boundary hyphens describe how a Goethe headword combines with another
+    word; they are not spoken.  Repeated alternatives such as ``weg/weg-``
+    likewise represent one pronunciation, not two recordings.
+    """
+    text = clean(value)
+    if not text:
+        return ""
+    atoms = [
+        clean(atom).strip("-")
+        for atom in re.split(r"\s*(?:/|,)\s*", text)
+    ]
+    return ", ".join(_dedupe_spoken_atoms(atoms))
+
+
+def bound_spoken_identity(value: Any) -> str | None:
+    """Return an authoritative identity when notation only repeats one stem."""
+    text = clean(value)
+    if not re.search(r"(?:^|[/\s])-[^\s/]|[^\s/]-(?:$|[/\s])", text):
+        return None
+    atoms = [
+        clean(atom).strip("-")
+        for atom in re.split(r"\s*/\s*", text)
+    ]
+    unique = _dedupe_spoken_atoms(atoms)
+    if len({atom.casefold() for atom in unique}) == 1:
+        return unique[0]
+    if text.endswith("-") and "/" not in text:
+        return canonical_spoken_identity(text)
+    return None
 
 
 def console_text(value: Any, encoding: str | None = None) -> str:
@@ -202,14 +249,20 @@ def compatible_gender(source: str, target: str) -> bool:
 
 
 def note_variants(fields: dict[str, str]) -> set[str]:
-    values = [fields.get("Lemma", "")] + completion.split_answers(fields.get("AcceptedAnswersDE", ""))
-    return {item for value in values for item in completion.source_variants(value)}
+    return set(completion.source_variants(fields.get("Lemma", "")))
 
 
 def source_matches(fields: dict[str, str], item: dict[str, Any], variants: set[str] | None = None) -> bool:
     word = completion.lemma_key(clean(item.get("word", "")))
     target = completion.lemma_key(clean(fields.get("Lemma", "")))
     if word in {"der", "die", "das"} and target not in {"der", "die", "das"}:
+        return False
+    expected_spoken = bound_spoken_identity(fields.get("Lemma", ""))
+    if (
+        expected_spoken is not None
+        and canonical_spoken_identity(item.get("word", "")).casefold()
+        != expected_spoken.casefold()
+    ):
         return False
     if word not in (variants if variants is not None else note_variants(fields)):
         return False
@@ -256,14 +309,34 @@ def validate_duden_rows(level: str, rows: list[dict[str, Any]]) -> None:
                 raise WordAudioError(f"{level} Duden manifest row {expected_row} has invalid audio hash")
 
 
+def load_level_duden_rows(level: str, root: Path) -> list[dict[str, Any]]:
+    candidates = [
+        root / "words_manifest.jsonl",
+        *sorted(
+            (root / "duden_checkpoints").glob("*/words_manifest.jsonl"),
+            reverse=True,
+        ),
+    ]
+    errors: list[WordAudioError] = []
+    for path in candidates:
+        rows = duden.load_existing_manifest_rows(path)
+        try:
+            validate_duden_rows(level, rows)
+        except WordAudioError as exc:
+            errors.append(exc)
+            continue
+        return rows
+    if errors:
+        raise errors[0]
+    raise WordAudioError(f"{level} Duden manifest is missing")
+
+
 def load_duden_catalog() -> tuple[dict[tuple[str, int], dict[str, Any]], dict[str, list[dict[str, Any]]]]:
     by_ref: dict[tuple[str, int], dict[str, Any]] = {}
     ok_index: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for level in scope.LEVELS:
         root = ROOT / "audio" / level.lower()
-        manifest_path = root / "words_manifest.jsonl"
-        rows = duden.load_existing_manifest_rows(manifest_path)
-        validate_duden_rows(level, rows)
+        rows = load_level_duden_rows(level, root)
         for item in rows:
             row = dict(item)
             row.update({"level": level, "path": str(root / "words" / item["output_filename"])})
@@ -337,7 +410,7 @@ def matched_main_rows(fields: dict[str, str], by_ref: dict[tuple[str, int], dict
 
 def load_override_policy() -> dict[str, Any]:
     data = load_json(OVERRIDES_PATH, {"schema_version": 1, "spoken_text": {}})
-    if data.get("schema_version") not in {1, 2}:
+    if data.get("schema_version") not in {1, 2, 3}:
         raise WordAudioError("unsupported spoken-text override schema")
     return data
 
@@ -350,51 +423,147 @@ def load_overrides() -> dict[str, str]:
     return {clean(key): clean(value) for key, value in values.items() if clean(value)}
 
 
-def load_provider_pins() -> dict[str, dict[str, str]]:
-    data = load_override_policy()
-    values = data.get("provider_pins", {})
+def load_spoken_equivalences() -> dict[str, dict[str, Any]]:
+    values = load_override_policy().get("spoken_equivalences", {})
     if not isinstance(values, dict):
-        raise WordAudioError("provider_pins must be an object")
-    pins: dict[str, dict[str, str]] = {}
+        raise WordAudioError("spoken_equivalences must be an object")
+    equivalences: dict[str, dict[str, Any]] = {}
+    for raw_source_id, raw in values.items():
+        source_id = clean(raw_source_id)
+        if not source_id or not isinstance(raw, dict):
+            raise WordAudioError(f"invalid spoken equivalence: {raw_source_id!r}")
+        expected_lemma = clean(raw.get("expected_lemma", ""))
+        spoken_texts = raw.get("spoken_texts")
+        reason = clean(raw.get("reason", ""))
+        if (
+            not expected_lemma
+            or not isinstance(spoken_texts, list)
+            or not spoken_texts
+            or any(not isinstance(value, str) or not clean(value) for value in spoken_texts)
+            or not reason
+        ):
+            raise WordAudioError(f"incomplete spoken equivalence: {source_id}")
+        equivalences[source_id] = {
+            "expected_lemma": expected_lemma,
+            "spoken_texts": list(dict.fromkeys(clean(value) for value in spoken_texts)),
+            "reason": reason,
+        }
+    return equivalences
+
+
+def load_protected_audio() -> dict[str, dict[str, Any]]:
+    data = load_override_policy()
+    schema = data.get("schema_version")
+    values = data.get("protected_audio", {})
+    if schema in {1, 2}:
+        values = {
+            source_ref: {
+                **raw,
+                "provider": "commons",
+                "spoken_text": raw.get("expected_lemma", ""),
+            }
+            for source_ref, raw in data.get("provider_pins", {}).items()
+        }
+    if not isinstance(values, dict):
+        raise WordAudioError("protected_audio must be an object")
+    protected: dict[str, dict[str, Any]] = {}
     for source_id, raw in values.items():
-        if not isinstance(raw, dict) or raw.get("provider") != "wiktionary":
-            raise WordAudioError(f"unsupported provider pin: {source_id}")
-        pin = {str(key): clean(value) for key, value in raw.items()}
-        if not pin.get("expected_lemma") or not pin.get("title") or not re.fullmatch(r"[0-9a-f]{64}", pin.get("sha256", "")):
-            raise WordAudioError(f"incomplete provider pin: {source_id}")
-        pins[clean(source_id)] = pin
-    return pins
+        if not isinstance(raw, dict) or raw.get("provider") not in {"commons", "local"}:
+            raise WordAudioError(f"unsupported protected audio: {source_id}")
+        item = {
+            str(key): clean(value) if isinstance(value, str) else value
+            for key, value in raw.items()
+        }
+        required = ("expected_lemma", "spoken_text", "sha256", "reason")
+        if any(not item.get(name) for name in required) or not re.fullmatch(r"[0-9a-f]{64}", item["sha256"]):
+            raise WordAudioError(f"incomplete protected audio: {source_id}")
+        if item["provider"] == "commons":
+            if not item.get("title") or (
+                schema == 3 and not re.fullmatch(r"[0-9a-f]{40}", item.get("original_sha1", ""))
+            ):
+                raise WordAudioError(f"incomplete protected audio: {source_id}")
+        elif not isinstance(item.get("size"), int) or item["size"] <= 0:
+            raise WordAudioError(f"incomplete protected audio: {source_id}")
+        protected[clean(source_id)] = item
+    return protected
 
 
-def provider_pin_for(fields: dict[str, str], pins: dict[str, dict[str, str]]) -> dict[str, str] | None:
-    source_id = clean(fields.get("SourceID", ""))
-    pin = pins.get(source_id)
-    if pin and clean(fields.get("Lemma", "")) != pin["expected_lemma"]:
-        raise WordAudioError(f"provider pin lemma mismatch: {source_id}")
-    return pin
+def protected_audio_for(
+    fields: dict[str, str], protected: dict[str, dict[str, Any]]
+) -> dict[str, Any] | None:
+    refs = [clean(fields.get("SourceID", "")), *split_refs(fields.get("SourceRefs", ""))]
+    matches = [(ref, protected[ref]) for ref in dict.fromkeys(refs) if ref in protected]
+    if not matches:
+        return None
+    lemma = clean(fields.get("Lemma", ""))
+    for source_ref, item in matches:
+        if lemma != item["expected_lemma"]:
+            raise WordAudioError(f"protected audio lemma mismatch: {source_ref}")
+    hashes = {item["sha256"] for _, item in matches}
+    if len(hashes) > 1:
+        raise WordAudioError(f"conflicting protected audio for {fields.get('Lemma')!r}")
+    source_ref, item = matches[0]
+    return {**item, "source_ref": source_ref}
+
+
+def validate_protected_commons(protected: dict[str, Any], candidate: dict[str, Any]) -> None:
+    if candidate.get("title") != protected["title"]:
+        raise WordAudioError("protected Commons title changed")
+    if protected.get("original_sha1") and candidate.get("original_sha1") != protected["original_sha1"]:
+        raise WordAudioError("protected Commons source revision changed")
+    if candidate.get("sha256") and candidate["sha256"] != protected["sha256"]:
+        raise WordAudioError("protected Commons MP3 changed")
+
+
+def local_protected_entry(
+    fields: dict[str, str], content: bytes, *, reason: str
+) -> dict[str, Any]:
+    lemma = clean(fields.get("Lemma", ""))
+    reason = clean(reason)
+    if not lemma or not clean(fields.get("SourceID", "")) or not reason:
+        raise WordAudioError("local protected audio requires lemma, SourceID, and reason")
+    duden.validate_mp3_bytes(content[:16])
+    return {
+        "provider": "local",
+        "expected_lemma": lemma,
+        "spoken_text": lemma,
+        "sha256": hashlib.sha256(content).hexdigest(),
+        "size": len(content),
+        "reason": reason,
+    }
 
 
 UNSAFE_SPOKEN_RE = re.compile(r"[()/;]|\d|(^|\s)[A-Za-zÄÖÜäöüß]\.|,$")
 
 
 def spoken_text(fields: dict[str, str], raw: str, overrides: dict[str, str]) -> str:
+    physical_identity = bound_spoken_identity(fields.get("Lemma", ""))
+    if physical_identity is not None:
+        return physical_identity
     refs = split_refs(fields.get("SourceRefs", ""))
     for key in refs + [fields.get("Lemma", ""), raw]:
         if clean(key) in overrides:
-            return overrides[clean(key)]
+            return canonical_spoken_identity(overrides[clean(key)])
     value = clean(raw)
     if value.endswith("-") or UNSAFE_SPOKEN_RE.search(value):
         raise WordAudioError(f"missing spoken-text override for {fields.get('Lemma')!r}")
     if not value:
         raise WordAudioError("empty spoken text")
-    return value
+    return canonical_spoken_identity(value)
 
 
 def media_name(source: str, sha256: str) -> str:
     return f"_goethe_word_{source}_{sha256}.mp3"
 
 
-def assignment(source: str, path: Path, *, detail: dict[str, Any]) -> dict[str, Any]:
+def assignment(
+    source: str,
+    path: Path,
+    *,
+    detail: dict[str, Any],
+    lemma_identity: str = "",
+    spoken_text: str = "",
+) -> dict[str, Any]:
     size, sha256 = validate_audio(path, detail.get("sha256"), detail.get("size"))
     return {
         "source": source,
@@ -402,8 +571,44 @@ def assignment(source: str, path: Path, *, detail: dict[str, Any]) -> dict[str, 
         "size": size,
         "sha256": sha256,
         "media_name": media_name("duden" if source.startswith("duden") else source, sha256),
+        "lemma_identity": clean(lemma_identity),
+        "spoken_text": clean(spoken_text),
         "detail": detail,
     }
+
+
+def preserve_matching_media_name(item: dict[str, Any], audio: dict[str, Any]) -> dict[str, Any]:
+    match = re.fullmatch(r"\[sound:([^\[\]]+)\]", clean(item.get("old_word_audio", "")))
+    if match and match.group(1).casefold().endswith(f"_{audio['sha256']}.mp3"):
+        audio["media_name"] = match.group(1)
+    return audio
+
+
+def validate_assignment_identity(
+    fields: dict[str, str],
+    item: dict[str, Any],
+) -> None:
+    assignment_item = item.get("assignment") or {}
+    expected_lemma = clean(fields.get("Lemma", ""))
+    assigned_lemma = clean(
+        assignment_item.get("lemma_identity") or item.get("lemma_identity")
+    )
+    if assigned_lemma != expected_lemma:
+        raise WordAudioError(
+            f"audio lemma identity mismatch: {assigned_lemma!r} != {expected_lemma!r}"
+        )
+    expected_spoken = bound_spoken_identity(expected_lemma)
+    assigned_spoken = clean(
+        assignment_item.get("spoken_text") or item.get("spoken_text")
+    )
+    if (
+        expected_spoken is not None
+        and canonical_spoken_identity(assigned_spoken).casefold()
+        != expected_spoken.casefold()
+    ):
+        raise WordAudioError(
+            f"audio spoken identity mismatch: {assigned_spoken!r} != {expected_spoken!r}"
+        )
 
 
 def level_counts(records: dict[int, dict[str, Any]]) -> dict[str, dict[str, int]]:
@@ -460,23 +665,37 @@ def validate_manifest(manifest: dict[str, Any], *, require_prepared: bool = Fals
     if require_prepared:
         if not manifest.get("prepared_utc"):
             raise WordAudioError("word-audio manifest is not prepared")
-        missing = [item.get("note_id") for item in notes.values() if not item.get("assignment")]
+        prepared_scope = manifest.get("prepared_scope", "full")
+        if prepared_scope == "protected":
+            required = [item for item in notes.values() if item.get("protected_audio")]
+        elif prepared_scope == "targeted":
+            prepared_ids = set(map(int, manifest.get("prepared_note_ids", [])))
+            if not prepared_ids:
+                raise WordAudioError("targeted word-audio manifest has no note IDs")
+            required = [
+                item for item in notes.values()
+                if int(item.get("note_id", 0)) in prepared_ids
+            ]
+        else:
+            required = list(notes.values())
+        missing = [item.get("note_id") for item in required if not item.get("assignment")]
         if missing:
-            raise WordAudioError(f"word-audio manifest has unassigned notes: {missing[:5]}")
+            label = "protected notes" if prepared_scope == "protected" else "notes"
+            raise WordAudioError(f"word-audio manifest has unassigned {label}: {missing[:5]}")
 
 
 def build_audit() -> dict[str, Any]:
     records = live_records()
     by_ref, ok_index = load_duden_catalog()
     overrides = load_overrides()
-    provider_pins = load_provider_pins()
+    protected_audio = load_protected_audio()
     notes: dict[str, Any] = {}
     missing_overrides: list[dict[str, Any]] = []
     counts: Counter[str] = Counter()
     for note_id, record in sorted(records.items()):
         fields = record["fields"]
-        pin = provider_pin_for(fields, provider_pins)
-        item = None if pin else select_local_duden(fields, by_ref, ok_index)
+        protected = protected_audio_for(fields, protected_audio)
+        item = None if protected else select_local_duden(fields, by_ref, ok_index)
         note_item: dict[str, Any] = {
             "note_id": note_id,
             "card_ids": [int(card["cardId"]) for card in record["cards"]],
@@ -487,28 +706,51 @@ def build_audit() -> dict[str, Any]:
             "source_refs": split_refs(fields.get("SourceRefs", "")),
             "source_signature": source_signature(fields),
             "old_word_audio": fields.get("WordAudio", ""),
+            "lemma_identity": clean(fields["Lemma"]),
         }
-        if pin:
-            note_item["provider_pin"] = pin
-        if item:
-            note_item["assignment"] = assignment("duden_local", Path(item["path"]), detail=item)
-            counts["duden_local"] += 1
-        else:
-            raw = source_word(fields, by_ref)
-            try:
-                text = spoken_text(fields, raw, overrides)
+        if protected:
+            note_item["protected_audio"] = protected
+        raw = (
+            protected["spoken_text"]
+            if protected
+            else item["word"] if item
+            else source_word(fields, by_ref)
+        )
+        try:
+            text = spoken_text(fields, raw, overrides)
+            note_item["spoken_text"] = text
+            if item:
+                note_item["assignment"] = assignment(
+                    "duden_local",
+                    Path(item["path"]),
+                    detail=item,
+                    lemma_identity=note_item["lemma_identity"],
+                    spoken_text=text,
+                )
+                counts["duden_local"] += 1
+            elif protected and protected["provider"] == "local":
+                path = PROTECTED_DIR / f"{protected['sha256']}.mp3"
+                note_item["assignment"] = assignment(
+                    "protected",
+                    path,
+                    detail=protected,
+                    lemma_identity=note_item["lemma_identity"],
+                    spoken_text=text,
+                )
+                counts["protected"] += 1
+            else:
                 note_item.update({"spoken_text": text, "request_key": canonical_hash({
                     "text": text, "pos": fields.get("POS", ""), "gender": fields.get("Gender", "")
-                }), "skip_duden": bool(pin and pin["provider"] != "duden")})
+                }), "skip_duden": bool(protected)})
                 counts["needs_prepare"] += 1
-                if pin:
-                    counts["provider_pin"] += 1
-            except WordAudioError as exc:
-                note_item["error"] = str(exc)
-                missing_overrides.append({
-                    "note_id": note_id, "lemma": fields["Lemma"], "source_refs": note_item["source_refs"], "raw": raw,
-                })
-                counts["missing_override"] += 1
+                if protected:
+                    counts["protected_audio"] += 1
+        except WordAudioError as exc:
+            note_item["error"] = str(exc)
+            missing_overrides.append({
+                "note_id": note_id, "lemma": fields["Lemma"], "source_refs": note_item["source_refs"], "raw": raw,
+            })
+            counts["missing_override"] += 1
         notes[str(note_id)] = note_item
     manifest = {
         "schema_version": MANIFEST_SCHEMA_VERSION,
@@ -529,6 +771,7 @@ def build_audit() -> dict[str, Any]:
         "notes": notes,
     }
     validate_manifest(manifest)
+    manifest["live_audio_audit"] = live_assignment_mismatches(records, manifest)
     STATE.mkdir(parents=True, exist_ok=True)
     atomic_json(MANIFEST_PATH, manifest)
     return manifest
@@ -546,12 +789,16 @@ def request_groups(manifest: dict[str, Any]) -> dict[str, dict[str, Any]]:
         })
         group["note_ids"].append(item["note_id"])
         group["skip_duden"] = group["skip_duden"] and bool(item.get("skip_duden"))
-        if item.get("provider_pin"):
-            group["required_providers"].add(item["provider_pin"]["provider"])
+        if item.get("protected_audio"):
+            group["required_providers"].add(item["protected_audio"]["provider"])
+            current = group.get("protected_audio")
+            if current and current["sha256"] != item["protected_audio"]["sha256"]:
+                raise WordAudioError(f"conflicting protected audio for {group['spoken_text']!r}")
+            group["protected_audio"] = item["protected_audio"]
     for group in groups.values():
         providers = group.pop("required_providers")
         if len(providers) > 1:
-            raise WordAudioError(f"conflicting provider pins for {group['spoken_text']!r}")
+            raise WordAudioError(f"conflicting protected audio for {group['spoken_text']!r}")
         group["required_provider"] = next(iter(providers), None)
     return groups
 
@@ -833,12 +1080,37 @@ async def prepare_commons(groups: dict[str, dict[str, Any]], duden_index: dict[s
     if index.get("config") != COMMONS_CONFIG:
         raise WordAudioError("existing Commons index uses a different configuration")
     items = index.setdefault("items", {})
-    targets = {key: group for key, group in groups.items() if duden_index["items"].get(key, {}).get("status") != "ok"}
-    pending = {key: group for key, group in targets.items() if items.get(key, {}).get("status") not in {"ok", "unresolved", "ambiguous"}}
+    targets = {
+        key: group for key, group in groups.items()
+        if group.get("required_provider") == "commons"
+        or duden_index["items"].get(key, {}).get("status") != "ok"
+    }
+    pending = {}
+    for key, group in targets.items():
+        cached = items.get(key, {})
+        protected = group.get("protected_audio")
+        if protected:
+            reusable = (
+                cached.get("status") == "ok"
+                and cached.get("title") == protected["title"]
+                and cached.get("sha256") == protected["sha256"]
+                and (
+                    not protected.get("original_sha1")
+                    or cached.get("original_sha1") == protected["original_sha1"]
+                )
+            )
+        else:
+            reusable = cached.get("status") in {"ok", "unresolved", "ambiguous"}
+        if not reusable:
+            pending[key] = group
     title_map: dict[str, str] = {}
     for key, group in pending.items():
-        for extension in ("ogg", "oga", "wav", "mp3"):
-            title_map[commons_title(group["spoken_text"], extension)] = key
+        protected = group.get("protected_audio")
+        if protected:
+            title_map[protected["title"]] = key
+        else:
+            for extension in ("ogg", "oga", "wav", "mp3"):
+                title_map[commons_title(group["spoken_text"], extension)] = key
     pages_by_key: dict[str, list[dict[str, Any]]] = defaultdict(list)
     timeout = aiohttp.ClientTimeout(total=90)
     async with aiohttp.ClientSession(timeout=timeout) as session:
@@ -853,9 +1125,12 @@ async def prepare_commons(groups: dict[str, dict[str, Any]], duden_index: dict[s
         for number, (key, group) in enumerate(sorted(pending.items()), 1):
             accepted: list[dict[str, Any]] = []
             rejected: list[str] = []
+            protected = group.get("protected_audio")
             for page in pages_by_key.get(key, []):
                 candidate, reason = evaluate_commons_page(page, group)
                 if candidate:
+                    if protected:
+                        validate_protected_commons(protected, candidate)
                     accepted.append(candidate)
                 else:
                     rejected.append(f"{page.get('title')}: {reason}")
@@ -870,6 +1145,8 @@ async def prepare_commons(groups: dict[str, dict[str, Any]], duden_index: dict[s
                     target = COMMONS_DIR / f"{key}.mp3"
                     size, sha256 = await download_commons(session, result, target)
                     result.update({"status": "ok", "path": str(target), "size": size, "sha256": sha256})
+                    if protected:
+                        validate_protected_commons(protected, result)
                     await asyncio.sleep(COMMONS_CONFIG["download_interval_seconds"])
             else:
                 result = {"status": "unresolved", "request_key": key, "spoken_text": group["spoken_text"], "reason": "; ".join(rejected[:5]) or "no exact Commons pronunciation file", "checked_utc": now_utc()}
@@ -1070,21 +1347,160 @@ def word_audio_provider(value: str) -> str:
     return "unknown"
 
 
+def word_audio_sha256(value: str) -> str:
+    match = re.search(r"_([0-9a-f]{64})\.mp3(?:\]|$)", clean(value), flags=re.I)
+    return match.group(1).lower() if match else ""
+
+
+def cached_audio_provenance() -> dict[str, dict[str, list[str]]]:
+    entries: dict[str, dict[str, set[str]]] = defaultdict(
+        lambda: {"spoken_texts": set(), "providers": set()}
+    )
+
+    def add(sha256: Any, spoken: Any, provider: str) -> None:
+        digest = clean(sha256).lower()
+        text = clean(spoken)
+        if re.fullmatch(r"[0-9a-f]{64}", digest) and text:
+            entries[digest]["spoken_texts"].add(text)
+            entries[digest]["providers"].add(provider)
+
+    by_ref, _ = load_duden_catalog()
+    for row in by_ref.values():
+        if row.get("status") == "ok":
+            add(row.get("sha256"), row.get("word"), "duden")
+    for provider, path in (
+        ("edge", EDGE_INDEX),
+        ("commons", COMMONS_INDEX),
+        ("wiktionary", WIKTIONARY_INDEX),
+    ):
+        for item in load_json(path, {"items": {}}).get("items", {}).values():
+            if isinstance(item, dict) and item.get("status") == "ok":
+                add(item.get("sha256"), item.get("spoken_text"), provider)
+    for item in load_protected_audio().values():
+        add(item.get("sha256"), item.get("spoken_text"), "protected")
+    return {
+        digest: {
+            "spoken_texts": sorted(value["spoken_texts"], key=str.casefold),
+            "providers": sorted(value["providers"]),
+        }
+        for digest, value in entries.items()
+    }
+
+
+def live_assignment_mismatches(
+    records: dict[int, dict[str, Any]],
+    manifest: dict[str, Any],
+    provenance: dict[str, dict[str, list[str]]] | None = None,
+    equivalences: dict[str, dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    provenance = provenance if provenance is not None else cached_audio_provenance()
+    equivalences = equivalences if equivalences is not None else load_spoken_equivalences()
+    semantic_mismatches: list[dict[str, Any]] = []
+    semantic_candidates: list[dict[str, Any]] = []
+    reviewed_equivalences: list[dict[str, Any]] = []
+    provider_drift: list[dict[str, Any]] = []
+    unknown_provenance: list[dict[str, Any]] = []
+    valid = 0
+    for note_id, record in sorted(records.items()):
+        item = manifest["notes"].get(str(note_id))
+        if not item:
+            continue
+        fields = record["fields"]
+        current_sha = word_audio_sha256(fields.get("WordAudio", ""))
+        expected = clean(
+            (item.get("assignment") or {}).get("spoken_text")
+            or item.get("spoken_text")
+        )
+        desired_sha = clean((item.get("assignment") or {}).get("sha256")).lower()
+        if not current_sha or not expected:
+            continue
+        if desired_sha and current_sha == desired_sha:
+            valid += 1
+            continue
+        current = provenance.get(current_sha)
+        row = {
+            "note_id": note_id,
+            "lemma": fields.get("Lemma", ""),
+            "source_id": fields.get("SourceID", ""),
+            "expected_spoken_text": expected,
+            "current_sha256": current_sha,
+            "desired_sha256": desired_sha,
+            "current_provenance": current or {},
+        }
+        if not current:
+            unknown_provenance.append(row)
+            continue
+        expected_key = canonical_spoken_identity(expected).casefold()
+        current_keys = {
+            canonical_spoken_identity(value).casefold()
+            for value in current.get("spoken_texts", [])
+        }
+        equivalence = equivalences.get(clean(fields.get("SourceID", "")))
+        if equivalence and clean(fields.get("Lemma", "")) != equivalence["expected_lemma"]:
+            raise WordAudioError(
+                f"spoken equivalence lemma mismatch: {fields.get('SourceID', '')}"
+            )
+        equivalent_keys = {
+            canonical_spoken_identity(value).casefold()
+            for value in (equivalence or {}).get("spoken_texts", [])
+        }
+        if expected_key in current_keys:
+            provider_drift.append(row)
+        elif equivalence and current_keys & equivalent_keys:
+            row["reason"] = equivalence["reason"]
+            reviewed_equivalences.append(row)
+        elif bound_spoken_identity(fields.get("Lemma", "")) is not None:
+            row["reason"] = "cached spoken text does not match current lemma"
+            semantic_mismatches.append(row)
+        else:
+            row["reason"] = "transcript differs; manual semantic review required"
+            semantic_candidates.append(row)
+    return {
+        "checked": len(records),
+        "valid": valid,
+        "semantic_mismatches": semantic_mismatches,
+        "semantic_candidates": semantic_candidates,
+        "reviewed_equivalences": reviewed_equivalences,
+        "provider_drift": provider_drift,
+        "unknown_provenance": unknown_provenance,
+    }
+
+
 def assignment_provider(item: dict[str, Any]) -> str:
     source = item["assignment"]["source"]
     return "duden" if source.startswith("duden") else source
 
 
 def validate_change_set(manifest: dict[str, Any]) -> None:
+    semantic_repairs = {
+        int(item["note_id"])
+        for item in manifest.get("live_audio_audit", {}).get(
+            "semantic_mismatches", []
+        )
+    }
+    prepared_ids = (
+        set(map(int, manifest.get("prepared_note_ids", [])))
+        if manifest.get("prepared_scope") == "targeted"
+        else None
+    )
     for item in manifest["notes"].values():
+        if prepared_ids is not None and int(item["note_id"]) not in prepared_ids:
+            continue
+        if not item.get("assignment"):
+            continue
         desired = f"[sound:{item['assignment']['media_name']}]"
         old = item.get("old_word_audio", "")
         if old == desired:
             continue
         old_provider = word_audio_provider(old)
         desired_provider = assignment_provider(item)
-        pin = item.get("provider_pin")
-        if pin and desired_provider == pin["provider"]:
+        protected = item.get("protected_audio")
+        if protected and (
+            desired_provider == protected["provider"]
+            or protected["provider"] == "local" and desired_provider == "protected"
+        ):
+            continue
+        if int(item["note_id"]) in semantic_repairs:
             continue
         if old_provider in {"commons", "wiktionary", "edge"} and desired_provider == "duden":
             continue
@@ -1096,12 +1512,14 @@ def validate_change_set(manifest: dict[str, Any]) -> None:
 def write_duden_rescan_report(manifest: dict[str, Any], duden_index: dict[str, Any]) -> dict[str, Any]:
     rows = []
     for item in manifest["notes"].values():
+        if not item.get("assignment"):
+            continue
         old_provider = word_audio_provider(item.get("old_word_audio", ""))
-        if old_provider == "duden" and not item.get("provider_pin"):
+        if old_provider == "duden" and not item.get("protected_audio"):
             continue
         duden_item = duden_index.get("items", {}).get(item.get("request_key", ""), {})
         desired_provider = assignment_provider(item)
-        if item.get("provider_pin"):
+        if item.get("protected_audio"):
             decision = "intentional_fallback"
         elif desired_provider == "duden":
             decision = "duden_audio_found"
@@ -1126,7 +1544,7 @@ def write_duden_rescan_report(manifest: dict[str, Any], duden_index: dict[str, A
                 "status", "reason", "match_method", "duden_page_url", "duden_audio_url",
                 "file_id", "candidate_pages", "resolver_version",
             )},
-            "provider_pin": item.get("provider_pin"),
+            "protected_audio": item.get("protected_audio"),
         })
     report = {
         "schema_version": 1, "created_utc": now_utc(),
@@ -1141,50 +1559,138 @@ def write_duden_rescan_report(manifest: dict[str, Any], duden_index: dict[str, A
     return report
 
 
-def finalize_manifest(manifest: dict[str, Any], duden_index: dict[str, Any], commons_index: dict[str, Any], edge_index: dict[str, Any], wiktionary_index: dict[str, Any] | None = None) -> dict[str, Any]:
+def finalize_manifest(
+    manifest: dict[str, Any],
+    duden_index: dict[str, Any],
+    commons_index: dict[str, Any],
+    edge_index: dict[str, Any],
+    wiktionary_index: dict[str, Any] | None = None,
+    *,
+    note_ids: list[int] | None = None,
+) -> dict[str, Any]:
     validate_manifest(manifest)
     wiktionary_index = wiktionary_index or {"items": {}}
     counts: Counter[str] = Counter()
-    for item in manifest["notes"].values():
+    selected = set(map(int, note_ids or []))
+    items = [
+        item for item in manifest["notes"].values()
+        if not selected or int(item["note_id"]) in selected
+    ]
+    for item in items:
         if item.get("assignment"):
             counts[item["assignment"]["source"]] += 1
             continue
         key = item["request_key"]
-        pin = item.get("provider_pin")
-        if pin:
-            pinned = wiktionary_index["items"].get(key, {})
+        protected = item.get("protected_audio")
+        if protected:
+            pinned = commons_index["items"].get(key, {})
             if pinned.get("status") != "ok":
-                raise WordAudioError(f"pinned Wiktionary audio is unavailable: {item['lemma']}")
-            if pinned.get("title") != pin["title"] or pinned.get("sha256") != pin["sha256"]:
-                raise WordAudioError(f"pinned Wiktionary provenance mismatch: {item['lemma']}")
-            item["assignment"] = assignment("wiktionary", Path(pinned["path"]), detail=pinned)
-            counts["wiktionary"] += 1
+                raise WordAudioError(f"protected Commons audio is unavailable: {item['lemma']}")
+            validate_protected_commons(protected, pinned)
+            item["assignment"] = preserve_matching_media_name(
+                item,
+                assignment(
+                    "commons",
+                    Path(pinned["path"]),
+                    detail=pinned,
+                    lemma_identity=item["lemma_identity"],
+                    spoken_text=item["spoken_text"],
+                ),
+            )
+            counts["commons"] += 1
             continue
         extra = duden_index["items"].get(key, {})
         if extra.get("status") == "ok":
-            item["assignment"] = assignment("duden_extra", Path(extra["path"]), detail=extra)
+            item["assignment"] = assignment(
+                "duden_extra",
+                Path(extra["path"]),
+                detail=extra,
+                lemma_identity=item["lemma_identity"],
+                spoken_text=item["spoken_text"],
+            )
         elif commons_index["items"].get(key, {}).get("status") == "ok":
             commons = commons_index["items"][key]
-            item["assignment"] = assignment("commons", Path(commons["path"]), detail=commons)
+            item["assignment"] = assignment(
+                "commons",
+                Path(commons["path"]),
+                detail=commons,
+                lemma_identity=item["lemma_identity"],
+                spoken_text=item["spoken_text"],
+            )
         elif wiktionary_index["items"].get(key, {}).get("status") == "ok":
             wiktionary = wiktionary_index["items"][key]
-            item["assignment"] = assignment("wiktionary", Path(wiktionary["path"]), detail=wiktionary)
+            item["assignment"] = assignment(
+                "wiktionary",
+                Path(wiktionary["path"]),
+                detail=wiktionary,
+                lemma_identity=item["lemma_identity"],
+                spoken_text=item["spoken_text"],
+            )
         else:
             edge_id = edge_audio_id(item["spoken_text"])
             edge = edge_index["items"].get(edge_id)
             if not edge or edge.get("status") != "ok":
                 raise WordAudioError(f"missing Edge result for {item['lemma']!r}")
-            item["assignment"] = assignment("edge", Path(edge["path"]), detail=edge)
+            item["assignment"] = assignment(
+                "edge",
+                Path(edge["path"]),
+                detail=edge,
+                lemma_identity=item["lemma_identity"],
+                spoken_text=item["spoken_text"],
+            )
         counts[item["assignment"]["source"]] += 1
-    expected = len(manifest["notes"])
-    if expected != manifest.get("note_count") or sum(counts.values()) != expected:
+    expected = len(items)
+    if sum(counts.values()) != expected:
         raise WordAudioError("prepared manifest is incomplete")
-    manifest.update({"prepared_utc": now_utc(), "counts": dict(counts), "missing_overrides": []})
+    manifest.update({
+        "prepared_utc": now_utc(),
+        "prepared_scope": "targeted" if selected else "full",
+        "prepared_note_ids": sorted(selected),
+        "counts": dict(counts),
+        "missing_overrides": [],
+    })
     validate_manifest(manifest, require_prepared=True)
     validate_change_set(manifest)
     report = write_duden_rescan_report(manifest, duden_index)
     manifest["duden_rescan_report"] = str(DUDEN_RESCAN_REPORT)
     manifest["duden_rescan_counts"] = report["counts"]
+    atomic_json(MANIFEST_PATH, manifest)
+    return manifest
+
+
+def finalize_protected_manifest(
+    manifest: dict[str, Any], commons_index: dict[str, Any]
+) -> dict[str, Any]:
+    validate_manifest(manifest)
+    counts: Counter[str] = Counter()
+    for item in manifest["notes"].values():
+        protected = item.get("protected_audio")
+        if not protected:
+            continue
+        if not item.get("assignment"):
+            pinned = commons_index.get("items", {}).get(item["request_key"], {})
+            if pinned.get("status") != "ok":
+                raise WordAudioError(f"protected Commons audio is unavailable: {item['lemma']}")
+            validate_protected_commons(protected, pinned)
+            item["assignment"] = preserve_matching_media_name(
+                item,
+                assignment(
+                    "commons",
+                    Path(pinned["path"]),
+                    detail=pinned,
+                    lemma_identity=item["lemma_identity"],
+                    spoken_text=item["spoken_text"],
+                ),
+            )
+        counts[item["assignment"]["source"]] += 1
+    manifest.update({
+        "prepared_utc": now_utc(),
+        "prepared_scope": "protected",
+        "counts": dict(counts),
+        "missing_overrides": [],
+    })
+    validate_manifest(manifest, require_prepared=True)
+    validate_change_set(manifest)
     atomic_json(MANIFEST_PATH, manifest)
     return manifest
 
@@ -1203,21 +1709,73 @@ async def command_prepare(_: argparse.Namespace) -> None:
             f"{len(manifest['missing_overrides'])} notes need spoken-text overrides; see {MANIFEST_PATH}"
         )
     groups = request_groups(manifest)
+    target_ids = selected_ids(manifest, "full", _.note_id) if _.note_id else []
+    if target_ids:
+        target_set = set(target_ids)
+        groups = {
+            key: group for key, group in groups.items()
+            if target_set.intersection(map(int, group["note_ids"]))
+        }
+    if _.scope == "protected":
+        if target_ids:
+            raise WordAudioError("--note-id cannot be combined with protected scope")
+        groups = {
+            key: group for key, group in groups.items()
+            if group.get("protected_audio")
+        }
+        duden_index = {
+            "items": {
+                key: {"status": "unresolved", "reason": "protected audio excludes Duden"}
+                for key in groups
+            }
+        }
+        commons_index = await prepare_commons(groups, duden_index)
+        final = finalize_protected_manifest(manifest, commons_index)
+        print(json.dumps({
+            "notes": len(selected_ids(final, "protected")),
+            "scope": "protected",
+            "counts": final["counts"],
+        }, ensure_ascii=False, indent=2))
+        return
     duden_index = await prepare_duden(groups, refresh_negative=_.refresh_duden_fallbacks)
     commons_index = await prepare_commons(groups, duden_index)
     wiktionary_index = await prepare_wiktionary(groups, duden_index, commons_index)
     edge_index = await prepare_edge(groups, duden_index, commons_index, wiktionary_index)
-    final = finalize_manifest(manifest, duden_index, commons_index, edge_index, wiktionary_index)
-    print(json.dumps({"notes": final["note_count"], "counts": final["counts"]}, ensure_ascii=False, indent=2))
+    final = finalize_manifest(
+        manifest,
+        duden_index,
+        commons_index,
+        edge_index,
+        wiktionary_index,
+        note_ids=target_ids,
+    )
+    print(json.dumps({
+        "notes": len(target_ids) if target_ids else final["note_count"],
+        "scope": final["prepared_scope"],
+        "counts": final["counts"],
+    }, ensure_ascii=False, indent=2))
 
 
 def command_audit(_: argparse.Namespace) -> None:
     manifest = build_audit()
-    print(json.dumps({
+    live_audio = manifest["live_audio_audit"]
+    payload = {
         "notes": manifest["note_count"], "counts": manifest["counts"],
         "levels": manifest["level_counts"], "duden_rows": manifest["duden_rows"],
         "missing_overrides": manifest["missing_overrides"], "manifest": str(MANIFEST_PATH),
-    }, ensure_ascii=False, indent=2))
+        "live_audio_audit": {
+            "valid": live_audio["valid"],
+            "semantic_mismatches": live_audio["semantic_mismatches"],
+            "semantic_candidates": len(live_audio["semantic_candidates"]),
+            "reviewed_equivalences": len(live_audio["reviewed_equivalences"]),
+            "provider_drift": len(live_audio["provider_drift"]),
+            "unknown_provenance": len(live_audio["unknown_provenance"]),
+        },
+    }
+    print(console_text(
+        json.dumps(payload, ensure_ascii=False, indent=2),
+        getattr(sys.stdout, "encoding", None),
+    ))
 
 
 def command_commons_audit(_: argparse.Namespace) -> None:
@@ -1231,6 +1789,20 @@ def all_reviews(card_ids: list[int]) -> dict[str, Any]:
     for batch in gw.chunks(sorted(card_ids), 250):
         reviews.update(gw.anki("getReviewsOfCards", cards=batch))
     return reviews
+
+
+def appended_review_cards(
+    before: dict[str, list[dict[str, Any]]],
+    after: dict[str, list[dict[str, Any]]],
+) -> set[str]:
+    appended: set[str] = set()
+    for card_id, old in before.items():
+        current = after.get(card_id)
+        if current is None or current[:len(old)] != old:
+            raise WordAudioError("review history changed")
+        if len(current) > len(old):
+            appended.add(card_id)
+    return appended
 
 
 def schedule_projection(card: dict[str, Any]) -> dict[str, Any]:
@@ -1308,7 +1880,7 @@ def pilot_ids(manifest: dict[str, Any]) -> list[int]:
     ]
     selected: list[int] = []
     for item in changes:
-        if item.get("provider_pin") or item.get("lemma") == "alle":
+        if item.get("protected_audio") or item.get("lemma") == "alle":
             selected.append(int(item["note_id"]))
     seen: set[tuple[str, str, bool]] = set()
     for level in scope.LEVELS:
@@ -1331,8 +1903,47 @@ def pilot_ids(manifest: dict[str, Any]) -> list[int]:
     return selected[:PILOT_SIZE]
 
 
-def selected_ids(manifest: dict[str, Any], scope: str) -> list[int]:
-    return pilot_ids(manifest) if scope == "pilot" else sorted(map(int, manifest["notes"]))
+def selected_ids(
+    manifest: dict[str, Any],
+    scope: str,
+    note_ids: list[int] | None = None,
+) -> list[int]:
+    if scope == "pilot":
+        selected = pilot_ids(manifest)
+    elif scope == "protected":
+        selected = sorted(
+            int(item["note_id"])
+            for item in manifest["notes"].values()
+            if item.get("protected_audio")
+        )
+    else:
+        selected = sorted(map(int, manifest["notes"]))
+    if note_ids:
+        requested = sorted(set(map(int, note_ids)))
+        missing = sorted(set(requested) - set(selected))
+        if missing:
+            raise WordAudioError(
+                f"requested note IDs are not present in {scope} scope: {missing}"
+            )
+        return requested
+    return selected
+
+
+def require_prepared_scope(
+    manifest: dict[str, Any],
+    requested: str,
+    note_ids: list[int] | None = None,
+) -> None:
+    prepared = manifest.get("prepared_scope", "full")
+    if prepared == "protected" and requested != "protected":
+        raise WordAudioError("manifest is prepared only for protected audio")
+    if prepared == "targeted":
+        allowed = set(map(int, manifest.get("prepared_note_ids", [])))
+        requested_ids = set(map(int, note_ids or []))
+        if not requested_ids or not requested_ids <= allowed:
+            raise WordAudioError(
+                "targeted manifest requires an explicit prepared --note-id subset"
+            )
 
 
 def verify_baseline(records: dict[int, dict[str, Any]], snapshot: dict[str, Any], manifest: dict[str, Any]) -> None:
@@ -1342,10 +1953,14 @@ def verify_baseline(records: dict[int, dict[str, Any]], snapshot: dict[str, Any]
         before = snapshot["notes"][str(note_id)]
         if record["model"] != before["model"] or record["tags"] != before["tags"]:
             raise WordAudioError(f"live note changed since snapshot: {note_id}")
+        item = manifest["notes"][str(note_id)]
+        if item.get("assignment"):
+            validate_assignment_identity(record["fields"], item)
         for name, value in before["fields"].items():
             actual = record["fields"].get(name, "")
             if name == "WordAudio":
-                expected = f"[sound:{manifest['notes'][str(note_id)]['assignment']['media_name']}]"
+                audio = manifest["notes"][str(note_id)].get("assignment")
+                expected = f"[sound:{audio['media_name']}]" if audio else value
                 if actual in (value, expected):
                     continue
             if actual != value:
@@ -1384,9 +1999,10 @@ def command_apply(args: argparse.Namespace) -> None:
     if not args.dry_run and args.confirmation != APPLY_CONFIRMATION:
         raise WordAudioError(f"confirmation must equal {APPLY_CONFIRMATION}")
     manifest, snapshot = load_ready()
+    require_prepared_scope(manifest, args.scope, args.note_id)
     records = live_records()
     verify_baseline(records, snapshot, manifest)
-    ids = selected_ids(manifest, args.scope)
+    ids = selected_ids(manifest, args.scope, args.note_id)
     changes = [note_id for note_id in ids if records[note_id]["fields"].get("WordAudio", "") != f"[sound:{manifest['notes'][str(note_id)]['assignment']['media_name']}]" ]
     print(json.dumps({"scope": args.scope, "selected": len(ids), "changes": len(changes), "dry_run": args.dry_run}, indent=2))
     if args.dry_run:
@@ -1402,16 +2018,31 @@ def command_apply(args: argparse.Namespace) -> None:
         raise
 
 
-def verify_state(scope: str, expect_baseline: bool = False) -> dict[str, Any]:
+def verify_state(
+    scope: str,
+    expect_baseline: bool = False,
+    note_ids: list[int] | None = None,
+) -> dict[str, Any]:
     manifest, snapshot = load_ready()
+    require_prepared_scope(manifest, scope, note_ids)
     records = live_records()
-    selected = set(selected_ids(manifest, scope))
+    selected = set(selected_ids(manifest, scope, note_ids))
+    targeted = scope == "protected" or bool(note_ids)
     if set(records) != set(map(int, snapshot["notes"])):
         raise WordAudioError("note ID set changed")
-    for note_id, record in records.items():
+    checked_records = (
+        {note_id: records[note_id] for note_id in selected}
+        if targeted
+        else records
+    )
+    for note_id, record in checked_records.items():
         before = snapshot["notes"][str(note_id)]
         if record["model"] != before["model"] or record["tags"] != before["tags"]:
             raise WordAudioError(f"model or tags changed: {note_id}")
+        validate_assignment_identity(
+            record["fields"],
+            manifest["notes"][str(note_id)],
+        )
         for name, value in before["fields"].items():
             actual = record["fields"].get(name, "")
             if name == "WordAudio" and not expect_baseline and note_id in selected:
@@ -1421,11 +2052,41 @@ def verify_state(scope: str, expect_baseline: bool = False) -> dict[str, Any]:
             if actual != expected:
                 raise WordAudioError(f"field changed unexpectedly: note={note_id} field={name}")
     cards = [card for record in records.values() for card in record["cards"]]
-    current_cards = {str(card["cardId"]): schedule_projection(card) for card in cards}
-    if current_cards != snapshot["cards"]:
-        raise WordAudioError("card IDs or scheduling changed")
-    reviews = all_reviews([int(card["cardId"]) for card in cards])
-    if canonical_hash(reviews) != snapshot["reviews_sha256"]:
+    checked_cards = (
+        [card for card in cards if int(card["note"]) in selected]
+        if targeted
+        else cards
+    )
+    checked_card_ids = {str(card["cardId"]) for card in checked_cards}
+    current_cards = {str(card["cardId"]): schedule_projection(card) for card in checked_cards}
+    expected_cards = {
+        card_id: value for card_id, value in snapshot["cards"].items()
+        if card_id in checked_card_ids
+    }
+    reviews = all_reviews([int(card["cardId"]) for card in checked_cards])
+    concurrent_review_notes: list[int] = []
+    if targeted:
+        expected_reviews = {
+            card_id: value for card_id, value in snapshot["reviews"].items()
+            if card_id in checked_card_ids
+        }
+        appended = appended_review_cards(expected_reviews, reviews)
+        card_notes = {str(card["cardId"]): int(card["note"]) for card in checked_cards}
+        reviewed_notes = {card_notes[card_id] for card_id in appended}
+        changed_cards = {
+            card_id for card_id in checked_card_ids
+            if current_cards.get(card_id) != expected_cards.get(card_id)
+        }
+        changed_notes = {card_notes[card_id] for card_id in changed_cards}
+        if changed_notes - reviewed_notes:
+            raise WordAudioError("card IDs or scheduling changed")
+        concurrent_review_notes = sorted(changed_notes)
+        reviews_match = True
+    else:
+        if current_cards != expected_cards:
+            raise WordAudioError("card IDs or scheduling changed")
+        reviews_match = canonical_hash(reviews) == snapshot["reviews_sha256"]
+    if not reviews_match:
         raise WordAudioError("review history changed")
     if model_snapshot() != snapshot["model"]:
         raise WordAudioError("model fields/templates/styling changed")
@@ -1435,22 +2096,99 @@ def verify_state(scope: str, expect_baseline: bool = False) -> dict[str, Any]:
             retrieved = gw.anki("retrieveMediaFile", filename=item["media_name"])
             if not retrieved or hashlib.sha256(base64.b64decode(retrieved)).hexdigest() != item["sha256"]:
                 raise WordAudioError(f"missing or corrupt Anki media: {item['media_name']}")
-    return {"scope": scope, "baseline": expect_baseline, "notes": len(records), "cards": len(cards), "verified": len(selected)}
+    return {
+        "scope": scope,
+        "baseline": expect_baseline,
+        "notes": len(records),
+        "cards": len(cards),
+        "verified": len(selected),
+        "concurrent_review_notes": concurrent_review_notes,
+    }
 
 
 def command_verify(args: argparse.Namespace) -> None:
-    print(json.dumps(verify_state(args.scope, expect_baseline=args.baseline), indent=2))
+    print(json.dumps(
+        verify_state(
+            args.scope,
+            expect_baseline=args.baseline,
+            note_ids=args.note_id,
+        ),
+        indent=2,
+    ))
+
+
+def command_protect_current(args: argparse.Namespace) -> None:
+    require_anki()
+    notes = gw.anki("notesInfo", notes=[args.note_id])
+    if len(notes) != 1 or int(notes[0]["noteId"]) != args.note_id:
+        raise WordAudioError(f"note not found: {args.note_id}")
+    note = notes[0]
+    if note.get("modelName") != MODEL:
+        raise WordAudioError(f"note uses unexpected model: {args.note_id}")
+    fields = field_values(note)
+    match = re.fullmatch(r"\[sound:([^\[\]]+\.mp3)\]", clean(fields.get("WordAudio", "")), flags=re.I)
+    if not match:
+        raise WordAudioError("WordAudio must contain exactly one MP3 sound reference")
+    encoded = gw.anki("retrieveMediaFile", filename=match.group(1))
+    if not encoded:
+        raise WordAudioError(f"Anki media is missing: {match.group(1)}")
+    content = base64.b64decode(encoded)
+    entry = local_protected_entry(fields, content, reason=args.reason)
+    target = PROTECTED_DIR / f"{entry['sha256']}.mp3"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    if target.exists():
+        validate_audio(target, entry["sha256"], entry["size"])
+    else:
+        fd, tmp_name = tempfile.mkstemp(dir=target.parent, suffix=".mp3.tmp")
+        try:
+            with os.fdopen(fd, "wb") as handle:
+                handle.write(content)
+            os.replace(tmp_name, target)
+        except Exception:
+            if os.path.exists(tmp_name):
+                os.unlink(tmp_name)
+            raise
+    policy = load_override_policy()
+    if policy.get("schema_version") != 3:
+        raise WordAudioError("protected-audio policy must be migrated to schema 3")
+    values = policy.setdefault("protected_audio", {})
+    source_id = clean(fields.get("SourceID", ""))
+    current = values.get(source_id)
+    if current and current.get("sha256") != entry["sha256"]:
+        raise WordAudioError(f"protected audio already exists for {source_id}")
+    values[source_id] = entry
+    atomic_json(OVERRIDES_PATH, policy)
+    print(json.dumps({
+        "note_id": args.note_id,
+        "source_id": source_id,
+        "lemma": fields["Lemma"],
+        "sha256": entry["sha256"],
+        "path": str(target),
+    }, ensure_ascii=False, indent=2))
 
 
 def command_rollback(args: argparse.Namespace) -> None:
     if args.confirmation != ROLLBACK_CONFIRMATION:
         raise WordAudioError(f"confirmation must equal {ROLLBACK_CONFIRMATION}")
     manifest, snapshot = load_ready()
+    require_prepared_scope(manifest, args.scope, args.note_id)
     records = live_records()
-    ids = [note_id for note_id in selected_ids(manifest, args.scope) if records[note_id]["fields"].get("WordAudio", "") != snapshot["notes"][str(note_id)]["fields"].get("WordAudio", "")]
+    ids = [
+        note_id
+        for note_id in selected_ids(manifest, args.scope, args.note_id)
+        if records[note_id]["fields"].get("WordAudio", "")
+        != snapshot["notes"][str(note_id)]["fields"].get("WordAudio", "")
+    ]
     old = {note_id: snapshot["notes"][str(note_id)]["fields"].get("WordAudio", "") for note_id in ids}
     update_word_audio(ids, old)
-    print(json.dumps(verify_state(args.scope, expect_baseline=True), indent=2))
+    print(json.dumps(
+        verify_state(
+            args.scope,
+            expect_baseline=True,
+            note_ids=args.note_id,
+        ),
+        indent=2,
+    ))
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -1462,6 +2200,8 @@ def build_parser() -> argparse.ArgumentParser:
     prepare.add_argument("--confirm-duden-usage", action="store_true", required=True)
     prepare.add_argument("--confirm-commons-license", action="store_true")
     prepare.add_argument("--offline", action="store_true", help="Resume from the existing audit manifest without AnkiConnect.")
+    prepare.add_argument("--scope", choices=("protected", "full"), default="full")
+    prepare.add_argument("--note-id", type=int, action="append")
     prepare.add_argument(
         "--refresh-duden-fallbacks", action="store_true",
         help="Re-probe cached non-Duden results through the exact Duden lexeme sitemap.",
@@ -1469,17 +2209,24 @@ def build_parser() -> argparse.ArgumentParser:
     prepare.set_defaults(func=command_prepare)
     sub.add_parser("snapshot").set_defaults(func=command_snapshot)
     apply = sub.add_parser("apply")
-    apply.add_argument("--scope", choices=("pilot", "full"), default="full")
+    apply.add_argument("--scope", choices=("pilot", "protected", "full"), default="full")
     apply.add_argument("--dry-run", action="store_true")
     apply.add_argument("--confirmation")
+    apply.add_argument("--note-id", type=int, action="append")
     apply.set_defaults(func=command_apply)
     verify = sub.add_parser("verify")
-    verify.add_argument("--scope", choices=("pilot", "full"), default="full")
+    verify.add_argument("--scope", choices=("pilot", "protected", "full"), default="full")
     verify.add_argument("--baseline", action="store_true")
+    verify.add_argument("--note-id", type=int, action="append")
     verify.set_defaults(func=command_verify)
+    protect = sub.add_parser("protect-current")
+    protect.add_argument("--note-id", type=int, required=True)
+    protect.add_argument("--reason", required=True)
+    protect.set_defaults(func=command_protect_current)
     rollback = sub.add_parser("rollback")
-    rollback.add_argument("--scope", choices=("pilot", "full"), default="full")
+    rollback.add_argument("--scope", choices=("pilot", "protected", "full"), default="full")
     rollback.add_argument("--confirmation", required=True)
+    rollback.add_argument("--note-id", type=int, action="append")
     rollback.set_defaults(func=command_rollback)
     return parser
 

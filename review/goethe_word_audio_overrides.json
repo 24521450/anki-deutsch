@@ -1,7 +1,27 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "spoken_text": {
     "B1-WG-0161": "hell, dunkel",
+    "A2-0277": "einig",
+    "A2-0378": "geehrt",
+    "A2-0459": "hin, hin, hin",
+    "A1-84887177194": "erst",
+    "A2-MAIN-0374": "Geburts",
+    "B1-MAIN-0304": "beid",
+    "B1-MAIN-0352": "besonder",
+    "B1-MAIN-1527": "link",
+    "B1-MAIN-2170": "selb",
+    "B1-MAIN-2545": "un",
+    "B1-MAIN-2559": "unter",
+    "B1-MAIN-2777": "was für ein",
+    "B1-MAIN-0918": "früher, früher",
+    "B1-MAIN-1168": "hier, hier",
+    "B1-MAIN-1173": "hinter, hinter",
+    "B1-MAIN-2352": "Stück, Stück",
+    "B1-MAIN-2724": "vorbei, vorbei",
+    "B1-MAIN-2796": "weiter, weiter",
+    "B1-MAIN-2826": "wieder, wieder",
+    "B1-MAIN-2947": "zusammen, zusammen",
     "B1-MAIN-0060": "aller",
     "B1-MAIN-0399": "Bio",
     "B1-MAIN-0549": "Doppel",
@@ -35,7 +55,7 @@
     "B1-MAIN-2248": "Spezial",
     "B1-MAIN-2466": "Traum",
     "B1-MAIN-2727": "vorder",
-    "B1-MAIN-2786": "weg, weg",
+    "B1-MAIN-2786": "weg",
     "B1-MAIN-2882": "Zahncreme, Zahnpasta",
     "B1-MAIN-2900": "Zeug, zeug",
     "B1-WG-0033": "Chat, Chatroom",
@@ -80,7 +100,7 @@
     "B1-WG-0268": "einundzwanzig",
     "B1-WG-0269": "dreißig bis neunzig",
     "B1-WG-0270": "einhundert",
-    "B1-WG-0271": "einhunderteins",
+    "B1-WG-0271": "hunderteins",
     "B1-WG-0272": "zweihundert",
     "B1-WG-0273": "eintausend",
     "B1-WG-0274": "eine Million",
@@ -108,7 +128,7 @@
     "meist-": "meist",
     "nächst-": "nächst",
     "unser-": "unser",
-    "ander-": "anderen",
+    "ander-": "ander",
     "welch-": "welch",
     "(ein)hundert": "einhundert",
     "(ein)tausend": "eintausend",
@@ -153,13 +173,108 @@
     "3. drittens": "drittens",
     "4. viertens": "viertens"
   },
-  "provider_pins": {
+  "protected_audio": {
+    "A1-MAIN-0016": {
+      "provider": "commons",
+      "expected_lemma": "anbieten",
+      "spoken_text": "anbieten",
+      "title": "File:De-anbieten.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/3/37/De-anbieten.ogg",
+      "original_sha1": "fc1a30dd4f903eb358281427f6b0399ff48ad70c",
+      "sha256": "1da87a5284c047bfedad73641c7eb539706afc620e459df3ceda68d3a3d99458",
+      "reason": "User-reviewed pronunciation; keep this recording across all later audio refreshes."
+    },
+    "A1-84886454592": {
+      "provider": "commons",
+      "expected_lemma": "Dame",
+      "spoken_text": "Dame",
+      "title": "File:De-Dame.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/8/89/De-Dame.ogg",
+      "original_sha1": "1861ee8e832921e3ef71265f0ea5331cfaf7038c",
+      "sha256": "5889a1973487c2fd0e74b2c246257cc2033454eaaf0bb3e5b3479cd091cab5a9",
+      "reason": "User-reviewed pronunciation; keep this recording across all later audio refreshes."
+    },
+    "A1-84886454915": {
+      "provider": "commons",
+      "expected_lemma": "lieben",
+      "spoken_text": "lieben",
+      "title": "File:De-lieben2.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/6/6d/De-lieben2.ogg",
+      "original_sha1": "87f64c2624623d38fad0acff7e7b47a390fb1da4",
+      "sha256": "6b40361ca7e51442c93d999f4beb6c6b5da2aedd79d2ce49559a6f60dea8fb18",
+      "reason": "User-reviewed pronunciation; keep this recording across all later audio refreshes."
+    },
     "A2-0521": {
-      "provider": "wiktionary",
+      "provider": "commons",
       "expected_lemma": "Keller",
+      "spoken_text": "Keller",
       "title": "File:De-Keller.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/a/a1/De-Keller.ogg",
+      "original_sha1": "efca7fdc1a6d579253d7e23883c4df0915fab9e9",
       "sha256": "f95670fae06724c95ec55e33089a014793b57f504821006c7809d5c1a1ec935f",
       "reason": "Intentional user-reviewed Wiktionary pronunciation; do not replace with Duden."
+    },
+    "A2-0610": {
+      "provider": "commons",
+      "expected_lemma": "Magen",
+      "spoken_text": "Magen",
+      "title": "File:De-Magen.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/6/61/De-Magen.ogg",
+      "original_sha1": "904e1186595a9140d1d68383f56fd3e17d9a31b4",
+      "sha256": "90fdee6bb68f4db7737f6d3e87e0d50e3a8e192df9ec144f5363c458244c30ce",
+      "reason": "User-reviewed pronunciation; keep this recording across all later audio refreshes."
+    },
+    "A2-0647": {
+      "provider": "commons",
+      "expected_lemma": "meistens",
+      "spoken_text": "meistens",
+      "title": "File:De-meistens.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/7/76/De-meistens.ogg",
+      "original_sha1": "20342c2d021ee1fa2cff537ac4e5918881ba94d5",
+      "sha256": "4b5f46a85ed6fe6e49fd488b14cd5a320add0476ab57a4717fa19a0e5b1da8fc",
+      "reason": "Corrects the previous meist recording; keep the exact user-reviewed meistens pronunciation."
+    },
+    "A2-1107": {
+      "provider": "commons",
+      "expected_lemma": "warm",
+      "spoken_text": "warm",
+      "title": "File:De-warm.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/0/04/De-warm.ogg",
+      "original_sha1": "44089c47df2519d260e1f655aa054874160a5d7f",
+      "sha256": "9e9a267ae2ee02652dd0fd3f5ad0db86402cd957ad3c69e6a956dffb7486487a",
+      "reason": "User-reviewed pronunciation; keep this recording across all later audio refreshes."
+    }
+  },
+  "spoken_equivalences": {
+    "A2-0614": {
+      "expected_lemma": "leidtun",
+      "spoken_texts": ["leid tun"],
+      "reason": "The separated spelling has the same pronunciation as the joined source lemma."
+    },
+    "B1-MAIN-2060": {
+      "expected_lemma": "Sauce",
+      "spoken_texts": ["Soße"],
+      "reason": "The source row and accepted answers explicitly include both regional lexical variants."
+    },
+    "B1-WG-0185": {
+      "expected_lemma": "Bund",
+      "spoken_texts": ["bunt"],
+      "reason": "The cached transcript is an orthographic homophone of the physical lemma."
+    },
+    "B1-MAIN-2744-IMAGINE": {
+      "expected_lemma": "sich etwas vorstellen",
+      "spoken_texts": ["vorstellen"],
+      "reason": "WordAudio intentionally pronounces the dictionary verb; the reflexive argument frame remains on the card."
+    },
+    "A2-MAIN-0282-REMIND": {
+      "expected_lemma": "jemanden erinnern",
+      "spoken_texts": ["erinnern"],
+      "reason": "WordAudio intentionally pronounces the dictionary verb; the object frame remains on the card."
+    },
+    "B1-MAIN-2871-SURPRISE": {
+      "expected_lemma": "jemanden wundern",
+      "spoken_texts": ["wundern"],
+      "reason": "WordAudio intentionally pronounces the dictionary verb; the object frame remains on the card."
     }
   }
 }

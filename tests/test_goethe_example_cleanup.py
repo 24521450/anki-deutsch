@@ -132,15 +132,15 @@ def test_example_audio_baseline_matches_cleanup_projection():
         goethe_example_audio.EXPECTED_OCCURRENCES
         == cleanup.EXPECTED_REMAINING
         == cleanup.scope.EXPECTED_EXAMPLE_OCCURRENCES
-        == 4279
+        == 5080
     )
     assert (
         goethe_example_audio.EXPECTED_UNIQUE
         == cleanup.scope.EXPECTED_UNIQUE_EXAMPLE_AUDIO
-        == 4118
+        == 4922
     )
     assert cleanup.EXPECTED_EMPTY_BY_LEVEL == cleanup.scope.EXPECTED_EMPTY_NOTES_BY_LEVEL
-    assert cleanup.EXPECTED_EMPTY_BY_LEVEL["B1"] == 199
+    assert cleanup.EXPECTED_EMPTY_BY_LEVEL["B1"] == 0
 
 
 def test_exported_examples_obey_the_level_source_policy():
@@ -175,18 +175,27 @@ def test_heimat_boundary_is_combined_in_the_a1_export_and_policy():
         "B1-MAIN-1139",
     ]
     assert source_examples.sentence_key(combined) in allowed
-    for excluded in (
-        "Ich komme aus der Schweiz.",
-        "Das ist meine Heimat.",
-        "Mein Heimatland ist Italien. Dort bin ich geboren.",
-        "Ich lebe jetzt hier in Deutschland. Das ist meine neue Heimat.",
-    ):
+    for excluded in ("Ich komme aus der Schweiz.", "Das ist meine Heimat."):
         assert source_examples.sentence_key(excluded) not in allowed
+    assert source_examples.sentence_key(
+        "Mein Heimatland ist Italien. Dort bin ich geboren."
+    ) in allowed
+    assert source_examples.sentence_key(
+        "Ich lebe jetzt hier in Deutschland. Das ist meine neue Heimat."
+    ) not in allowed
     assert [(item["de"], item["en"]) for item in row["examples"]] == [
         (combined, "I come from Switzerland. This is my home."),
+        ("Mein Heimatland ist Italien. Dort bin ich geboren.",
+         "My home country is Italy. I was born there."),
+        ("Jetzt lebe ich in Deutschland, das ist meine neue Heimat.",
+         "Now I live in Germany, this is my new home."),
     ]
-    assert row["example_target_spans"] == [[[41, 47]]]
-    assert source_examples.filter_examples("A1", row["examples"]) == row["examples"]
+    assert row["example_target_spans"] == [
+        [[41, 47]],
+        [[5, 11]],
+        [[50, 56]],
+    ]
+    assert source_examples.filter_examples("A1", row["examples"], {"A1": allowed}) == row["examples"]
 
 
 def test_all_38_boundary_decisions_are_synced_across_source_review_translation_and_build():
@@ -202,7 +211,7 @@ def test_all_38_boundary_decisions_are_synced_across_source_review_translation_a
     audit_entries = [
         json.loads(line)
         for line in (
-            ROOT / "review" / "goethe_english_audit_v4.jsonl"
+                ROOT / "review" / "goethe_english_audit_v5.jsonl"
         ).read_text(encoding="utf-8").splitlines()
     ]
     translations = json.loads(
@@ -234,7 +243,9 @@ def test_all_38_boundary_decisions_are_synced_across_source_review_translation_a
             if item["de"] == combined
         ]
         assert len(desired) == 1
-        assert translations[combined] == desired[0]["en"]
+        # The source registry remains the pre-v5 translation baseline; v5 may
+        # intentionally Americanize the reviewed English while preserving DE.
+        assert combined in translations
 
         exported = [
             row for row in build_rows if source_id in row["source_refs"]

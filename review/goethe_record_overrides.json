@@ -26,6 +26,25 @@
     "A1-84886455145": {"set": {"Lemma": "treffen", "AcceptedAnswersDE": "sich treffen", "AcceptedFullAnswersDE": "sich treffen|s treffen"}},
     "A1-84886455189": {"set": {"Lemma": "vorstellen", "AcceptedAnswersDE": "sich vorstellen", "AcceptedFullAnswersDE": "sich vorstellen|s vorstellen"}},
     "A1-84886455201": {"set": {"Lemma": "waschen", "AcceptedAnswersDE": "sich waschen", "AcceptedFullAnswersDE": "sich waschen|s waschen"}},
+    "A2-0246": {
+      "set": {
+        "AcceptedAnswersDE": "eintragen|sich eintragen",
+        "AcceptedFullAnswersDE": "eintragen|sich eintragen|s eintragen"
+      }
+    },
+    "A2-1059": {
+      "set": {
+        "AcceptedAnswersDE": "verbieten|verboten sein",
+        "AcceptedFullAnswersDE": "verbieten|verboten sein",
+        "FormOrVariantNote": "combined source headword: verbieten / verboten sein"
+      }
+    },
+    "A2-MAIN-1066": {
+      "set": {
+        "AcceptedAnswersDE": "vorn|vorne",
+        "AcceptedFullAnswersDE": "vorn|vorne"
+      }
+    },
     "A1-84887177194": {"set": {"FormOrVariantNote": "ordinal number", "AcceptedAnswersDE": "erste", "AcceptedFullAnswersDE": "erste"}},
     "A1-84887177195": {"set": {"FormOrVariantNote": "ordinal number", "AcceptedAnswersDE": "zweite", "AcceptedFullAnswersDE": "zweite"}},
     "A1-84887177196": {"set": {"FormOrVariantNote": "ordinal number", "AcceptedAnswersDE": "dritte", "AcceptedFullAnswersDE": "dritte"}},
