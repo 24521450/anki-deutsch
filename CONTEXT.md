@@ -14,3 +14,7 @@ A German response treated as correct when grading a card. It does not imply pron
 **Spoken form**:
 The exact German text represented by a note's pronunciation audio. It is the lemma unless a different form has been explicitly reviewed.
 _Avoid_: Accepted answer
+
+**Removed or merged note**:
+A note that no longer exists as an independent deck entry because its useful content was merged into a surviving note or because the entry was excluded from the canonical lexeme inventory.
+_Avoid_: Deleted word
