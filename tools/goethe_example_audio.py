@@ -7,6 +7,7 @@ import base64
 import hashlib
 import html
 import json
+import math
 import re
 import time
 import unicodedata
@@ -31,6 +32,8 @@ SNAPSHOT_PATH = STATE / "snapshot.json"
 PRONUNCIATION_AUDIO_OVERRIDES = (
     ROOT / "review" / "goethe_example_pronunciation_audio.json"
 )
+REJECTIONS_PATH = ROOT / "review" / "goethe_example_audio_rejections.json"
+REPETITION_AUDIT_PATH = STATE / "repetition_audit.json"
 MODEL = "Goethe Werkstatt"
 PARENT_DECK = "Goethe Institute"
 MANIFEST_SCHEMA_VERSION = 3
@@ -59,10 +62,39 @@ PASSING_QA_STATUSES = frozenset({"exact", "verified_equivalent"})
 APPLY_CONFIRMATION = "APPLY_GOETHE_EXAMPLE_AUDIO"
 ROLLBACK_CONFIRMATION = "ROLLBACK_GOETHE_EXAMPLE_AUDIO"
 _REVIEWED_PRONUNCIATION_AUDIO: dict[str, Any] | None = None
+_EXAMPLE_AUDIO_REJECTIONS: dict[str, dict[str, str]] | None = None
 
 
 class ExampleAudioError(RuntimeError):
     pass
+
+
+def load_rejections() -> dict[str, dict[str, str]]:
+    global _EXAMPLE_AUDIO_REJECTIONS
+    if _EXAMPLE_AUDIO_REJECTIONS is not None:
+        return _EXAMPLE_AUDIO_REJECTIONS
+    data = word_audio.load_json(REJECTIONS_PATH, None)
+    if not isinstance(data, dict) or data.get("schema_version") != 1:
+        raise ExampleAudioError("example-audio rejection registry is missing or stale")
+    values = data.get("rejections")
+    if not isinstance(values, dict):
+        raise ExampleAudioError("example-audio rejection registry is invalid")
+    result: dict[str, dict[str, str]] = {}
+    for audio_id, item in values.items():
+        if (
+            not isinstance(item, dict)
+            or not re.fullmatch(r"[0-9a-f]{64}", str(audio_id))
+            or not re.fullmatch(r"[0-9a-f]{64}", str(item.get("sha256", "")))
+            or not str(item.get("reason", "")).strip()
+        ):
+            raise ExampleAudioError(f"invalid example-audio rejection: {audio_id}")
+        result[str(audio_id)] = {
+            key: str(value)
+            for key, value in item.items()
+            if isinstance(value, str)
+        }
+    _EXAMPLE_AUDIO_REJECTIONS = result
+    return result
 
 
 def reviewed_pronunciation_audio(
@@ -214,7 +246,8 @@ def build_manifest(records: dict[int, dict[str, Any]], previous: dict[str, Any] 
                     for key in (
                         "status", "path", "size", "sha256", "media_name",
                         "duration_seconds", "qa_status", "asr_transcript",
-                        "created_utc",
+                        "live_transcript", "strict_transcript", "qa_source",
+                        "qa_version", "created_utc",
                     )
                     if key in cached
                 })
@@ -411,6 +444,20 @@ def validate_manifest(manifest: dict[str, Any]) -> None:
 def validate_cached(item: dict[str, Any]) -> bool:
     try:
         word_audio.validate_audio(Path(item["path"]), item.get("sha256"), item.get("size"))
+        rejected = load_rejections().get(str(item.get("audio_id", "")))
+        if rejected and rejected["sha256"] == item.get("sha256"):
+            return False
+        qa_version = item.get("qa_version")
+        if qa_version is not None and (
+            qa_version != gemini_tts.EXAMPLE_QA_VERSION
+            or gemini_tts._normalized_spoken_text(
+                str(item.get("strict_transcript", ""))
+            )
+            != gemini_tts._normalized_spoken_text(
+                str(item.get("spoken_text", ""))
+            )
+        ):
+            return False
         return (
             item.get("status") == "ok"
             and item.get("voice") in GEMINI_VOICES
@@ -422,6 +469,47 @@ def validate_cached(item: dict[str, Any]) -> bool:
         )
     except (KeyError, TypeError, ValueError, word_audio.WordAudioError):
         return False
+
+
+def _word_count_bucket(text: str) -> str:
+    count = len(re.findall(r"\w+", text, flags=re.UNICODE))
+    if count <= 5:
+        return "1-5"
+    if count <= 10:
+        return "6-10"
+    if count <= 20:
+        return "11-20"
+    return "21+"
+
+
+def repetition_outlier_ids(
+    manifest: dict[str, Any], *, percentile: float = 95.0
+) -> list[str]:
+    if not 0 < percentile < 100:
+        raise ExampleAudioError("repetition percentile must be between 0 and 100")
+    groups: dict[tuple[str, str], list[tuple[float, str]]] = {}
+    for audio_id, item in manifest.get("unique", {}).items():
+        text = str(item.get("spoken_text", ""))
+        words = re.findall(r"\w+", text, flags=re.UNICODE)
+        duration = float(item.get("duration_seconds") or 0)
+        if not words or duration <= 0:
+            continue
+        key = (str(item.get("voice", "")), _word_count_bucket(text))
+        groups.setdefault(key, []).append((duration / len(words), audio_id))
+    selected: set[str] = set()
+    fraction = (100.0 - percentile) / 100.0
+    for values in groups.values():
+        count = max(1, math.ceil(len(values) * fraction - 1e-12))
+        selected.update(
+            audio_id
+            for _, audio_id in sorted(values, reverse=True)[:count]
+        )
+    selected.update(
+        audio_id
+        for audio_id in load_rejections()
+        if audio_id in manifest.get("unique", {})
+    )
+    return sorted(selected)
 
 
 async def generate_one(item: dict[str, Any], semaphore: asyncio.Semaphore) -> dict[str, Any]:
@@ -555,6 +643,112 @@ def command_audit(_: argparse.Namespace) -> None:
             "occurrences": occurrences_by_level[level],
         } for level in scope.LEVELS},
         "sources": sources,
+    }, ensure_ascii=False, indent=2))
+
+
+async def command_audit_repetitions(args: argparse.Namespace) -> None:
+    manifest = word_audio.load_json(MANIFEST_PATH, None)
+    if not manifest:
+        raise ExampleAudioError("example-audio manifest is missing")
+    validate_manifest(manifest)
+    selected = repetition_outlier_ids(
+        manifest, percentile=args.percentile
+    )
+    report = word_audio.load_json(REPETITION_AUDIT_PATH, {
+        "schema_version": 1,
+        "percentile": args.percentile,
+        "items": {},
+    })
+    if (
+        not isinstance(report, dict)
+        or report.get("schema_version") != 1
+        or float(report.get("percentile", -1)) != args.percentile
+        or not isinstance(report.get("items"), dict)
+    ):
+        report = {
+            "schema_version": 1,
+            "percentile": args.percentile,
+            "items": {},
+        }
+    report.update({
+        "created_utc": report.get("created_utc") or now_utc(),
+        "updated_utc": now_utc(),
+        "selected_audio_ids": selected,
+    })
+    pending = [
+        audio_id
+        for audio_id in selected
+        if (
+            report["items"].get(audio_id, {}).get("sha256")
+            != manifest["unique"][audio_id].get("sha256")
+            or report["items"].get(audio_id, {}).get("status")
+            not in {"exact", "mismatch"}
+        )
+    ]
+    print(json.dumps({
+        "selected": len(selected),
+        "pending": len(pending),
+        "percentile": args.percentile,
+    }))
+    word_audio.atomic_json(REPETITION_AUDIT_PATH, report)
+    semaphore = asyncio.Semaphore(
+        CONCURRENCY_PER_KEY * len(gemini_tts._api_keys())
+    )
+
+    async def inspect(audio_id: str) -> tuple[str, dict[str, Any]]:
+        item = manifest["unique"][audio_id]
+        async with semaphore:
+            transcript = await gemini_tts.transcribe_strict_mp3(
+                Path(item["path"])
+            )
+        status = (
+            "exact"
+            if gemini_tts._normalized_spoken_text(transcript)
+            == gemini_tts._normalized_spoken_text(item["spoken_text"])
+            else "mismatch"
+        )
+        return audio_id, {
+            "audio_id": audio_id,
+            "sha256": item["sha256"],
+            "spoken_text": item["spoken_text"],
+            "voice": item["voice"],
+            "duration_seconds": item["duration_seconds"],
+            "strict_transcript": transcript,
+            "status": status,
+            "audited_utc": now_utc(),
+        }
+
+    failures: list[Exception] = []
+    completed = 0
+    tasks = [asyncio.create_task(inspect(audio_id)) for audio_id in pending]
+    for future in asyncio.as_completed(tasks):
+        try:
+            audio_id, result = await future
+        except Exception as exc:
+            failures.append(exc)
+            continue
+        report["items"][audio_id] = result
+        completed += 1
+        if completed % 10 == 0 or completed == len(pending):
+            report["updated_utc"] = now_utc()
+            word_audio.atomic_json(REPETITION_AUDIT_PATH, report)
+            print(f"strict-asr {completed}/{len(pending)}")
+    counts = Counter(
+        item.get("status") for item in report["items"].values()
+        if item.get("audio_id") in selected
+    )
+    report["counts"] = dict(counts)
+    report["updated_utc"] = now_utc()
+    word_audio.atomic_json(REPETITION_AUDIT_PATH, report)
+    if failures:
+        raise ExampleAudioError(
+            f"repetition audit checkpointed {completed} items with "
+            f"{len(failures)} failures: {failures[0]}"
+        )
+    print(json.dumps({
+        "selected": len(selected),
+        "counts": dict(counts),
+        "report": str(REPETITION_AUDIT_PATH),
     }, ensure_ascii=False, indent=2))
 
 
@@ -845,6 +1039,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("audit").set_defaults(func=command_audit)
+    repetitions = sub.add_parser("audit-repetitions")
+    repetitions.add_argument("--percentile", type=float, default=95.0)
+    repetitions.set_defaults(func=command_audit_repetitions)
     for name in ("prepare", "resume"):
         prepare = sub.add_parser(name)
         prepare.add_argument("--scope", choices=("pilot", "full"), default="full")

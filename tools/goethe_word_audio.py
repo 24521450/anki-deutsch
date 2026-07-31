@@ -47,6 +47,8 @@ PROTECTED_DIR = ROOT / "audio" / "protected"
 MANIFEST_PATH = STATE / "manifest.json"
 DUDEN_EXTRA_INDEX = STATE / "duden_extra.json"
 DUDEN_RESCAN_REPORT = STATE / "duden_fallback_rescan.json"
+GEMINI_AUDIT_REPORT = STATE / "gemini_audit_report.json"
+WORD_ASR_INDEX = STATE / "semantic_asr.json"
 # Retained only to identify provenance for historical media already in Anki.
 EDGE_INDEX = STATE / "edge.json"
 GEMINI_INDEX = STATE / "gemini.json"
@@ -54,12 +56,14 @@ COMMONS_INDEX = STATE / "commons.json"
 WIKTIONARY_INDEX = STATE / "wiktionary.json"
 SNAPSHOT_PATH = STATE / "snapshot.json"
 OVERRIDES_PATH = ROOT / "review" / "goethe_word_audio_overrides.json"
+APPROVED_AUDIO_PATH = ROOT / "review" / "goethe_word_audio_approved.json"
+SEIN_AUDIT_PATH = ROOT / "review" / "goethe_sein_audio_audit.json"
 COMMONS_ATTRIBUTION_PATH = ROOT / "review" / "wikimedia_commons_audio_attribution.json"
 MODEL = "Goethe Werkstatt"
 PARENT_DECK = "Goethe Institute"
 LEVEL_DECKS = scope.LEVEL_DECK
 MANIFEST_SCHEMA_VERSION = 7
-DUDEN_RESOLVER_VERSION = 2
+DUDEN_RESOLVER_VERSION = 3
 APPLY_CONFIRMATION = "APPLY_GOETHE_WORD_AUDIO"
 ROLLBACK_CONFIRMATION = "ROLLBACK_GOETHE_WORD_AUDIO"
 GEMINI_VOICES = tuple(gemini_tts.VOICES)
@@ -412,7 +416,7 @@ def matched_main_rows(fields: dict[str, str], by_ref: dict[tuple[str, int], dict
 
 def load_override_policy() -> dict[str, Any]:
     data = load_json(OVERRIDES_PATH, {"schema_version": 1, "spoken_text": {}})
-    if data.get("schema_version") not in {1, 2, 3}:
+    if data.get("schema_version") not in {1, 2, 3, 4}:
         raise WordAudioError("unsupported spoken-text override schema")
     return data
 
@@ -423,6 +427,193 @@ def load_overrides() -> dict[str, str]:
     if not isinstance(values, dict):
         raise WordAudioError("spoken_text overrides must be an object")
     return {clean(key): clean(value) for key, value in values.items() if clean(value)}
+
+
+def load_sein_audio_audit() -> dict[int, dict[str, Any]]:
+    data = load_json(SEIN_AUDIT_PATH, None)
+    if not isinstance(data, dict) or data.get("schema_version") != 1:
+        raise WordAudioError("sein audio audit is missing or stale")
+    entries = data.get("entries")
+    if not isinstance(entries, list):
+        raise WordAudioError("sein audio audit entries must be a list")
+    result: dict[int, dict[str, Any]] = {}
+    for entry in entries:
+        if not isinstance(entry, dict):
+            raise WordAudioError("sein audio audit entry must be an object")
+        try:
+            note_id = int(entry["note_id"])
+        except (KeyError, TypeError, ValueError) as exc:
+            raise WordAudioError("sein audio audit note_id is invalid") from exc
+        if note_id in result:
+            raise WordAudioError(f"duplicate sein audio audit note: {note_id}")
+        if entry.get("decision") not in {"approved_strip", "keep", "pending"}:
+            raise WordAudioError(f"invalid sein audio decision: {note_id}")
+        if not clean(entry.get("lemma")) or not clean(entry.get("spoken_text")):
+            raise WordAudioError(f"sein audio audit identity is blank: {note_id}")
+        result[note_id] = entry
+    return result
+
+
+def load_duden_page_overrides() -> dict[str, dict[str, str]]:
+    values = load_override_policy().get("duden_pages", {})
+    if not isinstance(values, dict):
+        raise WordAudioError("duden_pages must be an object")
+    pages: dict[str, dict[str, str]] = {}
+    for raw_source_ref, raw in values.items():
+        source_ref = clean(raw_source_ref)
+        if not source_ref or not isinstance(raw, dict):
+            raise WordAudioError(f"invalid Duden page override: {raw_source_ref!r}")
+        item = {
+            key: clean(raw.get(key, ""))
+            for key in ("expected_lemma", "spoken_text", "url", "headword")
+        }
+        if (
+            any(not item[key] for key in item)
+            or not item["url"].startswith("https://www.duden.de/rechtschreibung/")
+        ):
+            raise WordAudioError(f"incomplete Duden page override: {source_ref}")
+        pages[source_ref] = item
+    return pages
+
+
+def load_approved_audio() -> dict[str, dict[str, str]]:
+    data = load_json(APPROVED_AUDIO_PATH, {"schema_version": 1, "entries": {}})
+    entries = data.get("entries")
+    if data.get("schema_version") != 1 or not isinstance(entries, dict):
+        raise WordAudioError("unsupported approved word-audio registry")
+    approved: dict[str, dict[str, str]] = {}
+    required = (
+        "expected_lemma", "spoken_text", "provider", "sha256",
+        "source_url", "audio_url", "source_revision",
+        "semantic_model", "semantic_transcript",
+    )
+    for raw_source_id, raw in entries.items():
+        source_id = clean(raw_source_id)
+        if not source_id or not isinstance(raw, dict):
+            raise WordAudioError(f"invalid approved word audio: {raw_source_id!r}")
+        item = {key: clean(raw.get(key, "")) for key in required}
+        if (
+            any(not item[key] for key in required)
+            or item["provider"] not in {"duden", "commons", "wiktionary"}
+            or not re.fullmatch(r"[0-9a-f]{64}", item["sha256"])
+            or not item["source_url"].startswith("https://")
+            or not item["audio_url"].startswith("https://")
+            or gemini_tts._normalized_spoken_text(item["semantic_transcript"])
+            != gemini_tts._normalized_spoken_text(item["spoken_text"])
+        ):
+            raise WordAudioError(f"incomplete approved word audio: {source_id}")
+        approved[source_id] = item
+    return approved
+
+
+def approved_audio_for(
+    fields: dict[str, str], spoken: str, approved: dict[str, dict[str, str]],
+) -> dict[str, str] | None:
+    refs = dict.fromkeys([
+        clean(fields.get("SourceID", "")),
+        *split_refs(fields.get("SourceRefs", "")),
+    ])
+    matches = [(source_id, approved[source_id]) for source_id in refs if source_id in approved]
+    if not matches:
+        return None
+    hashes = {item["sha256"] for _, item in matches}
+    if len(hashes) != 1:
+        raise WordAudioError(f"conflicting approved audio for {fields.get('Lemma')!r}")
+    source_id, item = matches[0]
+    if clean(fields.get("Lemma", "")) != item["expected_lemma"]:
+        raise WordAudioError(f"approved audio lemma mismatch: {source_id}")
+    if clean(spoken) != item["spoken_text"]:
+        raise WordAudioError(f"approved audio spoken-text mismatch: {source_id}")
+    return {**item, "source_id": source_id}
+
+
+def enforce_approved_assignment(item: dict[str, Any]) -> None:
+    approved = item.get("approved_audio")
+    if not approved:
+        return
+    assigned = item.get("assignment", {})
+    if (
+        assignment_provider(item) != approved["provider"]
+        or clean(assigned.get("sha256", "")) != approved["sha256"]
+    ):
+        raise WordAudioError(
+            f"approved audio drift: {approved['source_id']} expected "
+            f"{approved['provider']} {approved['sha256']}"
+        )
+    assigned["semantic_qa"] = {
+        "status": "exact",
+        "transcript": approved["semantic_transcript"],
+        "expected_spoken_text": approved["spoken_text"],
+        "model": approved["semantic_model"],
+        "source_revision": approved["source_revision"],
+    }
+
+
+def load_wortgruppen_duden_pages() -> dict[str, list[str]]:
+    pages: dict[str, list[str]] = {}
+    for path in completion.WG_FILES.values():
+        for row in completion.parse_wortgruppen(path):
+            values = re.split(
+                r"<br\s*/?>|\s+",
+                html.unescape(row.get("dictionary_sources", "")),
+                flags=re.I,
+            )
+            urls = list(dict.fromkeys(
+                value.strip()
+                for value in values
+                if value.startswith("https://www.duden.de/rechtschreibung/")
+            ))
+            if urls:
+                pages[row["id"]] = urls
+    return pages
+
+
+def duden_page_specs(
+    fields: dict[str, str],
+    spoken: str,
+    overrides: dict[str, dict[str, str]],
+    *,
+    source_pages: dict[str, list[str]] | None = None,
+) -> list[dict[str, Any]]:
+    refs = [
+        clean(fields.get("SourceID", "")),
+        *split_refs(fields.get("SourceRefs", "")),
+    ]
+    reviewed: list[dict[str, Any]] = []
+    for source_ref in dict.fromkeys(refs):
+        item = overrides.get(source_ref)
+        if item is None:
+            continue
+        if clean(fields.get("Lemma", "")) != item["expected_lemma"]:
+            raise WordAudioError(f"Duden page lemma mismatch: {source_ref}")
+        if clean(spoken) != item["spoken_text"]:
+            raise WordAudioError(f"Duden page spoken-text mismatch: {source_ref}")
+        reviewed.append({**item, "source_ref": source_ref, "reviewed": True})
+    if reviewed:
+        urls = {item["url"] for item in reviewed}
+        if len(urls) != 1:
+            raise WordAudioError(
+                f"conflicting Duden page overrides for {fields.get('Lemma')!r}"
+            )
+        return reviewed[:1]
+
+    source_pages = (
+        source_pages
+        if source_pages is not None
+        else load_wortgruppen_duden_pages()
+    )
+    return [
+        {
+            "source_ref": source_ref,
+            "expected_lemma": clean(fields.get("Lemma", "")),
+            "spoken_text": clean(spoken),
+            "url": url,
+            "headword": "",
+            "reviewed": False,
+        }
+        for source_ref in dict.fromkeys(refs)
+        for url in source_pages.get(source_ref, [])
+    ]
 
 
 def load_spoken_equivalences() -> dict[str, dict[str, Any]]:
@@ -481,7 +672,10 @@ def load_protected_audio() -> dict[str, dict[str, Any]]:
             raise WordAudioError(f"incomplete protected audio: {source_id}")
         if item["provider"] == "commons":
             if not item.get("title") or (
-                schema == 3 and not re.fullmatch(r"[0-9a-f]{40}", item.get("original_sha1", ""))
+                schema in {3, 4}
+                and not re.fullmatch(
+                    r"[0-9a-f]{40}", item.get("original_sha1", "")
+                )
             ):
                 raise WordAudioError(f"incomplete protected audio: {source_id}")
         elif not isinstance(item.get("size"), int) or item["size"] <= 0:
@@ -543,7 +737,8 @@ def spoken_text(fields: dict[str, str], raw: str, overrides: dict[str, str]) -> 
     if physical_identity is not None:
         return physical_identity
     refs = split_refs(fields.get("SourceRefs", ""))
-    for key in refs + [fields.get("Lemma", ""), raw]:
+    keys = [fields.get("SourceID", ""), *refs, fields.get("Lemma", ""), raw]
+    for key in dict.fromkeys(clean(value) for value in keys if clean(value)):
         if clean(key) in overrides:
             return canonical_spoken_identity(overrides[clean(key)])
     value = clean(raw)
@@ -552,6 +747,21 @@ def spoken_text(fields: dict[str, str], raw: str, overrides: dict[str, str]) -> 
     if not value:
         raise WordAudioError("empty spoken text")
     return canonical_spoken_identity(value)
+
+
+def reviewed_spoken_override(
+    fields: dict[str, str], spoken: str, overrides: dict[str, str]
+) -> bool:
+    expected = canonical_spoken_identity(spoken).casefold()
+    keys = split_refs(fields.get("SourceRefs", "")) + [
+        clean(fields.get("SourceID", "")),
+        clean(fields.get("Lemma", "")),
+    ]
+    return any(
+        key in overrides
+        and canonical_spoken_identity(overrides[key]).casefold() == expected
+        for key in keys
+    )
 
 
 def media_name(source: str, sha256: str) -> str:
@@ -668,11 +878,13 @@ def validate_manifest(manifest: dict[str, Any], *, require_prepared: bool = Fals
         if not manifest.get("prepared_utc"):
             raise WordAudioError("word-audio manifest is not prepared")
         prepared_scope = manifest.get("prepared_scope", "full")
-        if prepared_scope not in {"full", "protected", "targeted", "edge"}:
+        if prepared_scope not in {
+            "full", "protected", "targeted", "edge", "gemini-audit",
+        }:
             raise WordAudioError("word-audio manifest has an unsupported prepared scope")
         if prepared_scope == "protected":
             required = [item for item in notes.values() if item.get("protected_audio")]
-        elif prepared_scope in {"targeted", "edge"}:
+        elif prepared_scope in {"targeted", "edge", "gemini-audit"}:
             prepared_ids = set(map(int, manifest.get("prepared_note_ids", [])))
             if not prepared_ids:
                 raise WordAudioError(f"{prepared_scope} word-audio manifest has no note IDs")
@@ -687,6 +899,16 @@ def validate_manifest(manifest: dict[str, Any], *, require_prepared: bool = Fals
                 if prepared_ids != expected_ids:
                     raise WordAudioError(
                         "edge word-audio manifest does not preserve the exact audited Edge note IDs"
+                    )
+            if prepared_scope == "gemini-audit":
+                expected_ids = {
+                    int(item["note_id"])
+                    for item in notes.values()
+                    if word_audio_provider(item.get("old_word_audio", "")) == "gemini"
+                }
+                if prepared_ids != expected_ids:
+                    raise WordAudioError(
+                        "Gemini audit manifest does not preserve the exact live Gemini note IDs"
                     )
             required = [
                 item for item in notes.values()
@@ -704,7 +926,11 @@ def build_audit() -> dict[str, Any]:
     records = live_records()
     by_ref, ok_index = load_duden_catalog()
     overrides = load_overrides()
+    sein_audio_audit = load_sein_audio_audit()
+    duden_page_overrides = load_duden_page_overrides()
+    wortgruppen_pages = load_wortgruppen_duden_pages()
     protected_audio = load_protected_audio()
+    approved_audio = load_approved_audio()
     notes: dict[str, Any] = {}
     missing_overrides: list[dict[str, Any]] = []
     counts: Counter[str] = Counter()
@@ -735,6 +961,18 @@ def build_audit() -> dict[str, Any]:
         try:
             text = spoken_text(fields, raw, overrides)
             note_item["spoken_text"] = text
+            note_item["spoken_override_reviewed"] = reviewed_spoken_override(
+                fields, text, overrides
+            )
+            note_item["lookup_pos"] = (
+                "" if note_item["spoken_override_reviewed"] else fields.get("POS", "")
+            )
+            note_item["lookup_gender"] = (
+                "" if note_item["spoken_override_reviewed"] else fields.get("Gender", "")
+            )
+            approved = approved_audio_for(fields, text, approved_audio)
+            if approved:
+                note_item["approved_audio"] = approved
             if item:
                 note_item["assignment"] = assignment(
                     "duden_local",
@@ -755,9 +993,31 @@ def build_audit() -> dict[str, Any]:
                 )
                 counts["protected"] += 1
             else:
-                note_item.update({"spoken_text": text, "request_key": canonical_hash({
-                    "text": text, "pos": fields.get("POS", ""), "gender": fields.get("Gender", "")
-                }), "skip_duden": bool(protected)})
+                pages = [] if protected else duden_page_specs(
+                    fields,
+                    text,
+                    duden_page_overrides,
+                    source_pages=wortgruppen_pages,
+                )
+                request = {
+                    "text": text,
+                    "pos": note_item["lookup_pos"],
+                    "gender": note_item["lookup_gender"],
+                }
+                if pages:
+                    request["duden_pages"] = [
+                        {
+                            key: page.get(key)
+                            for key in ("url", "headword", "reviewed")
+                        }
+                        for page in pages
+                    ]
+                note_item.update({
+                    "spoken_text": text,
+                    "duden_pages": pages,
+                    "request_key": canonical_hash(request),
+                    "skip_duden": bool(protected),
+                })
                 counts["needs_prepare"] += 1
                 if protected:
                     counts["protected_audio"] += 1
@@ -779,6 +1039,7 @@ def build_audit() -> dict[str, Any]:
         "commons_config": COMMONS_CONFIG,
         "wiktionary_config": WIKTIONARY_CONFIG,
         "source_order": ["duden_local", "duden_extra", "commons", "wiktionary", "gemini"],
+        "sein_audio_audit": sein_audio_audit,
         "duden_level_order": list(scope.LEVELS),
         "note_count": len(notes),
         "card_count": sum(len(record["cards"]) for record in records.values()),
@@ -799,12 +1060,25 @@ def request_groups(manifest: dict[str, Any]) -> dict[str, dict[str, Any]]:
         if item.get("assignment") or item.get("error"):
             continue
         key = item["request_key"]
+        reviewed = bool(item.get("spoken_override_reviewed"))
         group = groups.setdefault(key, {
-            "request_key": key, "spoken_text": item["spoken_text"], "pos": item["pos"], "gender": item["gender"],
+            "request_key": key, "spoken_text": item["spoken_text"],
+            "pos": item.get("lookup_pos", "" if reviewed else item["pos"]),
+            "gender": item.get("lookup_gender", "" if reviewed else item["gender"]),
             "note_ids": [], "skip_duden": True, "required_providers": set(),
+            "duden_pages": item.get("duden_pages", []),
+            "spoken_override_reviewed": bool(item.get("spoken_override_reviewed")),
         })
+        if group["duden_pages"] != item.get("duden_pages", []):
+            raise WordAudioError(
+                f"conflicting Duden page policy for {group['spoken_text']!r}"
+            )
         group["note_ids"].append(item["note_id"])
         group["skip_duden"] = group["skip_duden"] and bool(item.get("skip_duden"))
+        group["spoken_override_reviewed"] = (
+            group["spoken_override_reviewed"]
+            or bool(item.get("spoken_override_reviewed"))
+        )
         if item.get("protected_audio"):
             group["required_providers"].add(item["protected_audio"]["provider"])
             current = group.get("protected_audio")
@@ -824,15 +1098,178 @@ def reuse_duden_cache(cached: dict[str, Any] | None, *, refresh_negative: bool) 
         return False
     if cached.get("status") == "ok":
         return True
-    return (
-        not refresh_negative
-        and cached.get("status") in {"unresolved", "ambiguous"}
-        and cached.get("resolver_version") == DUDEN_RESOLVER_VERSION
+    if cached.get("status") == "technical_error":
+        return not refresh_negative
+    if cached.get("status") not in {"unresolved", "ambiguous"}:
+        return False
+    # These outcomes are conclusive exact-identity results and remain valid
+    # across resolver revisions.  Re-probing them on every audit caused long,
+    # repeated Duden crawls without adding evidence.
+    if cached.get("match_method") in {
+        "sitemap-not-found",
+        "sitemap-page-no-audio",
+        "provider-policy",
+    }:
+        return True
+    if cached.get("resolver_version") != DUDEN_RESOLVER_VERSION:
+        return False
+    if not refresh_negative:
+        return True
+    return cached.get("match_method") in {
+        "sitemap-not-found",
+        "sitemap-page-no-audio",
+        "provider-policy",
+    }
+
+
+async def resolve_direct_duden_page(
+    session: aiohttp.ClientSession,
+    key: str,
+    group: dict[str, Any],
+    *,
+    throttle: duden.RequestThrottle,
+) -> dict[str, Any] | None:
+    specs = group.get("duden_pages", [])
+    if not specs:
+        return None
+    accepted: list[tuple[dict[str, Any], duden.DudenPage]] = []
+    candidates: list[dict[str, Any]] = []
+    technical_errors: list[str] = []
+    reviewed = any(spec.get("reviewed") for spec in specs)
+    for spec in specs:
+        try:
+            status, html_text, _ = await duden.fetch_page(
+                session, spec["url"], throttle=throttle
+            )
+        except Exception as exc:
+            if reviewed:
+                return {
+                    "status": "technical_error",
+                    "reason": f"reviewed Duden page request failed: {exc}",
+                    "match_method": "reviewed-page-technical-error",
+                    "duden_page_url": spec["url"],
+                }
+            technical_errors.append(f"{spec['url']}: {exc}")
+            continue
+        if status != 200:
+            if reviewed:
+                return {
+                    "status": "technical_error",
+                    "reason": f"reviewed Duden page returned HTTP {status}",
+                    "match_method": "reviewed-page-technical-error",
+                    "duden_page_url": spec["url"],
+                }
+            technical_errors.append(f"{spec['url']}: HTTP {status}")
+            continue
+        try:
+            page = duden.parse_duden_page(html_text, requested_url=spec["url"])
+        except Exception as exc:
+            if reviewed:
+                return {
+                    "status": "technical_error",
+                    "reason": f"reviewed Duden page parse failed: {exc}",
+                    "match_method": "reviewed-page-technical-error",
+                    "duden_page_url": spec["url"],
+                }
+            technical_errors.append(f"{spec['url']}: parse failed: {exc}")
+            continue
+        candidate = {
+            "canonical_url": page.canonical_url,
+            "headword": page.headword,
+            "wordart": page.wordart,
+            "pos_labels": list(page.pos_labels),
+            "gender": page.h1_gender,
+            "audio": list(page.audio_candidates),
+            "reviewed": bool(spec.get("reviewed")),
+        }
+        candidates.append(candidate)
+        expected_headword = (
+            spec["headword"] if spec.get("reviewed") else group["spoken_text"]
+        )
+        if not duden.exact_audit_headword_matches(
+            expected_headword, page.headword
+        ):
+            continue
+        if not spec.get("reviewed"):
+            if group.get("pos") and page.pos_labels and not duden.pos_matches(
+                group["pos"], page.pos_labels
+            ):
+                continue
+            actual_gender = (
+                "pl"
+                if "pluralwort" in duden.normalize_text(page.wordart).lower()
+                else page.h1_gender
+            )
+            if (
+                group.get("gender")
+                and actual_gender is not None
+                and not duden.gender_matches(group["gender"], actual_gender)
+            ):
+                continue
+        if page.audio_candidates:
+            accepted.append((spec, page))
+    if not accepted:
+        if reviewed:
+            return {
+                "status": "unresolved",
+                "reason": "reviewed Duden page has no matching audio",
+                "match_method": "reviewed-page-no-audio",
+                "duden_page_url": specs[0]["url"],
+                "candidate_pages": candidates,
+            }
+        if technical_errors:
+            return {
+                "status": "technical_error",
+                "reason": "; ".join(technical_errors[:5]),
+                "match_method": "direct-page-technical-error",
+                "duden_page_url": specs[0]["url"],
+                "candidate_pages": candidates,
+            }
+        return None
+    audio_urls = {
+        page.audio_candidates[0]["audio_url"] for _, page in accepted
+    }
+    if len(audio_urls) != 1:
+        return {
+            "status": "ambiguous",
+            "reason": "direct Duden pages have different audio",
+            "match_method": "direct-page-ambiguous-audio",
+            "duden_page_url": accepted[0][1].canonical_url,
+            "candidate_pages": candidates,
+        }
+    spec, page = accepted[0]
+    audio = page.audio_candidates[0]
+    target = DUDEN_EXTRA_DIR / f"{key}.mp3"
+    size, sha256, content_type, etag = await duden.download_audio(
+        session, audio["audio_url"], target, throttle=throttle
     )
+    return {
+        "status": "ok",
+        "reason": (
+            "reviewed canonical Duden page"
+            if spec.get("reviewed")
+            else "exact Wortgruppen Duden page"
+        ),
+        "match_method": (
+            "reviewed-canonical-page"
+            if spec.get("reviewed")
+            else "wortgruppen-direct-page"
+        ),
+        "duden_page_url": page.canonical_url,
+        "duden_audio_url": audio["audio_url"],
+        "file_id": audio.get("file_id"),
+        "candidate_pages": candidates,
+        "path": str(target),
+        "size": size,
+        "sha256": sha256,
+        "content_type": content_type,
+        "etag": etag,
+    }
 
 
 async def prepare_duden(
-    groups: dict[str, dict[str, Any]], *, refresh_negative: bool = False
+    groups: dict[str, dict[str, Any]], *, refresh_negative: bool = False,
+    fail_on_technical_error: bool = True,
 ) -> dict[str, Any]:
     index = load_json(DUDEN_EXTRA_INDEX, {"schema_version": 2, "items": {}})
     index["schema_version"] = 2
@@ -847,8 +1284,6 @@ async def prepare_duden(
     duden.PREFER_FIRST_EXACT_CANDIDATE = False
     # Deck-only/Wortgruppen lookup is a fresh crawl; be more conservative than
     # the source-list downloader to avoid triggering Duden's request guard.
-    duden.PAGE_REQUEST_MIN_INTERVAL = 5.0
-    duden.CDN_REQUEST_MIN_INTERVAL = 2.0
     DUDEN_EXTRA_DIR.mkdir(parents=True, exist_ok=True)
     pending: dict[str, tuple[int, dict[str, Any], duden.SourceRow]] = {}
     for number, (key, group) in enumerate(sorted(groups.items()), 1):
@@ -870,44 +1305,147 @@ async def prepare_duden(
                 continue
         if reuse_duden_cache(cached, refresh_negative=refresh_negative):
             continue
+        if (
+            refresh_negative
+            and cached
+            and not group.get("duden_pages")
+            and cached.get("match_method") in {
+                "sitemap-ambiguous-audio",
+                "sitemap-metadata-conflict",
+            }
+        ):
+            candidate_urls = list(dict.fromkeys(
+                clean(page.get("canonical_url", ""))
+                for page in cached.get("candidate_pages", [])
+                if clean(page.get("canonical_url", "")).startswith(
+                    "https://www.duden.de/rechtschreibung/"
+                )
+            ))
+            if candidate_urls:
+                group = {
+                    **group,
+                    "duden_pages": [{
+                        "source_ref": "",
+                        "expected_lemma": "",
+                        "spoken_text": group["spoken_text"],
+                        "url": url,
+                        "headword": "",
+                        "reviewed": False,
+                    } for url in candidate_urls],
+                    "cached_page_refresh": True,
+                }
         pending[key] = (
             number,
             group,
-            duden.SourceRow(number, group["spoken_text"], group["pos"], group["gender"], "", "", ""),
+            duden.SourceRow(
+                number,
+                group["spoken_text"],
+                "" if group.get("spoken_override_reviewed") else group["pos"],
+                "" if group.get("spoken_override_reviewed") else group["gender"],
+                "",
+                "",
+                "",
+            ),
         )
     atomic_json(DUDEN_EXTRA_INDEX, index)
     if not pending:
         return index
 
-    timeout = aiohttp.ClientTimeout(total=45)
+    timeout = aiohttp.ClientTimeout(total=20)
     async with aiohttp.ClientSession(timeout=timeout) as session:
         throttle = duden.RequestThrottle()
+        direct_keys: set[str] = set()
+        for progress, (key, (number, group, row)) in enumerate(
+            sorted(pending.items()), 1
+        ):
+            result = await resolve_direct_duden_page(
+                session, key, group, throttle=throttle
+            )
+            if result is None:
+                if group.get("cached_page_refresh"):
+                    direct_keys.add(key)
+                continue
+            direct_keys.add(key)
+            result.update({
+                "request_key": key,
+                "spoken_text": group["spoken_text"],
+                "resolver_version": DUDEN_RESOLVER_VERSION,
+                "updated_utc": now_utc(),
+            })
+            items[key] = result
+            index.pop("cooldown_until", None)
+            atomic_json(DUDEN_EXTRA_INDEX, index)
+            print(console_text(
+                f"duden direct {progress}/{len(pending)} "
+                f"{group['spoken_text']!r}: {result['status']}"
+            ))
+        pending = {
+            key: value for key, value in pending.items()
+            if key not in direct_keys
+        }
+        if not pending:
+            return index
         try:
             lexeme_index = await duden.build_lexeme_index_for_rows(
                 session, [entry[2] for entry in pending.values()], throttle=throttle
             )
         except duden.TechnicalError as exc:
-            raise WordAudioError(f"Duden sitemap technical error: {exc}") from exc
+            if fail_on_technical_error:
+                raise WordAudioError(f"Duden sitemap technical error: {exc}") from exc
+            for key, (_, group, _) in pending.items():
+                items[key] = {
+                    "request_key": key,
+                    "spoken_text": group["spoken_text"],
+                    "status": "technical_error",
+                    "reason": f"Duden sitemap technical error: {exc}",
+                    "match_method": "sitemap-technical-error",
+                    "resolver_version": DUDEN_RESOLVER_VERSION,
+                    "updated_utc": now_utc(),
+                }
+            atomic_json(DUDEN_EXTRA_INDEX, index)
+            return index
         for progress, (key, (number, group, row)) in enumerate(sorted(pending.items()), 1):
-            resolution, pages = await duden.resolve_exact_sitemap_row(
-                session, row, lexeme_index, throttle=throttle
+            result = await resolve_direct_duden_page(
+                session, key, group, throttle=throttle
             )
-            result = duden.resolution_to_row(resolution)
+            if result is None:
+                try:
+                    resolution, pages = await duden.resolve_exact_sitemap_row(
+                        session, row, lexeme_index, throttle=throttle
+                    )
+                except Exception as exc:
+                    result = {
+                        "status": "technical_error",
+                        "reason": f"Duden exact lookup failed: {exc}",
+                        "match_method": "sitemap-technical-error",
+                    }
+                else:
+                    result = duden.resolution_to_row(resolution)
+                    result["candidate_pages"] = [{
+                        "canonical_url": page.canonical_url,
+                        "headword": page.headword,
+                        "wordart": page.wordart,
+                        "pos_labels": list(page.pos_labels),
+                        "gender": page.h1_gender,
+                        "audio": list(page.audio_candidates),
+                    } for page in pages]
             result.update({
                 "request_key": key, "spoken_text": group["spoken_text"],
-                "resolver_version": DUDEN_RESOLVER_VERSION, "updated_utc": now_utc(),
-                "candidate_pages": [{
-                    "canonical_url": page.canonical_url, "headword": page.headword,
-                    "wordart": page.wordart, "pos_labels": list(page.pos_labels),
-                    "gender": page.h1_gender,
-                    "audio": list(page.audio_candidates),
-                } for page in pages],
+                "resolver_version": DUDEN_RESOLVER_VERSION,
+                "updated_utc": now_utc(),
             })
-            if resolution.status == "ok" and resolution.duden_audio_url:
+            if (
+                result.get("status") == "ok"
+                and result.get("duden_audio_url")
+                and not result.get("path")
+            ):
                 target = DUDEN_EXTRA_DIR / f"{key}.mp3"
                 try:
                     size, sha256, content_type, etag = await duden.download_audio(
-                        session, resolution.duden_audio_url, target, throttle=throttle
+                        session,
+                        result["duden_audio_url"],
+                        target,
+                        throttle=throttle,
                     )
                 except Exception as exc:
                     result.update({"status": "technical_error", "reason": str(exc)})
@@ -920,7 +1458,7 @@ async def prepare_duden(
                 index.pop("cooldown_until", None)
             atomic_json(DUDEN_EXTRA_INDEX, index)
             print(console_text(f"duden {progress}/{len(pending)} {group['spoken_text']!r}: {result['status']}"))
-            if result["status"] == "technical_error":
+            if result["status"] == "technical_error" and fail_on_technical_error:
                 raise WordAudioError(f"Duden technical error for {group['spoken_text']!r}: {result['reason']}")
     return index
 
@@ -1091,7 +1629,12 @@ def write_commons_attribution(index: dict[str, Any]) -> None:
     })
 
 
-async def prepare_commons(groups: dict[str, dict[str, Any]], duden_index: dict[str, Any]) -> dict[str, Any]:
+async def prepare_commons(
+    groups: dict[str, dict[str, Any]],
+    duden_index: dict[str, Any],
+    *,
+    refresh_negative: bool = False,
+) -> dict[str, Any]:
     index = load_json(COMMONS_INDEX, {"schema_version": 1, "config": COMMONS_CONFIG, "items": {}})
     if index.get("config") != COMMONS_CONFIG:
         raise WordAudioError("existing Commons index uses a different configuration")
@@ -1116,7 +1659,13 @@ async def prepare_commons(groups: dict[str, dict[str, Any]], duden_index: dict[s
                 )
             )
         else:
-            reusable = cached.get("status") in {"ok", "unresolved", "ambiguous"}
+            reusable = (
+                cached.get("status") == "ok"
+                or (
+                    not refresh_negative
+                    and cached.get("status") in {"unresolved", "ambiguous"}
+                )
+            )
         if not reusable:
             pending[key] = group
     title_map: dict[str, str] = {}
@@ -1221,7 +1770,13 @@ def wiktionary_audio_candidates(parse: dict[str, Any], lemma: str) -> list[dict[
     return sorted(dedup.values(), key=lambda item: (item["rank"], item["title"].casefold()))
 
 
-async def prepare_wiktionary(groups: dict[str, dict[str, Any]], duden_index: dict[str, Any], commons_index: dict[str, Any]) -> dict[str, Any]:
+async def prepare_wiktionary(
+    groups: dict[str, dict[str, Any]],
+    duden_index: dict[str, Any],
+    commons_index: dict[str, Any],
+    *,
+    refresh_negative: bool = False,
+) -> dict[str, Any]:
     index = load_json(WIKTIONARY_INDEX, {"schema_version": 1, "config": WIKTIONARY_CONFIG, "items": {}})
     if index.get("config") != WIKTIONARY_CONFIG:
         raise WordAudioError("existing Wiktionary index uses a different configuration")
@@ -1235,7 +1790,11 @@ async def prepare_wiktionary(groups: dict[str, dict[str, Any]], duden_index: dic
                 and commons_index["items"].get(key, {}).get("status") != "ok"
             )
         )
-        and items.get(key, {}).get("status") not in {"ok", "unresolved", "ambiguous"}
+        and (
+            items.get(key, {}).get("status") != "ok"
+            if refresh_negative
+            else items.get(key, {}).get("status") not in {"ok", "unresolved", "ambiguous"}
+        )
     }
     timeout = aiohttp.ClientTimeout(total=90)
     async with aiohttp.ClientSession(timeout=timeout) as session:
@@ -1356,6 +1915,10 @@ async def prepare_gemini(
         target = GEMINI_DIR / f"{audio_id}.mp3"
         pending.append((group, spoken_text, voice, audio_id, target))
 
+    if not pending:
+        atomic_json(GEMINI_INDEX, index)
+        return index
+
     semaphore = asyncio.Semaphore(2 * len(gemini_tts._api_keys()))
 
     async def generate_word(
@@ -1473,6 +2036,7 @@ def live_assignment_mismatches(
 ) -> dict[str, Any]:
     provenance = provenance if provenance is not None else cached_audio_provenance()
     equivalences = equivalences if equivalences is not None else load_spoken_equivalences()
+    spoken_overrides = load_overrides()
     semantic_mismatches: list[dict[str, Any]] = []
     semantic_candidates: list[dict[str, Any]] = []
     reviewed_equivalences: list[dict[str, Any]] = []
@@ -1522,11 +2086,23 @@ def live_assignment_mismatches(
             canonical_spoken_identity(value).casefold()
             for value in (equivalence or {}).get("spoken_texts", [])
         }
+        reviewed_override = any(
+            canonical_spoken_identity(spoken_overrides[key]).casefold()
+            == expected_key
+            for key in (
+                split_refs(fields.get("SourceRefs", ""))
+                + [clean(fields.get("SourceID", "")), clean(fields.get("Lemma", ""))]
+            )
+            if key in spoken_overrides
+        )
         if expected_key in current_keys:
             provider_drift.append(row)
         elif equivalence and current_keys & equivalent_keys:
             row["reason"] = equivalence["reason"]
             reviewed_equivalences.append(row)
+        elif reviewed_override:
+            row["reason"] = "tracked spoken-text override changes the audio identity"
+            semantic_mismatches.append(row)
         elif bound_spoken_identity(fields.get("Lemma", "")) is not None:
             row["reason"] = "cached spoken text does not match current lemma"
             semantic_mismatches.append(row)
@@ -1549,6 +2125,178 @@ def assignment_provider(item: dict[str, Any]) -> str:
     return "duden" if source.startswith("duden") else source
 
 
+def _conclusive_source_absence(item: dict[str, Any]) -> bool:
+    if item.get("status") != "unresolved":
+        return False
+    evidence = clean(" ".join((
+        str(item.get("reason", "")), str(item.get("match_method", "")),
+    ))).casefold()
+    uncertain = (
+        "technical", "timeout", "rate", "cooldown", "failed", "error",
+        "ambiguous", "conflict", "mismatch",
+    )
+    return not any(marker in evidence for marker in uncertain)
+
+
+async def verify_human_assignment_semantics(
+    manifest: dict[str, Any],
+    note_ids: list[int],
+    *,
+    cache: dict[str, Any] | None = None,
+    transcribe: Any | None = None,
+    timeout_seconds: float = 90.0,
+    checkpoint: Any | None = None,
+    model_name: str = "gemini-3.6-flash",
+) -> dict[str, Any]:
+    cache = cache if cache is not None else {}
+    transcribe = transcribe or gemini_tts.transcribe_strict_mp3
+    for note_id in sorted(set(map(int, note_ids))):
+        item = manifest["notes"][str(note_id)]
+        assignment_item = item.get("assignment", {})
+        if assignment_provider(item) not in {"duden", "commons", "wiktionary"}:
+            continue
+        sha256 = clean(assignment_item.get("sha256", ""))
+        spoken = clean(item.get("spoken_text", ""))
+        cached = cache.get(sha256, {})
+        transcript = clean(cached.get("transcript", ""))
+        error = clean(cached.get("error", ""))
+        if not transcript and not error:
+            try:
+                transcript = clean(await asyncio.wait_for(
+                    transcribe(Path(assignment_item["path"])),
+                    timeout=timeout_seconds,
+                ))
+            except asyncio.TimeoutError:
+                error = f"strict ASR timed out after {timeout_seconds:g} seconds"
+            except Exception as exc:
+                error = str(exc)
+            if transcript:
+                cache[sha256] = {
+                    "status": "ok",
+                    "transcript": transcript,
+                    "model": model_name,
+                    "checked_utc": now_utc(),
+                }
+            elif error:
+                cache[sha256] = {
+                    "status": "error",
+                    "error": error,
+                    "model": model_name,
+                    "checked_utc": now_utc(),
+                }
+            if checkpoint is not None:
+                checkpoint(cache)
+        if error:
+            qa = {"status": "error", "error": error}
+        else:
+            exact = (
+                gemini_tts._normalized_spoken_text(transcript)
+                == gemini_tts._normalized_spoken_text(spoken)
+            )
+            qa = {
+                "status": "exact" if exact else "mismatch",
+                "transcript": transcript,
+                "expected_spoken_text": spoken,
+                "model": clean(cache.get(sha256, {}).get("model", "")) or model_name,
+            }
+        assignment_item["semantic_qa"] = qa
+    return cache
+
+
+def build_gemini_audit_report(
+    manifest: dict[str, Any],
+    duden_index: dict[str, Any],
+    commons_index: dict[str, Any],
+    wiktionary_index: dict[str, Any],
+) -> dict[str, Any]:
+    """Classify live Gemini word audio without guessing through uncertainty."""
+    semantic = manifest.get("live_audio_audit", {})
+    review_ids = {
+        int(item["note_id"])
+        for name in ("semantic_candidates", "unknown_provenance")
+        for item in semantic.get(name, [])
+    }
+    mismatch_ids = {
+        int(item["note_id"])
+        for item in semantic.get("semantic_mismatches", [])
+    }
+    result = {
+        "schema_version": 1,
+        "wrong_certain": [],
+        "needs_review": [],
+        "valid_fallback": [],
+    }
+    indexes = {
+        "duden": duden_index.get("items", {}),
+        "commons": commons_index.get("items", {}),
+        "wiktionary": wiktionary_index.get("items", {}),
+    }
+    for item in sorted(
+        manifest.get("notes", {}).values(), key=lambda value: int(value["note_id"])
+    ):
+        if word_audio_provider(item.get("old_word_audio", "")) != "gemini":
+            continue
+        note_id = int(item["note_id"])
+        key = item.get("request_key", "")
+        evidence = {provider: values.get(key, {}) for provider, values in indexes.items()}
+        row = {
+            "note_id": note_id,
+            "level": item.get("level", ""),
+            "lemma": item.get("lemma", ""),
+            "pos": item.get("pos", ""),
+            "spoken_text": item.get("spoken_text", ""),
+            "current_sha256": word_audio_sha256(item.get("old_word_audio", "")),
+            "desired_provider": assignment_provider(item),
+            "desired_sha256": item.get("assignment", {}).get("sha256", ""),
+            "source_evidence": evidence,
+        }
+        provider_order = ("duden", "commons", "wiktionary")
+        desired_provider = row["desired_provider"]
+        if desired_provider in provider_order:
+            # A selected exact assignment is affirmative evidence for its own
+            # provider.  Only unresolved higher-priority providers can block
+            # promotion; lower-priority search noise is irrelevant.
+            considered_providers = provider_order[:provider_order.index(desired_provider)]
+        else:
+            considered_providers = provider_order
+        uncertain = any(
+            source.get("status") in {"ambiguous", "technical_error", "invalid"}
+            or (
+                source.get("status") == "unresolved"
+                and not _conclusive_source_absence(source)
+            )
+            for provider in considered_providers
+            for source in (evidence[provider],)
+            if source
+        )
+        if (
+            row["desired_provider"] in {"duden", "commons", "wiktionary"}
+            and item.get("assignment", {}).get("semantic_qa", {}).get("status")
+            != "exact"
+        ):
+            uncertain = True
+        if note_id in review_ids or uncertain:
+            row["reason"] = "source or semantic evidence requires review"
+            result["needs_review"].append(row)
+        elif row["desired_provider"] in {"duden", "commons", "wiktionary"}:
+            row["reason"] = "unique exact human recording replaces Gemini"
+            result["wrong_certain"].append(row)
+        elif note_id in mismatch_ids and row["desired_sha256"] != row["current_sha256"]:
+            row["reason"] = "semantic mismatch has a newly verified replacement"
+            result["wrong_certain"].append(row)
+        elif all(_conclusive_source_absence(source) for source in evidence.values()):
+            row["reason"] = "all exact human providers are conclusively unavailable"
+            result["valid_fallback"].append(row)
+        else:
+            row["reason"] = "source evidence is incomplete"
+            result["needs_review"].append(row)
+    result["counts"] = {
+        name: len(result[name])
+        for name in ("wrong_certain", "needs_review", "valid_fallback")
+    }
+    return result
+
+
 def validate_change_set(manifest: dict[str, Any]) -> None:
     semantic_repairs = {
         int(item["note_id"])
@@ -1556,11 +2304,22 @@ def validate_change_set(manifest: dict[str, Any]) -> None:
             "semantic_mismatches", []
         )
     }
-    prepared_ids = (
-        set(map(int, manifest.get("prepared_note_ids", [])))
-        if manifest.get("prepared_scope") in {"targeted", "edge"}
-        else None
-    )
+    prepared_scope = manifest.get("prepared_scope")
+    if prepared_scope == "gemini-audit":
+        audit = manifest.get("gemini_audit")
+        if not audit:
+            # Candidate transitions are deliberately validated only after the
+            # classification/ASR gate has produced an approved change set.
+            return
+        prepared_ids = {
+            int(item["note_id"]) for item in audit.get("wrong_certain", [])
+        }
+    else:
+        prepared_ids = (
+            set(map(int, manifest.get("prepared_note_ids", [])))
+            if prepared_scope in {"targeted", "edge"}
+            else None
+        )
     for item in manifest["notes"].values():
         if prepared_ids is not None and int(item["note_id"]) not in prepared_ids:
             continue
@@ -1579,6 +2338,14 @@ def validate_change_set(manifest: dict[str, Any]) -> None:
         ):
             continue
         if int(item["note_id"]) in semantic_repairs:
+            continue
+        if (
+            prepared_scope == "gemini-audit"
+            and old_provider == "gemini"
+            and desired_provider in {"duden", "commons", "wiktionary"}
+            and item.get("assignment", {}).get("semantic_qa", {}).get("status")
+            == "exact"
+        ):
             continue
         if old_provider in {"commons", "wiktionary", "edge", "gemini"} and desired_provider == "duden":
             continue
@@ -1659,6 +2426,7 @@ def finalize_manifest(
     ]
     for item in items:
         if item.get("assignment"):
+            enforce_approved_assignment(item)
             counts[item["assignment"]["source"]] += 1
             continue
         key = item["request_key"]
@@ -1678,6 +2446,7 @@ def finalize_manifest(
                     spoken_text=item["spoken_text"],
                 ),
             )
+            enforce_approved_assignment(item)
             counts["commons"] += 1
             continue
         extra = duden_index["items"].get(key, {})
@@ -1719,6 +2488,7 @@ def finalize_manifest(
                 lemma_identity=item["lemma_identity"],
                 spoken_text=item["spoken_text"],
             )
+        enforce_approved_assignment(item)
         counts[item["assignment"]["source"]] += 1
     expected = len(items)
     if sum(counts.values()) != expected:
@@ -1790,7 +2560,7 @@ async def command_prepare(_: argparse.Namespace) -> None:
             f"{len(manifest['missing_overrides'])} notes need spoken-text overrides; see {MANIFEST_PATH}"
         )
     groups = request_groups(manifest)
-    if _.scope in {"protected", "edge"} and _.note_id:
+    if _.scope in {"protected", "edge", "gemini-audit"} and _.note_id:
         raise WordAudioError(f"--note-id cannot be combined with {_.scope} scope")
     if _.scope == "edge":
         if _.offline:
@@ -1798,6 +2568,13 @@ async def command_prepare(_: argparse.Namespace) -> None:
         target_ids = selected_ids(manifest, "edge")
         if not target_ids:
             raise WordAudioError("live deck has no historical Edge WordAudio notes")
+    elif _.scope == "gemini-audit":
+        # Preparation always reclassifies the full live Gemini baseline.  The
+        # prior report narrows apply/verify, but must never narrow a resumed
+        # audit or an empty old approval set becomes self-locking.
+        target_ids = gemini_baseline_ids(manifest)
+        if not target_ids:
+            raise WordAudioError("live deck has no Gemini WordAudio notes")
     else:
         target_ids = selected_ids(manifest, "full", _.note_id) if _.note_id else []
     if target_ids:
@@ -1825,9 +2602,21 @@ async def command_prepare(_: argparse.Namespace) -> None:
             "counts": final["counts"],
         }, ensure_ascii=False, indent=2))
         return
-    duden_index = await prepare_duden(groups, refresh_negative=_.refresh_duden_fallbacks)
-    commons_index = await prepare_commons(groups, duden_index)
-    wiktionary_index = await prepare_wiktionary(groups, duden_index, commons_index)
+    refresh_negative = (
+        _.refresh_duden_fallbacks
+        or (_.scope == "gemini-audit" and not _.offline)
+    )
+    duden_index = await prepare_duden(
+        groups,
+        refresh_negative=refresh_negative,
+        fail_on_technical_error=_.scope != "gemini-audit",
+    )
+    commons_index = await prepare_commons(
+        groups, duden_index, refresh_negative=refresh_negative
+    )
+    wiktionary_index = await prepare_wiktionary(
+        groups, duden_index, commons_index, refresh_negative=refresh_negative
+    )
     gemini_index = await prepare_gemini(groups, duden_index, commons_index, wiktionary_index)
     final = finalize_manifest(
         manifest,
@@ -1836,12 +2625,45 @@ async def command_prepare(_: argparse.Namespace) -> None:
         gemini_index,
         wiktionary_index,
         note_ids=target_ids,
-        prepared_scope="edge" if _.scope == "edge" else None,
+        prepared_scope=(
+            "edge" if _.scope == "edge"
+            else "gemini-audit" if _.scope == "gemini-audit"
+            else None
+        ),
     )
+    if _.scope == "gemini-audit":
+        asr_document = load_json(
+            WORD_ASR_INDEX, {"schema_version": 1, "items": {}}
+        )
+        if asr_document.get("schema_version") != 1:
+            raise WordAudioError("unsupported semantic ASR cache schema")
+        await verify_human_assignment_semantics(
+            final,
+            target_ids,
+            cache=asr_document.setdefault("items", {}),
+            checkpoint=lambda _items: atomic_json(WORD_ASR_INDEX, asr_document),
+        )
+        atomic_json(WORD_ASR_INDEX, asr_document)
+        report = build_gemini_audit_report(
+            final, duden_index, commons_index, wiktionary_index
+        )
+        report.update({
+            "created_utc": now_utc(),
+            "baseline_gemini_note_ids": target_ids,
+        })
+        report["report_sha256"] = canonical_hash(report)
+        final["gemini_audit"] = report
+        final["gemini_audit_report"] = str(GEMINI_AUDIT_REPORT)
+        validate_change_set(final)
+        atomic_json(GEMINI_AUDIT_REPORT, report)
+        atomic_json(MANIFEST_PATH, final)
     print(json.dumps({
         "notes": len(target_ids) if target_ids else final["note_count"],
         "scope": final["prepared_scope"],
-        "counts": final["counts"],
+        "counts": (
+            final["gemini_audit"]["counts"]
+            if _.scope == "gemini-audit" else final["counts"]
+        ),
     }, ensure_ascii=False, indent=2))
 
 
@@ -2023,6 +2845,19 @@ def selected_ids(
                 for item in manifest["notes"].values()
                 if word_audio_provider(item.get("old_word_audio", "")) == "edge"
             )
+    elif scope == "gemini-audit":
+        audit = manifest.get("gemini_audit")
+        if audit:
+            selected = sorted(
+                int(item["note_id"])
+                for item in audit.get("wrong_certain", [])
+            )
+        else:
+            selected = sorted(
+                int(item["note_id"])
+                for item in manifest["notes"].values()
+                if word_audio_provider(item.get("old_word_audio", "")) == "gemini"
+            )
     else:
         selected = sorted(map(int, manifest["notes"]))
     if note_ids:
@@ -2036,6 +2871,15 @@ def selected_ids(
     return selected
 
 
+def gemini_baseline_ids(manifest: dict[str, Any]) -> list[int]:
+    """Return every live Gemini note, independent of any prior audit report."""
+    return sorted(
+        int(item["note_id"])
+        for item in manifest.get("notes", {}).values()
+        if word_audio_provider(item.get("old_word_audio", "")) == "gemini"
+    )
+
+
 def require_prepared_scope(
     manifest: dict[str, Any],
     requested: str,
@@ -2046,6 +2890,10 @@ def require_prepared_scope(
         raise WordAudioError("manifest is prepared only for protected audio")
     if prepared == "edge" and requested != "edge":
         raise WordAudioError("manifest is prepared only for the audited Edge migration scope")
+    if prepared == "gemini-audit" and requested != "gemini-audit":
+        raise WordAudioError(
+            "manifest is prepared only for the audited Gemini correction scope"
+        )
     if prepared == "targeted":
         allowed = set(map(int, manifest.get("prepared_note_ids", [])))
         requested_ids = set(map(int, note_ids or []))
@@ -2103,6 +2951,28 @@ def update_word_audio(note_ids: list[int], values: dict[int, str]) -> None:
         if errors:
             raise WordAudioError(f"Anki update errors: {errors[:3]}")
 
+    def read_values(ids: list[int]) -> dict[int, str]:
+        notes: list[dict[str, Any]] = []
+        for batch in gw.chunks(ids, 60):
+            notes.extend(gw.anki("notesInfo", notes=batch))
+        return {
+            int(note["noteId"]): note.get("fields", {}).get("WordAudio", {}).get("value", "")
+            for note in notes
+        }
+
+    actual = read_values(note_ids)
+    missing = [note_id for note_id in note_ids if actual.get(note_id) != values[note_id]]
+    for note_id in missing:
+        gw.anki(
+            "updateNoteFields",
+            note={"id": note_id, "fields": {"WordAudio": values[note_id]}},
+        )
+    if missing:
+        actual = read_values(note_ids)
+    failed = [note_id for note_id in note_ids if actual.get(note_id) != values[note_id]]
+    if failed:
+        raise WordAudioError(f"Anki WordAudio write verification failed: {failed[:5]}")
+
 
 def command_apply(args: argparse.Namespace) -> None:
     if not args.dry_run and args.confirmation != APPLY_CONFIRMATION:
@@ -2136,7 +3006,7 @@ def verify_state(
     require_prepared_scope(manifest, scope, note_ids)
     records = live_records()
     selected = set(selected_ids(manifest, scope, note_ids))
-    targeted = scope in {"protected", "edge"} or bool(note_ids)
+    targeted = scope in {"protected", "edge", "gemini-audit"} or bool(note_ids)
     if set(records) != set(map(int, snapshot["notes"])):
         raise WordAudioError("note ID set changed")
     checked_records = (
@@ -2310,7 +3180,10 @@ def build_parser() -> argparse.ArgumentParser:
     prepare.add_argument("--confirm-duden-usage", action="store_true", required=True)
     prepare.add_argument("--confirm-commons-license", action="store_true")
     prepare.add_argument("--offline", action="store_true", help="Resume from the existing audit manifest without AnkiConnect.")
-    prepare.add_argument("--scope", choices=("edge", "protected", "full"), default="full")
+    prepare.add_argument(
+        "--scope", choices=("edge", "protected", "gemini-audit", "full"),
+        default="full",
+    )
     prepare.add_argument("--note-id", type=int, action="append")
     prepare.add_argument(
         "--refresh-duden-fallbacks", action="store_true",
@@ -2319,13 +3192,19 @@ def build_parser() -> argparse.ArgumentParser:
     prepare.set_defaults(func=command_prepare)
     sub.add_parser("snapshot").set_defaults(func=command_snapshot)
     apply = sub.add_parser("apply")
-    apply.add_argument("--scope", choices=("edge", "pilot", "protected", "full"), default="full")
+    apply.add_argument(
+        "--scope", choices=("edge", "pilot", "protected", "gemini-audit", "full"),
+        default="full",
+    )
     apply.add_argument("--dry-run", action="store_true")
     apply.add_argument("--confirmation")
     apply.add_argument("--note-id", type=int, action="append")
     apply.set_defaults(func=command_apply)
     verify = sub.add_parser("verify")
-    verify.add_argument("--scope", choices=("edge", "pilot", "protected", "full"), default="full")
+    verify.add_argument(
+        "--scope", choices=("edge", "pilot", "protected", "gemini-audit", "full"),
+        default="full",
+    )
     verify.add_argument("--baseline", action="store_true")
     verify.add_argument("--note-id", type=int, action="append")
     verify.set_defaults(func=command_verify)
@@ -2334,7 +3213,10 @@ def build_parser() -> argparse.ArgumentParser:
     protect.add_argument("--reason", required=True)
     protect.set_defaults(func=command_protect_current)
     rollback = sub.add_parser("rollback")
-    rollback.add_argument("--scope", choices=("edge", "pilot", "protected", "full"), default="full")
+    rollback.add_argument(
+        "--scope", choices=("edge", "pilot", "protected", "gemini-audit", "full"),
+        default="full",
+    )
     rollback.add_argument("--confirmation", required=True)
     rollback.add_argument("--note-id", type=int, action="append")
     rollback.set_defaults(func=command_rollback)

@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "entries": {
+    "A1-84887177192": {
+      "expected_lemma": "Million",
+      "spoken_text": "Million",
+      "provider": "duden",
+      "sha256": "4a3e413eb7ed522137d4ed192711a7dfa0773edd10afa0a0e2aec632edce5533",
+      "source_url": "https://www.duden.de/rechtschreibung/Million",
+      "audio_url": "https://cdn.duden.de/_media_/audio/ID4520693_103100655.mp3",
+      "source_revision": "etag:14f6b6987cff02cec83c645c668417e5",
+      "semantic_model": "openai/whisper-small",
+      "semantic_transcript": "Million."
+    },
+    "A1-84887177193": {
+      "expected_lemma": "Milliarde",
+      "spoken_text": "Milliarde",
+      "provider": "duden",
+      "sha256": "5a0c7a59709a819615ff986e1f9cafaf50f7acb787e5032255f09e3ed34014fc",
+      "source_url": "https://www.duden.de/rechtschreibung/Milliarde",
+      "audio_url": "https://cdn.duden.de/_media_/audio/ID4107833_322381313.mp3",
+      "source_revision": "etag:fc865273c4bd9c05ce92565f8e2e4e1e",
+      "semantic_model": "jonatasgrosman/wav2vec2-large-xlsr-53-german",
+      "semantic_transcript": "milliarde"
+    },
+    "A2-0212": {
+      "expected_lemma": "dagegen sein",
+      "spoken_text": "dagegen",
+      "provider": "duden",
+      "sha256": "d40aa0873234850a568c5f20de158b83203c325f5089539411cdfa6310d0ea9f",
+      "source_url": "https://www.duden.de/rechtschreibung/dagegen",
+      "audio_url": "https://cdn.duden.de/_media_/audio/ID4115845_496288394.mp3",
+      "source_revision": "etag:272dd992ada40179bbdb2d0bfb14c2c3",
+      "semantic_model": "openai/whisper-small",
+      "semantic_transcript": "dagegen."
+    },
+    "B1-MAIN-0489": {
+      "expected_lemma": "dagegen",
+      "spoken_text": "dagegen",
+      "provider": "duden",
+      "sha256": "d40aa0873234850a568c5f20de158b83203c325f5089539411cdfa6310d0ea9f",
+      "source_url": "https://www.duden.de/rechtschreibung/dagegen",
+      "audio_url": "https://cdn.duden.de/_media_/audio/ID4115845_496288394.mp3",
+      "source_revision": "etag:272dd992ada40179bbdb2d0bfb14c2c3",
+      "semantic_model": "openai/whisper-small",
+      "semantic_transcript": "dagegen."
+    },
+    "A2-0293": {
+      "expected_lemma": "erlaubt sein",
+      "spoken_text": "erlaubt",
+      "provider": "commons",
+      "sha256": "49a4cc0c7f206a12d643e1155c236adab1fce8a07a3a39e74f1d701e58769ab8",
+      "source_url": "https://commons.wikimedia.org/wiki/File:De-erlaubt.ogg",
+      "audio_url": "https://upload.wikimedia.org/wikipedia/commons/3/3c/De-erlaubt.ogg",
+      "source_revision": "sha1:75f392ef589c1f96ea97a73e426b3e936116a737",
+      "semantic_model": "openai/whisper-small",
+      "semantic_transcript": "erlaubt"
+    },
+    "A2-1050": {
+      "expected_lemma": "verabredet sein",
+      "spoken_text": "verabredet",
+      "provider": "commons",
+      "sha256": "201cf82a6a091a0c95efe7b5d976c4918cea2773647b34938bce691ef0b1d2b2",
+      "source_url": "https://commons.wikimedia.org/wiki/File:De-verabredet.ogg",
+      "audio_url": "https://upload.wikimedia.org/wikipedia/commons/1/16/De-verabredet.ogg",
+      "source_revision": "sha1:61d9e6788127af9197c079aed1fb17117d9b4f76",
+      "semantic_model": "openai/whisper-small",
+      "semantic_transcript": "Verabredet"
+    },
+    "A1-84886454917": {
+      "expected_lemma": "Lieblings-",
+      "spoken_text": "Lieblings",
+      "provider": "commons",
+      "sha256": "7953bbaf7cb2cc881c4eb1ca809b97bd8943ef78ba952c7d7682a4eb5d74f449",
+      "source_url": "https://commons.wikimedia.org/wiki/File:De-Lieblings.ogg",
+      "audio_url": "https://upload.wikimedia.org/wikipedia/commons/b/bf/De-Lieblings.ogg",
+      "source_revision": "sha1:1da280633a60d8429fd9406a59a3a7f1e0194fcd",
+      "semantic_model": "openai/whisper-small",
+      "semantic_transcript": "Lieblings"
+    },
+    "B1-MAIN-0030": {
+      "expected_lemma": "absolut",
+      "spoken_text": "absolut",
+      "provider": "duden",
+      "sha256": "01160db9bdf952e0ab76dbf9428bc36a4796364fd76fe1fe237c1b9f2a38b434",
+      "source_url": "https://www.duden.de/rechtschreibung/absolut_Adjektiv",
+      "audio_url": "https://cdn.duden.de/_media_/audio/ID4129903_52224224.mp3",
+      "source_revision": "etag:5c143598ccba572d6584d8e3d582e9dd",
+      "semantic_model": "openai/whisper-small",
+      "semantic_transcript": "Absolut."
+    },
+    "B1-MAIN-0399": {
+      "expected_lemma": "Bio-",
+      "spoken_text": "Bio",
+      "provider": "commons",
+      "sha256": "0f60de60b09fca11b3c5896804f821a3a8753ffdaa78fc5521f349005ddd7241",
+      "source_url": "https://commons.wikimedia.org/wiki/File:De-Bio.ogg",
+      "audio_url": "https://upload.wikimedia.org/wikipedia/commons/6/69/De-Bio.ogg",
+      "source_revision": "sha1:40e3263824a61204d84b022bc66651e6f2b6bb2c",
+      "semantic_model": "openai/whisper-small",
+      "semantic_transcript": "Bio"
+    },
+    "A2-MAIN-0268": {
+      "expected_lemma": "Einzel-",
+      "spoken_text": "Einzel",
+      "provider": "commons",
+      "sha256": "aeb2b43223bf96199d7512858315a95b4f9dbba0989cff17bd35e76aadd61055",
+      "source_url": "https://commons.wikimedia.org/wiki/File:De-Einzel.ogg",
+      "audio_url": "https://upload.wikimedia.org/wikipedia/commons/4/4f/De-Einzel.ogg",
+      "source_revision": "sha1:d746e1424cf8e184b8281b92dc5e8b51cedb6b41",
+      "semantic_model": "openai/whisper-small",
+      "semantic_transcript": "Einzel."
+    },
+    "B1-MAIN-0819": {
+      "expected_lemma": "Ferien-",
+      "spoken_text": "Ferien",
+      "provider": "duden",
+      "sha256": "35c2157b5d183b7057cb3206f7390423ca13914d5f830dc4de72fac466f946ce",
+      "source_url": "https://www.duden.de/rechtschreibung/Ferien",
+      "audio_url": "https://cdn.duden.de/_media_/audio/ID4114518_145352044.mp3",
+      "source_revision": "etag:f33d374b1c20eebd9cb943ca7f9e5b52",
+      "semantic_model": "openai/whisper-small",
+      "semantic_transcript": "Ferien."
+    },
+    "B1-MAIN-1078": {
+      "expected_lemma": "Groß-",
+      "spoken_text": "Groß",
+      "provider": "commons",
+      "sha256": "ab4dada631957341deda4a0927d2a00f2ad43fa798d2029017aed9b548478d33",
+      "source_url": "https://commons.wikimedia.org/wiki/File:De-Gro%C3%9F.ogg",
+      "audio_url": "https://upload.wikimedia.org/wikipedia/commons/a/a2/De-Gro%C3%9F.ogg",
+      "source_revision": "sha1:dd7bccd0ddb68b2ac5d460c6ec2e08572c2dd756",
+      "semantic_model": "openai/whisper-small",
+      "semantic_transcript": "Groß!"
+    },
+    "B1-MAIN-1629": {
+      "expected_lemma": "miss-",
+      "spoken_text": "miss",
+      "provider": "commons",
+      "sha256": "cf6a704745d98b51ea95669bc3248d2d2cefb65f2d746bf163515aaa9a15f037",
+      "source_url": "https://commons.wikimedia.org/wiki/File:De-miss.ogg",
+      "audio_url": "https://upload.wikimedia.org/wikipedia/commons/1/18/De-miss.ogg",
+      "source_revision": "sha1:d7985d9e34f835944538c7650c141cf957ffc637",
+      "semantic_model": "openai/whisper-small",
+      "semantic_transcript": "Miss."
+    },
+    "B1-MAIN-2466": {
+      "expected_lemma": "Traum-",
+      "spoken_text": "Traum",
+      "provider": "duden",
+      "sha256": "c314954334ce6222f66ed26d5f6910b464ac30faeebb0bd8f5740453eba0f801",
+      "source_url": "https://www.duden.de/rechtschreibung/Traum",
+      "audio_url": "https://cdn.duden.de/_media_/audio/ID4108509_283795095.mp3",
+      "source_revision": "etag:47b56aebae39be18475477ca8b551c51",
+      "semantic_model": "openai/whisper-small",
+      "semantic_transcript": "Traum"
+    }
+  }
+}

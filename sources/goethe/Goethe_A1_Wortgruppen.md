@@ -38,8 +38,8 @@ Structured transcription of the *Inventare* on pages 6–8 of `A1_SD1_Wortliste_
 | A1-WG-0030 | 101 | hunderteins | A1 | 6 |  |  |  |  |  |  |  |  |  |  |
 | A1-WG-0031 | 200 | zweihundert | A1 | 6 |  |  |  |  |  |  |  |  |  |  |
 | A1-WG-0032 | 1.000 | (ein)tausend | A1 | 6 |  |  |  |  |  |  |  |  |  |  |
-| A1-WG-0033 | 1.000.000 | eine Million, =en | A1 | 6 |  |  |  |  |  |  |  |  |  |  |
-| A1-WG-0034 | 1.000.000.000 | eine Milliarde, =en | A1 | 6 |  |  |  |  |  |  |  |  |  |  |
+| A1-WG-0033 | 1.000.000 | eine Million, =en | A1 | 6 |  |  | Million | n. | die | f. | -en |  | Source entry is a quantity form; card headword is the lexical noun. | https://www.duden.de/rechtschreibung/Million |
+| A1-WG-0034 | 1.000.000.000 | eine Milliarde, =en | A1 | 6 |  |  | Milliarde | n. | die | f. | -n |  | Source entry is a quantity form; card headword is the lexical noun. | https://www.duden.de/rechtschreibung/Milliarde |
 | A1-WG-0035 | das/der/die erste |  | A1 | 6 |  | ordinal |  |  |  |  |  |  |  |  |
 | A1-WG-0036 | zweite |  | A1 | 6 |  | ordinal |  |  |  |  |  |  |  |  |
 | A1-WG-0037 | dritte |  | A1 | 6 |  | ordinal |  |  |  |  |  |  |  |  |

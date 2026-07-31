@@ -258,6 +258,12 @@ def test_matching_page_without_audio_blocks_conflicting_audio_page():
 
 def test_audit_headword_matching_is_exact_case_and_rejects_lemma():
     assert duden.exact_audit_headword_matches("essen", "essen")
+    assert duden.exact_audit_headword_matches(
+        "Geografie", "Geografie, Geographie"
+    )
+    assert duden.exact_audit_headword_matches(
+        "Geographie", "Geografie, Geographie"
+    )
     assert not duden.exact_audit_headword_matches("Essen", "essen")
     assert not duden.exact_audit_headword_matches("Beamte", "Beamter")
     assert not duden.exact_audit_headword_matches("Papiere", "Papier")

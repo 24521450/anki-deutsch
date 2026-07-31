@@ -128,6 +128,23 @@ def test_pommes_frites_pronunciation_override_is_exact_and_example_only():
     )
 
 
+def test_repetition_override_is_exact_versioned_and_example_only():
+    text = (
+        "Welche Süßigkeiten isst du am liebsten? - Schokolade und Eis."
+    )
+    assert tts.pronunciation_override_identity(text, "example") == {
+        "kind": "example-repetition",
+        "phrase": text,
+        "version": 1,
+    }
+    prompt = tts._tts_prompt(text, "example")
+    assert "Lies die Frage genau einmal" in prompt
+    assert "Wiederhole weder" in prompt
+    assert "am liebsten?\nSchokolade" in prompt
+    assert "am liebsten? - Schokolade" not in prompt
+    assert tts.pronunciation_override_identity(text, "word") is None
+
+
 @pytest.mark.parametrize(
     ("text", "voice", "purpose", "filename"),
     [
@@ -219,6 +236,53 @@ def test_independent_asr_accepts_full_audio_when_live_transcript_is_truncated(
     assert result["asr_transcript"] == (
         "Diesen Hut habe ich auf dem Flohmarkt gekauft."
     )
+    assert result["qa_version"] == tts.EXAMPLE_QA_VERSION
+
+
+def test_strict_asr_rejects_repeated_phrase_even_when_live_transcript_is_exact(
+    monkeypatch, tmp_path
+):
+    text = (
+        "Welche Süßigkeiten isst du am liebsten? - Schokolade und Eis."
+    )
+    calls = []
+    strict = iter([
+        (
+            "Welche Süßigkeiten isst du am liebsten? "
+            "Isst du am liebsten? - Schokolade und Eis."
+        ),
+        text,
+    ])
+
+    monkeypatch.setattr(tts, "_create_client", lambda: object())
+
+    async def synthesize(client, value, voice, purpose):
+        calls.append(value)
+        return pcm(), value
+
+    async def transcribe(client, value):
+        return next(strict)
+
+    async def no_sleep(delay):
+        pass
+
+    monkeypatch.setattr(tts, "_synthesize_pcm", synthesize)
+    monkeypatch.setattr(tts, "_transcribe_pcm", transcribe)
+    monkeypatch.setattr(tts, "_encode_mp3", lambda value: fake_mp3())
+    monkeypatch.setattr(tts, "_sleep", no_sleep)
+    monkeypatch.setattr(
+        tts, "_now_utc", lambda: "2026-07-31T00:00:00+00:00"
+    )
+
+    result = asyncio.run(
+        tts.generate_verified_mp3(
+            text, "Kore", "example", tmp_path / "result.mp3"
+        )
+    )
+
+    assert calls == [text, text]
+    assert result["strict_transcript"] == text
+    assert result["qa_version"] == tts.EXAMPLE_QA_VERSION
 
 
 def test_normalized_live_transcript_writes_atomic_metadata(monkeypatch, tmp_path):
@@ -248,7 +312,11 @@ def test_normalized_live_transcript_writes_atomic_metadata(monkeypatch, tmp_path
             "live_transcript": (
                 "FÜR Schüler, Studenten und Rentner gibt es eine Ermäßigung!"
             ),
-            "qa_source": "live-output-audio-transcription",
+            "qa_source": "gemini-3.6-flash",
+            "qa_version": tts.EXAMPLE_QA_VERSION,
+            "strict_transcript": (
+                "FÜR Schüler, Studenten und Rentner gibt es eine Ermäßigung!"
+            ),
             "voice": "Charon",
         "created_utc": "2026-07-29T00:00:00+00:00",
     }

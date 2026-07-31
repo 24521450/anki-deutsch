@@ -19,18 +19,23 @@ class HighlightError(RuntimeError):
 class _Candidate(str):
     def __new__(
         cls, value: str, *, case_sensitive: bool = False, case_mode: str = "fold",
-        role: str = "standalone", pair_key: str = "",
+        role: str = "standalone", pair_key: str = "", boundary_mode: str = "default",
+        sequence_index: int = -1, sequence_size: int = 0,
     ) -> _Candidate:
         candidate = super().__new__(cls, value)
         candidate.case_sensitive = case_sensitive
         candidate.case_mode = "exact" if case_sensitive else case_mode
         candidate.role = role
         candidate.pair_key = pair_key
+        candidate.boundary_mode = boundary_mode
+        candidate.sequence_index = sequence_index
+        candidate.sequence_size = sequence_size
         return candidate
 
 
 ROOT = Path(__file__).resolve().parents[1]
 VERB_POLICY_PATH = ROOT / "review" / "goethe_verb_target_policy.json"
+HIGHLIGHT_POLICY_PATH = ROOT / "review" / "goethe_target_highlight_audit_v3.json"
 
 
 @lru_cache(maxsize=1)
@@ -51,6 +56,68 @@ def verb_policy() -> dict[str, Any]:
     if not isinstance(overrides, list) or len(overrides) != 15:
         raise HighlightError("verb target policy must contain 15 semantic overrides")
     return value
+
+
+@lru_cache(maxsize=1)
+def highlight_policy() -> dict[str, Any]:
+    try:
+        value = json.loads(HIGHLIGHT_POLICY_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise HighlightError(f"target-highlight audit is unavailable: {exc}") from exc
+    if value.get("schema_version") != 1 or not isinstance(value.get("cases"), list):
+        raise HighlightError("unsupported target-highlight audit schema")
+    seen: set[tuple[str, int]] = set()
+    allowed = {"missing_certain", "needs_review", "valid_blank"}
+    for case in value["cases"]:
+        if not isinstance(case, dict) or set(case) != {
+            "source_id", "example_index", "text", "status", "reason", "targets",
+        }:
+            raise HighlightError("target-highlight audit case has invalid fields")
+        key = (case["source_id"], case["example_index"])
+        if (
+            not isinstance(key[0], str) or not key[0]
+            or not isinstance(key[1], int) or isinstance(key[1], bool) or key[1] < 1
+            or key in seen or case["status"] not in allowed
+            or not isinstance(case["text"], str) or not case["text"]
+            or not isinstance(case["reason"], str) or not case["reason"]
+            or not isinstance(case["targets"], list)
+        ):
+            raise HighlightError("target-highlight audit case is invalid")
+        if case["status"] == "missing_certain" and not case["targets"]:
+            raise HighlightError("missing-certain audit case has no targets")
+        if case["status"] != "missing_certain" and case["targets"]:
+            raise HighlightError("non-repair audit case must not have targets")
+        seen.add(key)
+    return value
+
+
+def _audit_target_ranges(text: str, targets: list[Any]) -> list[tuple[int, int]]:
+    result: list[tuple[int, int]] = []
+    for target in targets:
+        occurrence: int | None = None
+        if isinstance(target, str):
+            surface = target
+        elif (
+            isinstance(target, dict) and set(target) == {"text", "occurrence"}
+            and isinstance(target.get("text"), str)
+            and isinstance(target.get("occurrence"), int)
+            and not isinstance(target.get("occurrence"), bool)
+            and target["occurrence"] > 0
+        ):
+            surface = target["text"]
+            occurrence = target["occurrence"]
+        else:
+            raise HighlightError("reviewed audit target is invalid")
+        starts = [match.start() for match in re.finditer(re.escape(surface), text)]
+        if not starts or (occurrence is not None and occurrence > len(starts)):
+            raise HighlightError("reviewed audit target is absent")
+        if occurrence is not None:
+            starts = [starts[occurrence - 1]]
+        result.extend((start, start + len(surface)) for start in starts)
+    ranges = sorted(set(result))
+    if any(start < prior_end for prior_end, (start, _) in zip((end for _, end in ranges), ranges[1:])):
+        raise HighlightError("reviewed audit targets overlap")
+    return ranges
 
 
 class _TextExtractor(HTMLParser):
@@ -77,7 +144,57 @@ def _strip_gender_qualifier(value: str) -> str:
     return re.sub(r"\s*\((?:männlich|weiblich)\)\s*$", "", value, flags=re.I).strip()
 
 
+def _notation_candidates(value: str) -> list[_Candidate]:
+    """Translate Goethe dictionary notation into visible surface components."""
+    value = str(value or "").strip()
+    if not value:
+        return []
+
+    sequence = [part.strip() for part in re.split(r"\s*(?:…|\.{3})\s*", value) if part.strip()]
+    if len(sequence) >= 2:
+        pair_key = "notation:" + re.sub(r"\s+", " ", value).casefold()
+        return [
+            _Candidate(
+                part, role="sequence", pair_key=pair_key,
+                sequence_index=index, sequence_size=len(sequence),
+            )
+            for index, part in enumerate(sequence)
+        ]
+
+    has_slash = "/" in value
+    has_bound_edge = value.startswith("-") or value.endswith("-")
+    optional = re.search(r"\(([^()]*)\)", value)
+    if not has_slash and not has_bound_edge and not optional:
+        return []
+
+    variants = value.split("/") if has_slash else [value]
+    if optional:
+        before, after = value[:optional.start()], value[optional.end():]
+        if not before and after.startswith("-"):
+            variants = [after[1:], optional.group(1) + after[1:]]
+        else:
+            variants = [before + after, before + optional.group(1) + after]
+
+    result: list[_Candidate] = []
+    for variant in variants:
+        variant = re.sub(r"\s+", " ", variant).strip()
+        if not variant:
+            continue
+        leading = variant.startswith("-")
+        trailing = variant.endswith("-")
+        surface = variant.removeprefix("-").removesuffix("-").strip()
+        if not surface:
+            continue
+        boundary_mode = "suffix" if leading else "prefix" if trailing else "default"
+        result.append(_Candidate(surface, boundary_mode=boundary_mode))
+    return result
+
+
 def _umlaut(value: str) -> str:
+    for index in range(len(value) - 2, -1, -1):
+        if value[index:index + 2].casefold() == "au":
+            replacement = "Äu" if value[index].isupper() else "äu"
+            return value[:index] + replacement + value[index + 2:]
     replacements = {"a": "ä", "o": "ö", "u": "ü", "A": "Ä", "O": "Ö", "U": "Ü"}
     for index in range(len(value) - 1, -1, -1):
         if value[index] in replacements:
@@ -143,6 +260,16 @@ def _verb_stem(infinitive: str) -> str:
     return infinitive
 
 
+def _weak_participle(infinitive: str, particle: str = "") -> str:
+    stem = _verb_stem(infinitive)
+    if not stem or infinitive.casefold().endswith("ieren"):
+        return ""
+    if not particle and re.match(r"^(?:be|emp|ent|er|ge|miss|ver|zer)", infinitive, flags=re.I):
+        return ""
+    ending = "et" if re.search(r"[dt]$", stem, flags=re.I) else "t"
+    return particle + "ge" + stem + ending
+
+
 def _verb_surfaces(infinitive: str, raw_forms: list[str]) -> set[str]:
     surfaces = {infinitive}
     stem = _verb_stem(infinitive)
@@ -192,6 +319,9 @@ def _verb_surfaces(infinitive: str, raw_forms: list[str]) -> set[str]:
         "wissen": ("weiß", "weißt", "wissen", "wisst", "wusste", "gewusst"),
     }
     surfaces.update(irregular.get(infinitive.casefold(), ()))
+    participle = _weak_participle(infinitive)
+    if participle:
+        surfaces.add(participle)
     return {value for value in surfaces if len(value) > 1}
 
 
@@ -235,6 +365,8 @@ def candidate_terms(fields: dict[str, str]) -> list[str]:
     lexical_lemma = _strip_gender_qualifier(lemma)
     accepted = [_strip_gender_qualifier(value) for value in split_pipe(fields.get("AcceptedAnswersDE", ""))]
     values = [lemma, lexical_lemma, *accepted]
+    for value in [lemma, lexical_lemma, *accepted]:
+        values.extend(_notation_candidates(value))
     lexical_bases: list[str] = []
     seen_bases: set[str] = set()
     for value in [lexical_lemma, *accepted]:
@@ -265,6 +397,24 @@ def candidate_terms(fields: dict[str, str]) -> list[str]:
         )
 
     pos = str(fields.get("POS") or "")
+    if re.fullmatch(r"n\.?", pos, flags=re.I):
+        for base in lexical_bases:
+            if not base or re.search(r"[/…()]|\.{3}", base):
+                continue
+            compound_surfaces = {base, _umlaut(base) + "e", _umlaut(base) + "er"}
+            standalone_surfaces: set[str] = set()
+            if base.casefold().endswith("in") and len(base) > 3:
+                masculine = base[:-2]
+                standalone_surfaces.update({masculine, masculine + "e", masculine + "en"})
+            elif base.casefold().endswith("e") and len(base) > 2:
+                standalone_surfaces.add(base[:-1] + "in")
+            elif base.casefold().endswith("er"):
+                standalone_surfaces.add(base + "in")
+            values.extend(
+                _Candidate(surface, boundary_mode="compound")
+                for surface in compound_surfaces if surface
+            )
+            values.extend(standalone_surfaces)
     if re.fullmatch(r"n\.?", pos, flags=re.I) and re.search(r"-(?:n|en)\b", noun, flags=re.I):
         for base in lexical_bases:
             if re.search(r"e$", base, flags=re.I):
@@ -304,37 +454,61 @@ def candidate_terms(fields: dict[str, str]) -> list[str]:
                 pass
             else:
                 values.append(_Candidate(particle + "zu" + head, case_mode="verb"))
+            participle = _weak_participle(head, particle)
+            if participle:
+                values.append(_Candidate(participle, case_mode="verb"))
         for predicate in spec.get("predicate") or []:
             values.append(_Candidate(str(predicate), role="predicate", pair_key=pair_key))
         for form in raw_forms:
             values.append(_Candidate(form, case_mode="verb"))
 
-    if re.search(r"adj|det|pron", pos, flags=re.I):
+    if re.search(r"adj|adv|det|pron", pos, flags=re.I):
         inflection_bases = [lexical_lemma] + [value for value in accepted if value.endswith("-")]
         for inflection_base in dict.fromkeys(inflection_bases):
             base = inflection_base.removesuffix("-")
+            if not base or re.search(r"[/…()]|\.{3}|\s", base):
+                continue
+            values.append(_Candidate(base, boundary_mode="prefix"))
             values.extend(base + ending for ending in ("e", "en", "em", "er", "es"))
+            if base.casefold().endswith("el"):
+                contracted = base[:-2] + base[-1]
+                values.extend(contracted + ending for ending in ("e", "en", "em", "er", "es"))
+            values.extend((_umlaut(base) + "er", base + "er"))
 
     result: list[str] = []
-    seen: set[tuple[str, str, str, str]] = set()
+    seen: set[tuple[str, str, str, str, str, int, int]] = set()
     for value in values:
         case_sensitive = bool(getattr(value, "case_sensitive", False))
         case_mode = str(getattr(value, "case_mode", "fold"))
         role = str(getattr(value, "role", "standalone"))
         pair_key = str(getattr(value, "pair_key", ""))
+        boundary_mode = str(getattr(value, "boundary_mode", "default"))
+        sequence_index = int(getattr(value, "sequence_index", -1))
+        sequence_size = int(getattr(value, "sequence_size", 0))
         value = str(value or "").strip()
-        key = (value.casefold(), case_mode, role, pair_key)
+        key = (
+            value.casefold(), case_mode, role, pair_key, boundary_mode,
+            sequence_index, sequence_size,
+        )
         if value and key not in seen:
             seen.add(key)
             result.append(_Candidate(
                 value, case_sensitive=case_sensitive, case_mode=case_mode,
-                role=role, pair_key=pair_key,
+                role=role, pair_key=pair_key, boundary_mode=boundary_mode,
+                sequence_index=sequence_index, sequence_size=sequence_size,
             ))
     return sorted(result, key=len, reverse=True)
 
 
 def _bounded_pattern(candidate: str, pos: str) -> str:
     escaped = re.escape(candidate)
+    boundary_mode = str(getattr(candidate, "boundary_mode", "default"))
+    if boundary_mode == "prefix":
+        return rf"(?<!\w){escaped}"
+    if boundary_mode == "suffix":
+        return rf"(?<=\w){escaped}(?!\w)"
+    if boundary_mode == "compound":
+        return rf"(?<=\w){escaped}"
     is_noun = bool(re.fullmatch(r"n\.?", str(pos or ""), flags=re.I))
     if len(candidate) < 4 or not is_noun:
         return rf"(?<!\w){escaped}(?!\w)"
@@ -342,7 +516,7 @@ def _bounded_pattern(candidate: str, pos: str) -> str:
 
 
 def match_ranges(text: str, candidates: Iterable[str], pos: str = "") -> list[tuple[int, int]]:
-    occurrences: list[tuple[int, int, str, str]] = []
+    occurrences: list[tuple[int, int, str, str, int, int]] = []
     for candidate in candidates:
         if not candidate:
             continue
@@ -358,19 +532,42 @@ def match_ranges(text: str, candidates: Iterable[str], pos: str = "") -> list[tu
             occurrences.append((
                 match.start(), match.end(), str(getattr(candidate, "role", "standalone")),
                 str(getattr(candidate, "pair_key", "")),
+                int(getattr(candidate, "sequence_index", -1)),
+                int(getattr(candidate, "sequence_size", 0)),
             ))
 
     def clause_at(index: int) -> int:
         return len(re.findall(r"[,.!?;:\n–—]", text[:index]))
 
     retained: list[tuple[int, int]] = []
-    grouped: dict[str, list[tuple[int, int, str, str]]] = {}
+    grouped: dict[str, list[tuple[int, int, str, str, int, int]]] = {}
     for item in occurrences:
         if item[2] == "standalone" or not item[3]:
             retained.append(item[:2])
         else:
             grouped.setdefault(item[3], []).append(item)
     for items in grouped.values():
+        sequence_items = [item for item in items if item[2] == "sequence"]
+        if sequence_items:
+            size = max(item[5] for item in sequence_items)
+            cursor = 0
+            while size > 0:
+                chain: list[tuple[int, int, str, str, int, int]] = []
+                for sequence_index in range(size):
+                    choices = [
+                        item for item in sequence_items
+                        if item[4] == sequence_index and item[0] >= cursor
+                    ]
+                    if not choices:
+                        chain = []
+                        break
+                    chosen = min(choices, key=lambda item: item[0])
+                    chain.append(chosen)
+                    cursor = chosen[1]
+                if not chain:
+                    break
+                retained.extend(item[:2] for item in chain)
+            continue
         heads = [item for item in items if item[2] == "head"]
         particles = [item for item in items if item[2] == "particle"]
         predicates = [item for item in items if item[2] == "predicate"]
@@ -420,8 +617,16 @@ def build_target_spans(fields: dict[str, str]) -> str:
         for item in verb_policy()["exact_overrides"]
         if item["source_id"] == source_id
     }
+    audit_cases = {
+        int(item["example_index"]): item
+        for item in highlight_policy()["cases"]
+        if item["source_id"] == source_id
+    }
+    texts = example_texts(fields)
+    if audit_cases and max(audit_cases) > len(texts):
+        raise HighlightError(f"reviewed audit example is absent: {source_id}")
     result = []
-    for index, text in enumerate(example_texts(fields), 1):
+    for index, text in enumerate(texts, 1):
         ranges = [
             [_utf16_offset(text, start), _utf16_offset(text, end)]
             for start, end in match_ranges(text, candidates, pos)
@@ -432,6 +637,16 @@ def build_target_spans(fields: dict[str, str]) -> str:
                 raise HighlightError(f"reviewed override text drift: {source_id} example {index}")
             ranges.extend([list(pair) for pair in override["ranges"]])
             ranges = [list(pair) for pair in sorted({tuple(pair) for pair in ranges})]
+        audit_case = audit_cases.get(index)
+        if audit_case:
+            if audit_case["text"] != text:
+                raise HighlightError(f"reviewed audit text drift: {source_id} example {index}")
+            if audit_case["status"] == "missing_certain":
+                ranges.extend([
+                    [_utf16_offset(text, start), _utf16_offset(text, end)]
+                    for start, end in _audit_target_ranges(text, audit_case["targets"])
+                ])
+                ranges = [list(pair) for pair in sorted({tuple(pair) for pair in ranges})]
         result.append(ranges)
     return json.dumps(result, ensure_ascii=False, separators=(",", ":"))
 

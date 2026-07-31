@@ -23,15 +23,15 @@ import goethe_werkstatt_migrate as gw
 
 ROOT = gw.ROOT
 STATE = ROOT / "tools" / ".goethe_target_highlight_refresh"
-MANIFEST_PATH = ROOT / "review" / "goethe_target_highlight_repairs_v2.json"
+MANIFEST_PATH = ROOT / "review" / "goethe_target_highlight_repairs_v3.json"
 MODEL = getattr(gw, "MODEL", "Goethe Werkstatt")
 PARENT_DECK = "Goethe Institute"
 TARGET_FIELD = "ExampleTargetSpansJSON"
 
-EXPECTED_CHANGED_NOTES = 141
-EXPECTED_CHANGED_EXAMPLES = 166
-EXPECTED_ADDED_RANGES = 195
-EXPECTED_REMOVED_RANGES = 8
+EXPECTED_CHANGED_NOTES = 208
+EXPECTED_CHANGED_EXAMPLES = 286
+EXPECTED_ADDED_RANGES = 317
+EXPECTED_REMOVED_RANGES = 34
 APPLY_CONFIRMATION = "APPLY_GOETHE_TARGET_HIGHLIGHT_REFRESH"
 ROLLBACK_CONFIRMATION = "ROLLBACK_GOETHE_TARGET_HIGHLIGHT_REFRESH"
 

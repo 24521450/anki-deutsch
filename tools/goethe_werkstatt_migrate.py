@@ -175,16 +175,19 @@ def answer_is_correct(raw: str, lemma: str, accepted_answers: str = "", accepted
     return bool(raw.strip()) and normalize_answer(raw) in expected
 
 
+EXAMPLE_BOUNDARY = "<br data-example-boundary>"
+EXAMPLE_BOUNDARY_RE = re.compile(
+    r"<br\s+data-example-boundary\s*/?>",
+    flags=re.I,
+)
+
+
 def parse_example_cell(value: str) -> list[str]:
-    examples: list[str] = []
-    for part in (item.strip() for item in re.split(r"<br\s*/?>", value, flags=re.I)):
-        if not part:
-            continue
-        if examples and re.match(r"^[–—-]\s*", part):
-            examples[-1] += "<br>" + part
-        else:
-            examples.append(part)
-    return examples
+    return [
+        part
+        for part in (item.strip() for item in EXAMPLE_BOUNDARY_RE.split(value))
+        if part
+    ]
 
 
 def parse_markdown(path: Path) -> list[dict[str, Any]]:
@@ -522,10 +525,30 @@ def command_preflight(_: argparse.Namespace) -> None:
 
 def templates() -> dict[str, Any]:
     verb_policy = json.loads((ROOT / "review" / "goethe_verb_target_policy.json").read_text(encoding="utf-8"))
+    highlight_audit = json.loads((ROOT / "review" / "goethe_target_highlight_audit_v3.json").read_text(encoding="utf-8"))
+    highlight_runtime = {
+        "cases": [
+            {
+                "source_id": case["source_id"],
+                "example_index": case["example_index"],
+                "text": case["text"],
+                "status": case["status"],
+                "targets": case["targets"],
+            }
+            for case in highlight_audit["cases"]
+            if case["status"] == "missing_certain"
+        ],
+    }
+    highlight_runtime_b64 = base64.b64encode(
+        json.dumps(highlight_runtime, ensure_ascii=True, separators=(",", ":")).encode("ascii")
+    ).decode("ascii")
     highlighter = (
         "globalThis.goetheWerkstattVerbTargetPolicy = "
         + json.dumps(verb_policy, ensure_ascii=False, separators=(",", ":"))
         + ";\n"
+        + "globalThis.goetheWerkstattTargetHighlightAudit = JSON.parse(atob(\""
+        + highlight_runtime_b64
+        + "\"));\n"
         + (DESIGN / "target_highlighter.js").read_text(encoding="utf-8")
     )
     example_audio = (DESIGN / "example_audio.js").read_text(encoding="utf-8")

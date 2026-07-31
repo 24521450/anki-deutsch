@@ -16,6 +16,8 @@ import validate_goethe_wortgruppen as wortgruppen  # noqa: E402
 
 
 NOUN_ROWS = {
+    "A1-WG-0033": ("Million", "die", "f.", "-en"),
+    "A1-WG-0034": ("Milliarde", "die", "f.", "-n"),
     "A1-WG-0093": ("Meter", "der", "m.", "-"),
     "A1-WG-0094": ("Zentimeter", "der", "m.", "-"),
     "A1-WG-0096": ("Kilometer", "der", "m.", "-"),
@@ -109,6 +111,27 @@ def test_measure_overrides_explain_pfund_and_keep_both_kilogramm_answers() -> No
     assert review_policy.apply_fields(kilogramm, policy)
     assert kilogramm["AcceptedAnswersDE"] == "Kilogramm|Kilo"
     assert kilogramm["AcceptedFullAnswersDE"] == "das Kilogramm|das Kilo"
+
+
+def test_large_number_overrides_keep_only_lexical_noun_answers() -> None:
+    policy = review_policy.load_policy()
+    million = {"SourceID": "A1-84887177192"}
+    milliarde = {"SourceID": "A1-84887177193"}
+
+    assert review_policy.apply_fields(million, policy)
+    assert review_policy.apply_fields(milliarde, policy)
+    assert million == {
+        "SourceID": "A1-84887177192",
+        "AcceptedAnswersDE": "Million",
+        "AcceptedArticlesDE": "die",
+        "AcceptedFullAnswersDE": "die Million",
+    }
+    assert milliarde == {
+        "SourceID": "A1-84887177193",
+        "AcceptedAnswersDE": "Milliarde",
+        "AcceptedArticlesDE": "die",
+        "AcceptedFullAnswersDE": "die Milliarde",
+    }
 
 
 def test_b1_colour_contrast_override_removes_html_and_disables_ambiguous_production() -> None:

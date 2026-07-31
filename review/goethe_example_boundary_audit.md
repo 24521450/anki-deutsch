@@ -1,6 +1,16 @@
 # Goethe example-boundary audit
 
-Audit date: 2026-07-26
+Audit date: 2026-07-31
+
+## Canonical source grammar
+
+- `<br data-example-boundary>` separates independent examples.
+- Plain `<br>` continues the same example, including dash-led dialogue replies.
+- `python tools/goethe_example_boundaries.py check` validates all 4,824 source
+  rows, the 2,621 explicit boundaries, and the reviewed coordinate evidence.
+- The current decision manifest contains 12 additional PDF-verified merges
+  across A1 and A2, including `A2-MAIN-0156` (`billig`).
+- The parser never infers a merge from punctuation or a leading dash.
 
 ## Method
 

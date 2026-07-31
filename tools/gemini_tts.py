@@ -49,6 +49,15 @@ _POMMES_FRITES_OVERRIDE = {
         "Sprich die Verbindung ungefähr [pɔm ˈfʁɪt], nicht „Pom-mes“ aus."
     ),
 }
+_EXAMPLE_REPETITION_OVERRIDES = {
+    "Welche Süßigkeiten isst du am liebsten? - Schokolade und Eis.": {
+        "version": 1,
+        "hint": (
+            "Wichtig: Lies die Frage genau einmal und danach direkt die Antwort. "
+            "Wiederhole weder „isst du am liebsten?“ noch einen anderen Satzteil."
+        ),
+    },
+}
 _SYNTHESIS_ATTEMPTS = 10
 _QA_BACKOFF_SECONDS = (1.0, 2.0, 4.0, 8.0, 16.0, 30.0, 30.0, 60.0, 60.0)
 _API_ATTEMPTS = 4
@@ -64,6 +73,12 @@ _LIVE_TURN_TIMEOUT_SECONDS = 90.0
 _LIVE_SESSION_MAX_SECONDS = 8 * 60.0
 _LIVE_SESSIONS_PER_VOICE = 3
 _INDEPENDENT_ASR_MODEL = "gemini-3.6-flash"
+EXAMPLE_QA_VERSION = 2
+_STRICT_ASR_PROMPT = (
+    "Transkribiere jedes tatsächlich hörbare deutsche Wort strikt in "
+    "Reihenfolge. Wiederholungen niemals glätten oder entfernen. "
+    "Gib nur die wortgetreue Transkription mit normaler Zeichensetzung aus."
+)
 _CLIENTS: list[Any] = []
 _CLIENT_KEY_DIGESTS: tuple[str, ...] = ()
 _CLIENT_CURSOR = 0
@@ -248,12 +263,20 @@ def _tts_prompt(text: str, purpose: str) -> str:
             "Füge nichts hinzu und lasse nichts aus."
         )
     override = pronunciation_override_identity(text, purpose)
-    hint = (
-        f"\n\n{_POMMES_FRITES_OVERRIDE['hint']}"
-        if override is not None
-        else ""
-    )
-    return f"{instruction}{hint}\n\nTEXT:\n{text}"
+    hint = ""
+    prompt_text = text
+    if override is not None:
+        if override.get("phrase") == _POMMES_FRITES_OVERRIDE["phrase"]:
+            hint = f"\n\n{_POMMES_FRITES_OVERRIDE['hint']}"
+        elif override.get("kind") == "example-repetition":
+            hint = (
+                "\n\n"
+                + _EXAMPLE_REPETITION_OVERRIDES[override["phrase"]]["hint"]
+            )
+            # A dialogue dash caused Gemini Live to restart the question.
+            # A line break preserves the spoken words without cueing a replay.
+            prompt_text = text.replace(" - ", "\n")
+    return f"{instruction}{hint}\n\nTEXT:\n{prompt_text}"
 
 
 def pronunciation_override_identity(
@@ -268,6 +291,12 @@ def pronunciation_override_identity(
         return {
             "phrase": phrase,
             "version": _POMMES_FRITES_OVERRIDE["version"],
+        }
+    if purpose == "example" and text in _EXAMPLE_REPETITION_OVERRIDES:
+        return {
+            "kind": "example-repetition",
+            "phrase": text,
+            "version": _EXAMPLE_REPETITION_OVERRIDES[text]["version"],
         }
     return None
 
@@ -407,15 +436,40 @@ async def _transcribe_pcm(client: Any, pcm: bytes) -> str:
                 data=payload.getvalue(),
                 mime_type="audio/wav",
             ),
-            (
-                "Transkribiere ausschließlich die gesprochenen deutschen "
-                "Wörter exakt mit normaler Zeichensetzung. Keine Erklärung."
-            ),
+            _STRICT_ASR_PROMPT,
         ],
     )
     transcript = getattr(response, "text", None)
     if not isinstance(transcript, str) or not transcript.strip():
         raise _RejectedSynthesis("independent ASR returned no transcript")
+    return transcript.strip()
+
+
+async def transcribe_strict_mp3(path: Path) -> str:
+    try:
+        from google.genai import types
+    except ImportError as exc:
+        raise GeminiTTSError(
+            f"{CONFIG['sdk']} {CONFIG['sdk_version']} is required"
+        ) from exc
+    audio_path = Path(path)
+    payload = audio_path.read_bytes()
+    _validate_mp3(payload)
+    client = _create_client()
+
+    async def transcribe() -> Any:
+        return await client.aio.models.generate_content(
+            model=_INDEPENDENT_ASR_MODEL,
+            contents=[
+                types.Part.from_bytes(data=payload, mime_type="audio/mpeg"),
+                _STRICT_ASR_PROMPT,
+            ],
+        )
+
+    response = await _retry_api(transcribe)
+    transcript = getattr(response, "text", None)
+    if not isinstance(transcript, str) or not transcript.strip():
+        raise GeminiTTSError("strict ASR returned no transcript")
     return transcript.strip()
 
 
@@ -586,7 +640,27 @@ async def generate_verified_mp3(
             last_transcript = transcript
             verified_transcript = transcript
             qa_source = CONFIG["transcription"]
-            if (
+            strict_transcript = ""
+            if purpose == "example":
+                try:
+                    strict_transcript = await _retry_api(
+                        _transcribe_pcm, client, pcm
+                    )
+                except _RejectedSynthesis:
+                    if attempt < len(_QA_BACKOFF_SECONDS):
+                        await _sleep(_QA_BACKOFF_SECONDS[attempt])
+                    continue
+                if (
+                    _normalized_spoken_text(strict_transcript)
+                    != _normalized_spoken_text(text)
+                ):
+                    last_transcript = strict_transcript
+                    if attempt < len(_QA_BACKOFF_SECONDS):
+                        await _sleep(_QA_BACKOFF_SECONDS[attempt])
+                    continue
+                verified_transcript = strict_transcript
+                qa_source = _INDEPENDENT_ASR_MODEL
+            elif (
                 _normalized_spoken_text(transcript)
                 != _normalized_spoken_text(text)
             ):
@@ -628,7 +702,7 @@ async def generate_verified_mp3(
             os.replace(temporary, target)
             temporary = None
             digest = hashlib.sha256(mp3).hexdigest()
-            return {
+            result = {
                 "status": "ok",
                 "path": str(target),
                 "size": len(mp3),
@@ -641,6 +715,12 @@ async def generate_verified_mp3(
                 "voice": voice,
                 "created_utc": _now_utc(),
             }
+            if purpose == "example":
+                result.update({
+                    "qa_version": EXAMPLE_QA_VERSION,
+                    "strict_transcript": strict_transcript,
+                })
+            return result
         except GeminiTTSError:
             raise
         except Exception as exc:

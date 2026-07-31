@@ -12,6 +12,8 @@ This repository is a German Anki resource project split out from the IELTS deck 
 - `audio/` is generated output. MP3s, logs, checkpoints, staging directories, and generated manifests are ignored by default.
 - `review/duden_overrides.json` and level-specific override files are the hand-reviewed Duden policy files.
 - `review/goethe_word_audio_overrides.json` records protected, user-reviewed word audio.
+- `review/goethe_word_audio_approved.json` pins every audit-approved human
+  recording to its source revision, content hash, and semantic transcript.
 - `docs/PLAN_A1_WORD_AUDIO.md` documents the current A1 word-audio plan.
 - `tests/` contains German-resource tests. They are outside the default pytest suite because `pyproject.toml` limits default collection to root `tests/`.
 
@@ -25,6 +27,30 @@ pronunciation, Wiktionary German pronunciation audio, then Gemini TTS.
 The canonical workflow covers A1, A2, and B1 together. Only the `WordAudio`
 field is updated; scheduling and review history are snapshotted and verified
 before and after an apply.
+
+Reviewed direct Duden pages (for example `August_Monat`, `Hundert_Zahl`, and
+`Tausend_Zahl`) take precedence over sitemap fallback when their headword and
+spoken form are explicitly pinned. Protected user-reviewed audio remains
+authoritative. Run `python tools/goethe_word_audio.py audit` after changing
+spoken-text policy so semantic repairs are recorded before preparation.
+
+To audit every live A1-B1 Gemini fallback, classify it, and apply only exact
+human replacements:
+
+```powershell
+python tools/goethe_word_audio.py prepare --scope gemini-audit --confirm-duden-usage --confirm-commons-license
+python tools/goethe_word_audio.py snapshot
+python tools/goethe_word_audio.py apply --scope gemini-audit --dry-run
+python tools/goethe_word_audio.py apply --scope gemini-audit --confirmation APPLY_GOETHE_WORD_AUDIO
+python tools/goethe_word_audio.py verify --scope gemini-audit
+```
+
+The report is written under `tools/.goethe_word_audio/` with categories
+`wrong_certain`, `needs_review`, and `valid_fallback`. Only `wrong_certain` is
+eligible for apply. Timeouts, source conflicts, and transcript mismatches are
+always review items. An interrupted scan may resume with `prepare --offline
+--scope gemini-audit`; the full live Gemini baseline is retained. See
+`docs/adr/0002-bounded-gemini-word-audio-audit.md` for the fail-closed rules.
 
 Gemini fallback audio uses `gemini-3.1-flash-live-preview` with reusable
 `Kore` and `Charon` Live sessions. The voice is selected deterministically
@@ -50,7 +76,7 @@ comma-separated `GEMINI_API_KEYS`; the single manifest writer keeps their Live
 session pools isolated and round-robins requests.
 
 Do not commit the key or write it into manifests, logs, or review files.
-The full example migration contains 4,992 resumable Live turns. The generator
+The full example migration contains 4,978 resumable Live turns. The generator
 serializes turns within each voice session, reconnects expired sessions, and
 checkpoints completed batches so an interrupted run can resume safely.
 
@@ -155,6 +181,7 @@ because another deck may still use the same filenames.
 English audit and completion:
 
 ```powershell
+python tools/goethe_example_boundaries.py check
 python tools/goethe_english_audit.py inspect
 python tools/goethe_english_audit.py check-batch --batch V5-01
 python tools/goethe_english_audit.py compile
@@ -164,6 +191,12 @@ python tools/goethe_completion.py apply --confirmation COMPLETE_GOETHE_A1_A2_B1
 python tools/goethe_completion.py verify
 python tools/export_goethe_notes_jsonl.py
 ```
+
+Goethe source cells use an explicit example grammar:
+`<br data-example-boundary>` separates independent examples, while plain
+`<br>` is reserved for a continuation inside one example (notably a dialogue
+reply). `goethe_example_boundaries.py check` validates the grammar and the
+reviewed PDF-coordinate evidence before a completion build can proceed.
 
 The checked-in v5 American-English audit has one row per canonical A1-B1
 note: 3,425 notes and 6,850 cards in total, including 1,941 B1 notes. Every
@@ -187,11 +220,15 @@ python tools/goethe_target_highlight_refresh.py verify
 ```
 
 Run these commands in order with Anki Desktop available. The audit must match
-the reviewed 40-note/44-example manifest exactly; backup creates a scheduled
+the reviewed 208-note/286-example v3 manifest exactly; backup creates a scheduled
 APKG and hash-checked local snapshot before apply can write. Apply is limited to
 reviewed `ExampleTargetSpansJSON` values and repository model templates. To
 restore the snapshotted spans and templates, use
 `python tools/goethe_target_highlight_refresh.py rollback --confirmation ROLLBACK_GOETHE_TARGET_HIGHLIGHT_REFRESH`.
+
+New example audio is independently strict-ASR checked; legacy repetition
+outliers can be audited with
+`python tools/goethe_example_audio.py audit-repetitions --percentile 95`.
 
 `tools/goethe_b1_media.py` is a non-mutating compatibility shim that points to
 the two all-level audio workflows.

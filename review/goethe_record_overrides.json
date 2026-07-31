@@ -46,6 +46,20 @@
       }
     },
     "A1-84887177194": {"set": {"FormOrVariantNote": "ordinal number", "AcceptedAnswersDE": "erste", "AcceptedFullAnswersDE": "erste"}},
+    "A1-84887177192": {
+      "set": {
+        "AcceptedAnswersDE": "Million",
+        "AcceptedArticlesDE": "die",
+        "AcceptedFullAnswersDE": "die Million"
+      }
+    },
+    "A1-84887177193": {
+      "set": {
+        "AcceptedAnswersDE": "Milliarde",
+        "AcceptedArticlesDE": "die",
+        "AcceptedFullAnswersDE": "die Milliarde"
+      }
+    },
     "A1-84887177195": {"set": {"FormOrVariantNote": "ordinal number", "AcceptedAnswersDE": "zweite", "AcceptedFullAnswersDE": "zweite"}},
     "A1-84887177196": {"set": {"FormOrVariantNote": "ordinal number", "AcceptedAnswersDE": "dritte", "AcceptedFullAnswersDE": "dritte"}},
     "A1-84887177197": {"set": {"FormOrVariantNote": "ordinal number", "AcceptedAnswersDE": "vierte", "AcceptedFullAnswersDE": "vierte"}},

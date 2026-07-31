@@ -3,14 +3,14 @@
 Workflow:
     python tools/a1_example_audio.py preflight   # parse + manifest only (no audio)
     python tools/a1_example_audio.py pilot       # generate 16 pilot entries; STOP for review
-    python tools/a1_example_audio.py full        # generate all 856 unique entries
+    python tools/a1_example_audio.py full        # generate all 836 unique entries
     python tools/a1_example_audio.py resume      # verify existing + generate the rest
 
 Source: column `Sentence` in sources/goethe/Goethe_A1.md
 Outputs:
-    audio/a1/examples_manifest.jsonl        — 870 occurrences, denormalized
+    audio/a1/examples_manifest.jsonl        — 849 occurrences, denormalized
     audio/a1/examples_manifest.meta.json     — meta + counts
-    audio/a1/examples_unique.jsonl           — 856 unique audios (status, voice, path)
+    audio/a1/examples_unique.jsonl           — 836 unique audios (status, voice, path)
     audio/a1/examples_staging/                — generated MP3s (transient)
     audio/a1/examples/                        — promoted MP3s (final, only on completion)
 
@@ -32,6 +32,8 @@ import urllib.request
 from collections import OrderedDict
 from pathlib import Path
 
+import goethe_werkstatt_migrate as gw
+
 
 # === Paths ============================================================
 ROOT = Path(__file__).resolve().parents[1]
@@ -46,12 +48,12 @@ UNIQUE_INDEX = OUT_DIR / "examples_unique.jsonl"
 
 # === Plan constants ===================================================
 EXPECTED_ROWS = 685
-EXPECTED_OCCURRENCES = 870
-EXPECTED_UNIQUE = 856
+EXPECTED_OCCURRENCES = 849
+EXPECTED_UNIQUE = 836
 SEED = "goethe-a1-examples-v1"
 VOICE_TARGETS: dict[str, int] = {
-    "German_SweetLady": 428,
-    "German_FriendlyMan": 428,
+    "German_SweetLady": 418,
+    "German_FriendlyMan": 418,
 }
 TTS_PARAMS = {"speed": 1.0, "pitch": 0, "volume": 2, "emotion": "neutral"}
 MAX_RETRIES = 3
@@ -77,10 +79,8 @@ OVERRIDES: dict[tuple[int, int], str] = {
 }
 
 
-# 16 dialogue turns in the corpus start with '-' / '–' / '—'.
-# We auto-detect them rather than hard-coding (row, idx) pairs so the rule is
-# data-driven and audit-verifiable. PLAN invariant: exactly 16 strips.
-EXPECTED_DASH_STRIPS = 16
+# Dialogue replies now stay inside their parent occurrence.
+EXPECTED_DASH_STRIPS = 0
 
 
 # 16 pilot keys: 8 per voice, per PLAN. Voice partitioning is dictated by SEED.
@@ -92,7 +92,7 @@ PILOT_KEYS: frozenset[tuple[int, int]] = frozenset({
     (262, 3),  # Jetzt muss ich aber leider gehen.
     (277, 1),  # Bei „Gewicht" schreibst du: 62 Kilo.
     (350, 1),  # Ich schreibe meinen Bekannten eine Karte aus dem Urlaub.
-    (373, 2),  # 10 Euro.
+    (373, 1),  # Wie viel kostet das? – 10 Euro.
     (555, 4),  # So, das war's!
     # FriendlyMan candidates (8)
     (6, 1),    # Wann kann ich den Schrank bei dir abholen?
@@ -165,12 +165,14 @@ def parse_markdown(path: Path) -> list[dict]:
 
 
 def extract_occurrences(rows: list[dict]) -> list[dict]:
-    """Split each sentence by `<br>`. example_index is 1-based per row."""
+    """Extract examples using the canonical explicit-boundary grammar."""
     out: list[dict] = []
     for r in rows:
-        parts = r["sentence"].split("<br>")
+        parts = gw.parse_example_cell(r["sentence"])
         for idx, part in enumerate(parts, start=1):
-            source_text = normalize_unicode_whitespace(part)
+            source_text = normalize_unicode_whitespace(
+                re.sub(r"<br\s*/?>", " ", part, flags=re.I)
+            )
             out.append({
                 "row": r["row"],
                 "example_index": idx,
@@ -254,7 +256,7 @@ def build_unique_view(occurrences: list[dict]) -> list[dict]:
 def _assign_voices(spoken_texts: list[str]) -> list[str]:
     """Deterministic voice assignment.
 
-    Build a pool of (sweet_lady * 428) + (friendly_man * 428) voices,
+    Build a balanced deterministic voice pool.
     shuffle by SEED, then map sorted unique-text slot -> pool[i].
 
     Same inputs + same seed => same output.
@@ -733,7 +735,7 @@ def run_resume() -> int:
 
 def try_promote(uniques: list[dict]) -> bool:
     """Promote staging -> live iff:
-        * 856 unique entries
+        * 836 unique entries
         * All have tts_status in {'ok','skipped_existing_valid'}
         * All files exist in staging
     """

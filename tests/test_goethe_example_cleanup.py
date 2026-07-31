@@ -63,8 +63,8 @@ def fields(level: str, rows: list[dict[str, str]]) -> dict[str, str]:
 
 def test_reviewed_overrides_define_canonical_level_whitelists():
     allowed = source_examples.allowed_examples_by_level()
-    assert len(allowed["A1"]) == 837
-    assert len(allowed["A2"]) == 1835
+    assert len(allowed["A1"]) == 833
+    assert len(allowed["A2"]) == 1828
     assert len(allowed["B1"]) == 4554
     assert source_examples.sentence_key("Im Zug fahre ich immer 2. Klasse.") in allowed["A1"]
     assert source_examples.sentence_key("Im Zug fahre ich immer 2.") not in allowed["A1"]
@@ -132,12 +132,12 @@ def test_example_audio_baseline_matches_cleanup_projection():
         goethe_example_audio.EXPECTED_OCCURRENCES
         == cleanup.EXPECTED_REMAINING
         == cleanup.scope.EXPECTED_EXAMPLE_OCCURRENCES
-        == 5080
+        == 5067
     )
     assert (
         goethe_example_audio.EXPECTED_UNIQUE
         == cleanup.scope.EXPECTED_UNIQUE_EXAMPLE_AUDIO
-        == 4992
+        == 4978
     )
     assert cleanup.EXPECTED_EMPTY_BY_LEVEL == cleanup.scope.EXPECTED_EMPTY_NOTES_BY_LEVEL
     assert cleanup.EXPECTED_EMPTY_BY_LEVEL["B1"] == 0

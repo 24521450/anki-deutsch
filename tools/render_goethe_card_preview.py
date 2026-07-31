@@ -17,7 +17,6 @@ import goethe_werkstatt_migrate as gw
 
 
 OUTPUT = gw.ROOT / "docs" / "goethe_card_preview.html"
-TOKEN_RE = re.compile(r"{{([#^/!]?)([^{}]+)}}")
 
 
 def _span(sentence: str, target: str) -> list[list[int]]:
@@ -121,10 +120,18 @@ def parse_template(source: str) -> list[tuple[Any, ...]]:
     root: list[tuple[Any, ...]] = []
     stack: list[tuple[str, list[tuple[Any, ...]]]] = [("", root)]
     cursor = 0
-    for match in TOKEN_RE.finditer(source):
-        if match.start() > cursor:
-            stack[-1][1].append(("text", source[cursor:match.start()]))
-        marker, raw_name = match.groups()
+    while True:
+        start = source.find("{{", cursor)
+        if start < 0:
+            break
+        end = source.find("}}", start + 2)
+        if end < 0:
+            break
+        if start > cursor:
+            stack[-1][1].append(("text", source[cursor:start]))
+        raw_token = source[start + 2:end]
+        marker = raw_token[0] if raw_token[:1] in {"#", "^", "/", "!"} else ""
+        raw_name = raw_token[1:] if marker else raw_token
         name = raw_name.strip()
         if marker in {"#", "^"}:
             children: list[tuple[Any, ...]] = []
@@ -138,7 +145,7 @@ def parse_template(source: str) -> list[tuple[Any, ...]]:
             pass
         else:
             stack[-1][1].append(("variable", name))
-        cursor = match.end()
+        cursor = end + 2
     if cursor < len(source):
         stack[-1][1].append(("text", source[cursor:]))
     if len(stack) != 1:

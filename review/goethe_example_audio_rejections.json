@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "rejections": {
+    "2bb1530928689ed6cd8210a5c449c4b62c6012733288cd86bda733d0f8b2b488": {
+      "sha256": "7abd27e4ed2026fe086d75d54df263c9bb3aec0eb105fb72968c197d9ac94e89",
+      "spoken_text": "Welche Süßigkeiten isst du am liebsten? - Schokolade und Eis.",
+      "voice": "Kore",
+      "reason": "Strict ASR found a repeated 'isst du am liebsten' phrase in the rendered audio."
+    }
+  }
+}

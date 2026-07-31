@@ -124,7 +124,7 @@ def test_media_name_is_content_hash_scoped():
         "_goethe_example_gemini_" + "a" * 64 + ".mp3"
     )
     assert audio.GEMINI_CONFIG["voices"] == ["Kore", "Charon"]
-    assert audio.EXPECTED_UNIQUE == 4992
+    assert audio.EXPECTED_UNIQUE == 4978
     assert all(
         audio.GEMINI_CONFIG[key] == value
         for key, value in audio.gemini_tts.CONFIG.items()
@@ -314,6 +314,56 @@ def test_cache_requires_passing_qa_metadata(monkeypatch, tmp_path):
     assert not audio.validate_cached({**item, "qa_status": "mismatch"})
     assert not audio.validate_cached({**item, "asr_transcript": ""})
     assert not audio.validate_cached({**item, "duration_seconds": 0})
+
+
+def test_cache_rejects_reviewed_repetition_artifact(monkeypatch, tmp_path):
+    path = tmp_path / "audio.mp3"
+    path.write_bytes(b"mp3")
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    monkeypatch.setattr(
+        audio.word_audio,
+        "validate_audio",
+        lambda *args: (path.stat().st_size, digest),
+    )
+    monkeypatch.setattr(audio, "_EXAMPLE_AUDIO_REJECTIONS", {
+        "bad-id": {
+            "sha256": digest,
+            "reason": "strict ASR found a repeated phrase",
+        }
+    })
+    item = {
+        "audio_id": "bad-id",
+        "status": "ok",
+        "path": str(path),
+        "size": path.stat().st_size,
+        "sha256": digest,
+        "media_name": audio.media_name_for(digest),
+        "voice": "Kore",
+        "duration_seconds": 5.9,
+        "qa_status": "exact",
+        "asr_transcript": (
+            "Welche Süßigkeiten isst du am liebsten? - Schokolade und Eis."
+        ),
+    }
+    assert not audio.validate_cached(item)
+
+
+def test_repetition_outliers_select_top_five_percent_per_voice_and_length():
+    unique = {}
+    for index in range(40):
+        audio_id = f"id-{index}"
+        unique[audio_id] = {
+            "audio_id": audio_id,
+            "spoken_text": "eins zwei drei vier fünf",
+            "voice": "Kore" if index < 20 else "Charon",
+            "duration_seconds": 1.0 + index / 100,
+            "sha256": f"{index:064x}",
+            "path": f"{audio_id}.mp3",
+        }
+    selected = audio.repetition_outlier_ids(
+        {"unique": unique}, percentile=95.0
+    )
+    assert selected == ["id-19", "id-39"]
 
 
 def test_generate_one_uses_verified_gemini_adapter(monkeypatch, tmp_path):

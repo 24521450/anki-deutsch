@@ -89,6 +89,554 @@ def test_spoken_text_requires_override_for_notation():
     assert gwa.spoken_text(fields(Lemma="d. h."), "d. h.", {"d. h.": "das heißt"}) == "das heißt"
 
 
+def test_reviewed_number_spoken_forms_omit_optional_ein():
+    overrides = gwa.load_overrides()
+    assert gwa.spoken_text(
+        fields(
+            Lemma="(ein)hundert",
+            SourceRefs="A1-WG-0029|A2-WG-0208|B1-WG-0270",
+        ),
+        "(ein)hundert",
+        overrides,
+    ) == "hundert"
+    assert gwa.spoken_text(
+        fields(
+            Lemma="(ein)tausend",
+            SourceRefs="A1-WG-0032|A2-WG-0211|B1-WG-0273",
+        ),
+        "(ein)tausend",
+        overrides,
+    ) == "tausend"
+
+
+def test_reviewed_fit_sein_spoken_form_omits_auxiliary():
+    assert gwa.spoken_text(
+        fields(
+            Lemma="fit sein",
+            SourceRefs="A2-0332|A2-MAIN-0328",
+            POS="v.",
+            Gender="",
+        ),
+        "fit sein",
+        gwa.load_overrides(),
+    ) == "fit"
+
+
+def test_reviewed_sein_policy_only_matches_explicit_copula_overrides():
+    overrides = gwa.load_overrides()
+    assert gwa.reviewed_spoken_override(
+        fields(Lemma="fit sein", SourceRefs="A2-0332"),
+        "fit",
+        overrides,
+    )
+    assert not gwa.reviewed_spoken_override(
+        fields(Lemma="zu sein", SourceRefs="A1-84886455089"),
+        "zu sein",
+        overrides,
+    )
+    assert gwa.spoken_text(
+        fields(Lemma="sein", SourceRefs="A1-84886455083"),
+        "sein",
+        overrides,
+    ) == "sein"
+
+
+def test_reviewed_spoken_override_clears_source_pos_for_duden_lookup():
+    manifest = {
+        "notes": {
+            "1": {
+                "request_key": "k",
+                    "note_id": 1,
+                "spoken_text": "fit",
+                "pos": "v.",
+                "gender": "",
+                "note_ids": [],
+                "duden_pages": [],
+                "spoken_override_reviewed": True,
+            }
+        }
+    }
+    groups = gwa.request_groups(manifest)
+    assert groups["k"]["spoken_override_reviewed"] is True
+    assert groups["k"]["pos"] == ""
+    assert groups["k"]["gender"] == ""
+
+
+@pytest.mark.parametrize(
+    ("source_id", "source_refs", "lemma"),
+    [
+        ("A1-84887177192", "A1-84887177192|A1-WG-0033|B1-WG-0274", "Million"),
+        ("A1-84887177193", "A1-84887177193|A1-WG-0034|B1-WG-0275", "Milliarde"),
+    ],
+)
+def test_canonical_large_number_source_wins_merged_quantity_spoken_form(
+    source_id, source_refs, lemma,
+):
+    overrides = gwa.load_overrides()
+    note = fields(Lemma=lemma, SourceID=source_id, SourceRefs=source_refs)
+    assert gwa.spoken_text(note, f"eine {lemma}", overrides) == lemma
+
+
+def test_gemini_audit_classifies_exact_ambiguous_and_valid_fallbacks():
+    manifest = {"notes": {
+        "1": {
+            "note_id": 1, "level": "A1", "lemma": "klar", "pos": "adj.",
+            "spoken_text": "klar", "request_key": "exact",
+            "old_word_audio": f"[sound:_goethe_word_gemini_{'a' * 64}.mp3]",
+            "assignment": {
+                "source": "duden_extra", "sha256": "b" * 64,
+                "semantic_qa": {"status": "exact", "transcript": "klar"},
+            },
+        },
+        "2": {
+            "note_id": 2, "level": "A2", "lemma": "mehrdeutig", "pos": "adj.",
+            "spoken_text": "mehrdeutig", "request_key": "ambiguous",
+            "old_word_audio": f"[sound:_goethe_word_gemini_{'c' * 64}.mp3]",
+            "assignment": {"source": "gemini", "sha256": "c" * 64},
+        },
+        "3": {
+            "note_id": 3, "level": "B1", "lemma": "ohne Quelle", "pos": "phrase",
+            "spoken_text": "ohne Quelle", "request_key": "missing",
+            "old_word_audio": f"[sound:_goethe_word_gemini_{'d' * 64}.mp3]",
+            "assignment": {"source": "gemini", "sha256": "d" * 64},
+        },
+    }, "live_audio_audit": {
+        "semantic_mismatches": [], "semantic_candidates": [],
+        "unknown_provenance": [],
+    }}
+    duden = {"items": {
+        "exact": {"status": "ok"},
+        "ambiguous": {"status": "ambiguous", "reason": "two pronunciations"},
+        "missing": {"status": "unresolved", "match_method": "sitemap-not-found"},
+    }}
+    commons = {"items": {
+        "exact": {"status": "ambiguous", "reason": "lower-priority duplicate"},
+        "ambiguous": {"status": "unresolved"},
+        "missing": {"status": "unresolved"},
+    }}
+    wiktionary = {"items": {
+        "ambiguous": {"status": "unresolved"},
+        "missing": {"status": "unresolved"},
+    }}
+
+    report = gwa.build_gemini_audit_report(
+        manifest, duden, commons, wiktionary,
+    )
+
+    assert [item["note_id"] for item in report["wrong_certain"]] == [1]
+    assert [item["note_id"] for item in report["needs_review"]] == [2]
+    assert [item["note_id"] for item in report["valid_fallback"]] == [3]
+    assert report["counts"] == {
+        "wrong_certain": 1, "needs_review": 1, "valid_fallback": 1,
+    }
+
+
+def test_gemini_audit_scope_selects_only_live_gemini_notes():
+    manifest = {"notes": {
+        "1": {"note_id": 1, "old_word_audio": "[sound:_goethe_word_gemini_a.mp3]"},
+        "2": {"note_id": 2, "old_word_audio": "[sound:_goethe_word_duden_b.mp3]"},
+        "3": {"note_id": 3, "old_word_audio": "[sound:_goethe_word_gemini_c.mp3]"},
+    }}
+
+    assert gwa.selected_ids(manifest, "gemini-audit") == [1, 3]
+
+    manifest["gemini_audit"] = {
+        "wrong_certain": [{"note_id": 3}],
+        "needs_review": [{"note_id": 1}],
+        "valid_fallback": [],
+    }
+    assert gwa.selected_ids(manifest, "gemini-audit") == [3]
+    assert gwa.gemini_baseline_ids(manifest) == [1, 3]
+
+
+def test_gemini_audit_requires_exact_asr_for_human_replacement():
+    manifest = {"notes": {"7": {
+        "note_id": 7, "level": "B1", "lemma": "absolut", "pos": "adj., adv.",
+        "spoken_text": "absolut", "request_key": "k",
+        "old_word_audio": f"[sound:_goethe_word_gemini_{'a' * 64}.mp3]",
+        "assignment": {
+            "source": "duden_extra", "sha256": "b" * 64,
+            "semantic_qa": {"status": "mismatch", "transcript": "Absolvent"},
+        },
+    }}, "live_audio_audit": {
+        "semantic_mismatches": [], "semantic_candidates": [],
+        "unknown_provenance": [],
+    }}
+    unavailable = {"items": {"k": {"status": "unresolved"}}}
+
+    report = gwa.build_gemini_audit_report(
+        manifest, {"items": {"k": {"status": "ok"}}},
+        unavailable, unavailable,
+    )
+
+    assert report["wrong_certain"] == []
+    assert [item["note_id"] for item in report["needs_review"]] == [7]
+
+
+def test_gemini_audit_change_guard_uses_only_wrong_certain():
+    exact = {
+        "note_id": 1,
+        "old_word_audio": f"[sound:_goethe_word_gemini_{'a' * 64}.mp3]",
+        "assignment": {
+            "source": "commons", "media_name": f"_goethe_word_commons_{'b' * 64}.mp3",
+            "semantic_qa": {"status": "exact"},
+        },
+    }
+    review = {
+        "note_id": 2,
+        "old_word_audio": f"[sound:_goethe_word_gemini_{'c' * 64}.mp3]",
+        "assignment": {
+            "source": "commons", "media_name": f"_goethe_word_commons_{'d' * 64}.mp3",
+            "semantic_qa": {"status": "error"},
+        },
+    }
+    manifest = {
+        "prepared_scope": "gemini-audit",
+        "prepared_note_ids": [1, 2],
+        "notes": {"1": exact, "2": review},
+    }
+    gwa.validate_change_set(manifest)
+    manifest["gemini_audit"] = {
+        "wrong_certain": [{"note_id": 1}],
+        "needs_review": [{"note_id": 2}],
+        "valid_fallback": [],
+    }
+    gwa.validate_change_set(manifest)
+
+
+def test_human_assignment_semantics_are_strict_asr_verified(tmp_path):
+    exact = tmp_path / "exact.mp3"
+    mismatch = tmp_path / "mismatch.mp3"
+    exact.write_bytes(b"ID3" + b"x" * 200)
+    mismatch.write_bytes(b"ID3" + b"y" * 200)
+    manifest = {"notes": {
+        "1": {
+            "note_id": 1, "spoken_text": "klar",
+            "assignment": {"source": "duden_extra", "sha256": "a" * 64, "path": str(exact)},
+        },
+        "2": {
+            "note_id": 2, "spoken_text": "absolut",
+            "assignment": {"source": "commons", "sha256": "b" * 64, "path": str(mismatch)},
+        },
+    }}
+
+    async def transcribe(path):
+        return "Klar." if path == exact else "Absolvent"
+
+    cache = asyncio.run(gwa.verify_human_assignment_semantics(
+        manifest, [1, 2], cache={}, transcribe=transcribe,
+    ))
+
+    assert manifest["notes"]["1"]["assignment"]["semantic_qa"]["status"] == "exact"
+    assert manifest["notes"]["2"]["assignment"]["semantic_qa"]["status"] == "mismatch"
+    assert set(cache) == {"a" * 64, "b" * 64}
+
+
+def test_human_assignment_semantics_checkpoints_timeout_errors(tmp_path):
+    audio = tmp_path / "slow.mp3"
+    audio.write_bytes(b"ID3" + b"x" * 200)
+    manifest = {"notes": {"1": {
+        "note_id": 1, "spoken_text": "langsam",
+        "assignment": {
+            "source": "commons", "sha256": "c" * 64, "path": str(audio),
+        },
+    }}}
+    checkpoints = []
+
+    async def transcribe(path):
+        await asyncio.sleep(0.05)
+        return "langsam"
+
+    cache = asyncio.run(gwa.verify_human_assignment_semantics(
+        manifest, [1], cache={}, transcribe=transcribe,
+        timeout_seconds=0.001,
+        checkpoint=lambda value: checkpoints.append(dict(value)),
+    ))
+    assert manifest["notes"]["1"]["assignment"]["semantic_qa"]["status"] == "error"
+    assert cache["c" * 64]["status"] == "error"
+    assert len(checkpoints) == 1
+
+    calls = 0
+
+    async def must_not_retry(path):
+        nonlocal calls
+        calls += 1
+        return "langsam"
+
+    asyncio.run(gwa.verify_human_assignment_semantics(
+        manifest, [1], cache=cache, transcribe=must_not_retry,
+        timeout_seconds=0.001,
+    ))
+    assert calls == 0
+
+
+def test_reviewed_duden_pages_are_source_scoped_and_protected_audio_wins():
+    policy = gwa.load_duden_page_overrides()
+    august = fields(
+        Lemma="August",
+        SourceRefs="A1-WG-0083|A2-WG-0142|B1-WG-0316",
+    )
+    pages = gwa.duden_page_specs(august, "August", policy)
+    assert pages == [{
+        "source_ref": "A1-WG-0083",
+        "expected_lemma": "August",
+        "spoken_text": "August",
+        "url": "https://www.duden.de/rechtschreibung/August_Monat",
+        "headword": "August",
+        "reviewed": True,
+    }]
+
+    protected = {"A1-WG-0083": {
+        "provider": "commons",
+        "expected_lemma": "August",
+        "spoken_text": "August",
+        "sha256": "a" * 64,
+        "title": "File:De-August.ogg",
+        "original_sha1": "b" * 40,
+        "reason": "reviewed",
+    }}
+    assert gwa.protected_audio_for(august, protected) is not None
+
+
+def test_reported_audio_regressions_are_source_scoped_and_pinned():
+    pages = gwa.load_duden_page_overrides()
+    assert pages["B1-MAIN-0030"] == {
+        "expected_lemma": "absolut",
+        "spoken_text": "absolut",
+        "url": "https://www.duden.de/rechtschreibung/absolut_Adjektiv",
+        "headword": "absolut",
+    }
+    assert pages["B1-MAIN-0489"]["url"] == (
+        "https://www.duden.de/rechtschreibung/dagegen"
+    )
+    assert pages["A2-0212"] == {
+        "expected_lemma": "dagegen sein",
+        "spoken_text": "dagegen",
+        "url": "https://www.duden.de/rechtschreibung/dagegen",
+        "headword": "dagegen",
+    }
+
+    protected = gwa.load_protected_audio()
+    assert protected["A2-0293"]["title"] == "File:De-erlaubt.ogg"
+    assert protected["A2-0293"]["spoken_text"] == "erlaubt"
+    assert protected["A2-1050"]["title"] == "File:De-verabredet.ogg"
+    assert protected["A2-1050"]["spoken_text"] == "verabredet"
+
+    approved = gwa.load_approved_audio()
+    required = {
+        "A1-84887177192", "A1-84887177193",
+        "A2-0212", "B1-MAIN-0489", "A2-0293", "A2-1050",
+        "B1-MAIN-0030",
+    }
+    assert required <= set(approved)
+    assert approved["B1-MAIN-0030"]["sha256"] == (
+        "01160db9bdf952e0ab76dbf9428bc36a4796364fd76fe1fe237c1b9f2a38b434"
+    )
+    assert approved["A2-0293"]["source_revision"].startswith("sha1:")
+    assert approved["A1-84887177192"]["provider"] == "duden"
+    assert approved["A1-84887177193"]["semantic_transcript"] == "milliarde"
+
+
+def test_approved_audio_hash_drift_fails_closed():
+    item = {
+        "assignment": {"source": "commons", "sha256": "b" * 64},
+        "approved_audio": {
+            "source_id": "A2-test", "provider": "commons", "sha256": "a" * 64,
+            "spoken_text": "Test", "semantic_model": "model",
+            "semantic_transcript": "Test",
+        },
+    }
+    with pytest.raises(gwa.WordAudioError, match="approved audio drift"):
+        gwa.enforce_approved_assignment(item)
+
+
+def test_word_audio_batch_update_retries_partial_ankiconnect_success(monkeypatch):
+    state = {1: "old-1", 2: "old-2"}
+
+    def anki(action, **params):
+        if action == "multi":
+            first = params["actions"][0]["params"]["note"]
+            state[first["id"]] = first["fields"]["WordAudio"]
+            return [None for _ in params["actions"]]
+        if action == "notesInfo":
+            return [
+                {"noteId": note_id, "fields": {"WordAudio": {"value": state[note_id]}}}
+                for note_id in params["notes"]
+            ]
+        if action == "updateNoteFields":
+            note = params["note"]
+            state[note["id"]] = note["fields"]["WordAudio"]
+            return None
+        raise AssertionError(action)
+
+    monkeypatch.setattr(gwa.gw, "anki", anki)
+    gwa.update_word_audio([1, 2], {1: "new-1", 2: "new-2"})
+    assert state == {1: "new-1", 2: "new-2"}
+
+
+def test_direct_wortgruppen_duden_page_is_discovered_without_partial_match():
+    pages = gwa.load_wortgruppen_duden_pages()
+    geografie = fields(
+        Lemma="Geografie",
+        SourceRefs="A2-WG-0104|B1-WG-0137",
+    )
+    specs = gwa.duden_page_specs(
+        geografie, "Geografie", {}, source_pages=pages
+    )
+    assert [item["url"] for item in specs] == [
+        "https://www.duden.de/rechtschreibung/Geografie"
+    ]
+
+    phrase = fields(
+        Lemma="ein Meter fünfzehn",
+        SourceRefs="A1-WG-0095",
+    )
+    specs = gwa.duden_page_specs(
+        phrase, "ein Meter fünfzehn", {}, source_pages=pages
+    )
+    assert specs[0]["reviewed"] is False
+    assert specs[0]["url"] == "https://www.duden.de/rechtschreibung/Meter"
+
+
+def test_direct_duden_resolver_uses_reviewed_page_and_exact_variant(
+    monkeypatch, tmp_path
+):
+    pages = {
+        "https://www.duden.de/rechtschreibung/August_Monat":
+            gwa.duden.DudenPage(
+                "https://www.duden.de/rechtschreibung/August_Monat",
+                "August",
+                "m",
+                "Substantiv, maskulin",
+                ("noun",),
+                ({"audio_url": "https://cdn.test/august.mp3", "file_id": "august"},),
+                (),
+            ),
+        "https://www.duden.de/rechtschreibung/Geografie":
+            gwa.duden.DudenPage(
+                "https://www.duden.de/rechtschreibung/Geografie",
+                "Geografie, Geographie",
+                "f",
+                "Substantiv, feminin",
+                ("noun",),
+                ({"audio_url": "https://cdn.test/geografie.mp3", "file_id": "geo"},),
+                (),
+            ),
+    }
+
+    async def fetch(session, url, throttle=None):
+        return 200, url, {}
+
+    async def download(session, url, target, throttle=None):
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(b"ID3" + b"x" * 128)
+        return target.stat().st_size, "a" * 64, "audio/mpeg", None
+
+    monkeypatch.setattr(gwa, "DUDEN_EXTRA_DIR", tmp_path)
+    monkeypatch.setattr(gwa.duden, "fetch_page", fetch)
+    monkeypatch.setattr(
+        gwa.duden, "parse_duden_page", lambda value, requested_url=None: pages[value]
+    )
+    monkeypatch.setattr(gwa.duden, "download_audio", download)
+
+    august = asyncio.run(gwa.resolve_direct_duden_page(
+        None,
+        "august-key",
+        {
+            "spoken_text": "August",
+            "pos": "n.",
+            "gender": "m.",
+            "duden_pages": [{
+                "url": "https://www.duden.de/rechtschreibung/August_Monat",
+                "headword": "August",
+                "reviewed": True,
+            }],
+        },
+        throttle=gwa.duden.RequestThrottle(),
+    ))
+    assert august["status"] == "ok"
+    assert august["match_method"] == "reviewed-canonical-page"
+
+    geografie = asyncio.run(gwa.resolve_direct_duden_page(
+        None,
+        "geo-key",
+        {
+            "spoken_text": "Geografie",
+            "pos": "n.",
+            "gender": "f.",
+            "duden_pages": [{
+                "url": "https://www.duden.de/rechtschreibung/Geografie",
+                "headword": "",
+                "reviewed": False,
+            }],
+        },
+        throttle=gwa.duden.RequestThrottle(),
+    ))
+    assert geografie["status"] == "ok"
+    assert geografie["match_method"] == "wortgruppen-direct-page"
+
+
+def test_direct_duden_resolver_rejects_partial_phrase_page(monkeypatch):
+    page = gwa.duden.DudenPage(
+        "https://www.duden.de/rechtschreibung/Meter",
+        "Meter",
+        "m",
+        "Substantiv, maskulin",
+        ("noun",),
+        ({"audio_url": "https://cdn.test/meter.mp3", "file_id": "meter"},),
+        (),
+    )
+
+    async def fetch(session, url, throttle=None):
+        return 200, "page", {}
+
+    monkeypatch.setattr(gwa.duden, "fetch_page", fetch)
+    monkeypatch.setattr(
+        gwa.duden, "parse_duden_page", lambda *args, **kwargs: page
+    )
+    result = asyncio.run(gwa.resolve_direct_duden_page(
+        None,
+        "meter-key",
+        {
+            "spoken_text": "ein Meter fünfzehn",
+            "pos": "phrase",
+            "gender": "",
+            "duden_pages": [{
+                "url": page.canonical_url,
+                "headword": "",
+                "reviewed": False,
+            }],
+        },
+        throttle=gwa.duden.RequestThrottle(),
+    ))
+    assert result is None
+
+
+def test_direct_duden_resolver_records_unreviewed_transport_failure(monkeypatch):
+    async def fetch(*args, **kwargs):
+        raise TimeoutError("page timed out")
+
+    monkeypatch.setattr(gwa.duden, "fetch_page", fetch)
+    result = asyncio.run(gwa.resolve_direct_duden_page(
+        None,
+        "timeout-key",
+        {
+            "spoken_text": "Test",
+            "pos": "n.",
+            "gender": "n.",
+            "duden_pages": [{
+                "url": "https://www.duden.de/rechtschreibung/Test",
+                "headword": "",
+                "reviewed": False,
+            }],
+        },
+        throttle=gwa.duden.RequestThrottle(),
+    ))
+    assert result["status"] == "technical_error"
+    assert result["match_method"] == "direct-page-technical-error"
+    assert "timed out" in result["reason"]
+
+
 def test_canonical_spoken_identity_strips_bound_markers_and_dedupes_atoms():
     assert gwa.canonical_spoken_identity("eigen-") == "eigen"
     assert gwa.canonical_spoken_identity("weg/weg-") == "weg"
@@ -223,6 +771,23 @@ def test_prepare_gemini_uses_deterministic_voice_and_verified_generator(
     assert index["items"][audio_id]["voice"] == gwa.gemini_voice_for("Bahnhof")
 
 
+def test_prepare_gemini_needs_no_api_key_when_cache_is_complete(
+    monkeypatch, tmp_path: Path,
+):
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    monkeypatch.delenv("GEMINI_API_KEYS", raising=False)
+    monkeypatch.setattr(gwa, "GEMINI_DIR", tmp_path / "audio")
+    monkeypatch.setattr(gwa, "GEMINI_INDEX", tmp_path / "gemini.json")
+    key = "request"
+    index = asyncio.run(gwa.prepare_gemini(
+        {key: {"spoken_text": "Bahnhof"}},
+        {"items": {key: {"status": "ok"}}},
+        {"items": {key: {"status": "unresolved"}}},
+        {"items": {key: {"status": "unresolved"}}},
+    ))
+    assert index["items"] == {}
+
+
 def test_console_text_escapes_unicode_that_windows_cp1252_cannot_encode():
     assert gwa.console_text("one third: ⅓", "cp1252") == "one third: \\u2153"
 
@@ -254,7 +819,22 @@ def test_every_current_b1_unsafe_spoken_form_has_a_source_override():
 
 def test_update_word_audio_only_writes_word_audio(monkeypatch):
     calls = []
-    monkeypatch.setattr(gwa.gw, "anki", lambda action, **params: calls.append((action, params)) or [{"result": None, "error": None}])
+    state = {7: ""}
+
+    def anki(action, **params):
+        calls.append((action, params))
+        if action == "multi":
+            note = params["actions"][0]["params"]["note"]
+            state[note["id"]] = note["fields"]["WordAudio"]
+            return [{"result": None, "error": None}]
+        if action == "notesInfo":
+            return [{
+                "noteId": note_id,
+                "fields": {"WordAudio": {"value": state[note_id]}},
+            } for note_id in params["notes"]]
+        raise AssertionError(action)
+
+    monkeypatch.setattr(gwa.gw, "anki", anki)
     gwa.update_word_audio([7], {7: "[sound:x.mp3]"})
     action = calls[0][1]["actions"][0]
     assert action["params"]["note"] == {"id": 7, "fields": {"WordAudio": "[sound:x.mp3]"}}
@@ -379,6 +959,29 @@ def test_live_assignment_mismatches_accepts_only_reviewed_spoken_equivalence():
         records, manifest, provenance, equivalences
     )
     assert [item["note_id"] for item in report["reviewed_equivalences"]] == [1]
+    assert report["semantic_candidates"] == []
+
+
+def test_live_assignment_mismatches_approves_tracked_spoken_override_repair():
+    records = {
+        1: {"fields": fields(
+            SourceID="A2-0332",
+            SourceRefs="A2-0332|A2-MAIN-0328",
+            Lemma="fit sein",
+            WordAudio=f"[sound:_goethe_word_gemini_{'a' * 64}.mp3]",
+        )},
+    }
+    manifest = {"notes": {
+        "1": {
+            "spoken_text": "fit",
+            "assignment": {"sha256": "b" * 64, "spoken_text": "fit"},
+        },
+    }}
+    provenance = {
+        "a" * 64: {"spoken_texts": ["fit sein"], "providers": ["gemini"]},
+    }
+    report = gwa.live_assignment_mismatches(records, manifest, provenance, {})
+    assert [item["note_id"] for item in report["semantic_mismatches"]] == [1]
     assert report["semantic_candidates"] == []
 
 
@@ -563,13 +1166,94 @@ def test_protected_manifest_requires_only_protected_assignments(monkeypatch):
 
 
 def test_duden_negative_cache_is_versioned_and_refreshable():
-    current = {"status": "unresolved", "resolver_version": gwa.DUDEN_RESOLVER_VERSION}
+    current = {
+        "status": "unresolved",
+        "resolver_version": gwa.DUDEN_RESOLVER_VERSION,
+        "match_method": "sitemap-metadata-conflict",
+    }
+    definitive = {
+        "status": "unresolved",
+        "resolver_version": gwa.DUDEN_RESOLVER_VERSION - 1,
+        "match_method": "sitemap-not-found",
+    }
     stale = {"status": "unresolved", "resolver_version": gwa.DUDEN_RESOLVER_VERSION - 1}
     positive = {"status": "ok", "resolver_version": 1}
     assert gwa.reuse_duden_cache(current, refresh_negative=False)
     assert not gwa.reuse_duden_cache(current, refresh_negative=True)
+    assert gwa.reuse_duden_cache(definitive, refresh_negative=True)
     assert not gwa.reuse_duden_cache(stale, refresh_negative=False)
     assert gwa.reuse_duden_cache(positive, refresh_negative=True)
+
+
+def test_refresh_rechecks_cached_candidate_pages_without_recrawling_sitemap(
+    monkeypatch, tmp_path
+):
+    index_path = tmp_path / "duden_extra.json"
+    index_path.write_text(json.dumps({
+        "schema_version": 2,
+        "items": {
+            "key": {
+                "status": "unresolved",
+                "resolver_version": gwa.DUDEN_RESOLVER_VERSION,
+                "match_method": "sitemap-metadata-conflict",
+                "candidate_pages": [{
+                    "canonical_url":
+                        "https://www.duden.de/rechtschreibung/Geografie"
+                }],
+            }
+        },
+    }), encoding="utf-8")
+    monkeypatch.setattr(gwa, "DUDEN_EXTRA_INDEX", index_path)
+    monkeypatch.setattr(gwa, "DUDEN_EXTRA_DIR", tmp_path / "audio")
+
+    async def no_match(*args, **kwargs):
+        return None
+
+    async def no_sitemap(*args, **kwargs):
+        raise AssertionError("sitemap crawl must not run")
+
+    monkeypatch.setattr(gwa, "resolve_direct_duden_page", no_match)
+    monkeypatch.setattr(
+        gwa.duden, "build_lexeme_index_for_rows", no_sitemap
+    )
+    result = asyncio.run(gwa.prepare_duden({
+        "key": {
+            "request_key": "key",
+            "spoken_text": "Geografie",
+            "pos": "n.",
+            "gender": "f.",
+            "note_ids": [1],
+            "skip_duden": False,
+            "duden_pages": [],
+        }
+    }, refresh_negative=True))
+    assert result["items"]["key"]["status"] == "unresolved"
+
+
+def test_gemini_audit_duden_marks_sitemap_outage_for_review(
+    monkeypatch, tmp_path,
+):
+    index_path = tmp_path / "duden_extra.json"
+    monkeypatch.setattr(gwa, "DUDEN_EXTRA_INDEX", index_path)
+    monkeypatch.setattr(gwa, "DUDEN_EXTRA_DIR", tmp_path / "audio")
+
+    async def no_direct(*args, **kwargs):
+        return None
+
+    async def outage(*args, **kwargs):
+        raise gwa.duden.TechnicalError("sitemap unavailable")
+
+    monkeypatch.setattr(gwa, "resolve_direct_duden_page", no_direct)
+    monkeypatch.setattr(gwa.duden, "build_lexeme_index_for_rows", outage)
+    result = asyncio.run(gwa.prepare_duden({
+        "key": {
+            "request_key": "key", "spoken_text": "Test", "pos": "n.",
+            "gender": "n.", "note_ids": [1], "skip_duden": False,
+            "duden_pages": [],
+        }
+    }, refresh_negative=True, fail_on_technical_error=False))
+    assert result["items"]["key"]["status"] == "technical_error"
+    assert "sitemap unavailable" in result["items"]["key"]["reason"]
 
 
 def test_protected_audio_follows_source_refs_after_merge(tmp_path, monkeypatch):

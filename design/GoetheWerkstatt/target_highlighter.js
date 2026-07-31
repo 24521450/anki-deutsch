@@ -13,6 +13,12 @@
     });
   }
   function umlaut(value) {
+    for (var pairIndex = value.length - 2; pairIndex >= 0; pairIndex -= 1) {
+      if (value.slice(pairIndex, pairIndex + 2).toLocaleLowerCase("de-DE") === "au") {
+        var pairReplacement = value[pairIndex] === value[pairIndex].toLocaleUpperCase("de-DE") ? "Äu" : "äu";
+        return value.slice(0, pairIndex) + pairReplacement + value.slice(pairIndex + 2);
+      }
+    }
     var replacements = [["a", "ä"], ["o", "ö"], ["u", "ü"], ["A", "Ä"], ["O", "Ö"], ["U", "Ü"]];
     for (var index = value.length - 1; index >= 0; index -= 1) {
       for (var pair = 0; pair < replacements.length; pair += 1) {
@@ -26,6 +32,45 @@
   function stripGenderQualifier(value) {
     return value.replace(/\s*\((?:m\u00e4nnlich|weiblich)\)\s*$/i, "").trim();
   }
+  function notationEntries(value) {
+    value = String(value || "").trim();
+    if (!value) return [];
+    var sequence = value.split(/\s*(?:…|\.{3})\s*/).map(function (part) {
+      return part.trim();
+    }).filter(Boolean);
+    if (sequence.length >= 2) {
+      var pairKey = "notation:" + value.replace(/\s+/g, " ").toLocaleLowerCase("de-DE");
+      return sequence.map(function (part, index) {
+        return {
+          text:part, caseMode:"fold", role:"sequence", pairKey:pairKey,
+          boundaryMode:"default", sequenceIndex:index, sequenceSize:sequence.length
+        };
+      });
+    }
+    var hasSlash = value.indexOf("/") >= 0;
+    var hasBoundEdge = value[0] === "-" || value[value.length - 1] === "-";
+    var optional = /\(([^()]*)\)/.exec(value);
+    if (!hasSlash && !hasBoundEdge && !optional) return [];
+    var variants = hasSlash ? value.split("/") : [value];
+    if (optional) {
+      var before = value.slice(0, optional.index);
+      var after = value.slice(optional.index + optional[0].length);
+      variants = !before && after[0] === "-"
+        ? [after.slice(1), optional[1] + after.slice(1)]
+        : [before + after, before + optional[1] + after];
+    }
+    return variants.map(function (variant) {
+      variant = variant.replace(/\s+/g, " ").trim();
+      var leading = variant[0] === "-";
+      var trailing = variant[variant.length - 1] === "-";
+      var surface = variant.replace(/^-/, "").replace(/-$/, "").trim();
+      return {
+        text:surface, caseMode:"fold", role:"standalone", pairKey:"",
+        boundaryMode:leading ? "suffix" : trailing ? "prefix" : "default",
+        sequenceIndex:-1, sequenceSize:0
+      };
+    }).filter(function (entry) { return entry.text; });
+  }
   function addFirstPersonPresentForm(values, infinitive) {
     if (!/en$/i.test(infinitive)) return;
     var stem = infinitive.slice(0, -2);
@@ -35,6 +80,30 @@
     return globalThis.goetheWerkstattVerbTargetPolicy || {
       blank_pos_verb_source_ids: [], verb_specs: {}, exact_overrides: []
     };
+  }
+  function auditPolicy() {
+    return globalThis.goetheWerkstattTargetHighlightAudit || {cases:[]};
+  }
+  function auditTargetRanges(source, targets) {
+    var ranges = [];
+    targets.forEach(function (target) {
+      var surface = typeof target === "string" ? target : String(target.text || "");
+      var occurrence = typeof target === "object" ? Number(target.occurrence || 0) : 0;
+      if (!surface) throw new Error("reviewed audit target is invalid");
+      var starts = [];
+      var cursor = 0;
+      while (cursor <= source.length) {
+        var found = source.indexOf(surface, cursor);
+        if (found < 0) break;
+        starts.push(found); cursor = found + surface.length;
+      }
+      if (!starts.length || (occurrence && occurrence > starts.length)) {
+        throw new Error("reviewed audit target is absent");
+      }
+      if (occurrence) starts = [starts[occurrence - 1]];
+      starts.forEach(function (start) { ranges.push([start, start + surface.length]); });
+    });
+    return ranges;
   }
   function usableVerbForms() {
     var raw = text("gw-verb-forms").trim();
@@ -69,6 +138,13 @@
     if (/en$/i.test(infinitive)) return infinitive.slice(0, -2);
     if (/n$/i.test(infinitive)) return infinitive.slice(0, -1);
     return infinitive;
+  }
+  function weakParticiple(infinitive, particle) {
+    particle = particle || "";
+    var stem = verbStem(infinitive);
+    if (!stem || /ieren$/i.test(infinitive)) return "";
+    if (!particle && /^(?:be|emp|ent|er|ge|miss|ver|zer)/i.test(infinitive)) return "";
+    return particle + "ge" + stem + (/[dt]$/i.test(stem) ? "et" : "t");
   }
   function verbSurfaces(infinitive, rawForms) {
     var result = {};
@@ -110,6 +186,7 @@
       sollen:["soll","sollst","sollen","sollt"], wissen:["weiß","weißt","wissen","wisst","wusste","gewusst"]
     };
     (irregular[infinitive.toLocaleLowerCase("de-DE")] || []).forEach(add);
+    add(weakParticiple(infinitive));
     return Object.keys(result);
   }
   function verbSpec(lemma, rawForms, pos) {
@@ -142,10 +219,14 @@
     var lexicalLemma = stripGenderQualifier(lemma);
     var values = [lemma, lexicalLemma];
     var verbEntries = [];
+    var dictionaryEntries = [];
     var caseSensitive = {};
     var accepted = text("gw-accepted-answers").split("|").map(stripGenderQualifier);
     var lexicalBases = unique([lexicalLemma].concat(accepted));
     values = values.concat(accepted);
+    [lemma, lexicalLemma].concat(accepted).forEach(function (value) {
+      dictionaryEntries = dictionaryEntries.concat(notationEntries(value));
+    });
 
     var noun = text("gw-noun-forms");
     var suffixes = noun.match(/-(?:e|en|er|n|s)\b/gi) || [];
@@ -174,6 +255,25 @@
     }
 
     var pos = text("gw-pos");
+    if (/^n\.?$/i.test(pos)) {
+      lexicalBases.forEach(function (base) {
+        if (!base || /[/…()]|\.{3}/.test(base)) return;
+        [base, umlaut(base) + "e", umlaut(base) + "er"].forEach(function (surface) {
+          dictionaryEntries.push({
+            text:surface, caseMode:"fold", role:"standalone", pairKey:"",
+            boundaryMode:"compound", sequenceIndex:-1, sequenceSize:0
+          });
+        });
+        if (/in$/i.test(base) && base.length > 3) {
+          var masculine = base.slice(0, -2);
+          values.push(masculine, masculine + "e", masculine + "en");
+        } else if (/e$/i.test(base) && base.length > 2) {
+          values.push(base.slice(0, -1) + "in");
+        } else if (/er$/i.test(base)) {
+          values.push(base + "in");
+        }
+      });
+    }
     if (/^n\.?$/i.test(pos) && /-(?:n|en)\b/i.test(noun)) {
       lexicalBases.forEach(function (base) {
         if (!/e$/i.test(base)) return;
@@ -209,6 +309,8 @@
         var joined = stripVerbLemma(lexicalLemma).replace(/\s+/g, "");
         if (joined) verbEntries.push({text:joined, caseMode:"verb", role:"standalone", pairKey:""});
         verbEntries.push({text:String(spec.particle) + "zu" + String(spec.head), caseMode:"verb", role:"standalone", pairKey:""});
+        var participle = weakParticiple(String(spec.head), String(spec.particle));
+        if (participle) verbEntries.push({text:participle, caseMode:"verb", role:"standalone", pairKey:""});
       }
       (spec.predicate || []).forEach(function (value) {
         verbEntries.push({text:String(value), caseMode:"fold", role:"predicate", pairKey:pairKey});
@@ -218,17 +320,36 @@
       });
     }
 
-    if (/adj|det|pron/i.test(pos)) {
+    if (/adj|adv|det|pron/i.test(pos)) {
       var base = lexicalLemma.replace(/-$/, "");
-      ["e", "en", "em", "er", "es"].forEach(function (ending) { values.push(base + ending); });
+      if (base && !/[/…()]|\.{3}|\s/.test(base)) {
+        dictionaryEntries.push({
+          text:base, caseMode:"fold", role:"standalone", pairKey:"",
+          boundaryMode:"prefix", sequenceIndex:-1, sequenceSize:0
+        });
+        ["e", "en", "em", "er", "es"].forEach(function (ending) { values.push(base + ending); });
+        if (/el$/i.test(base)) {
+          var contracted = base.slice(0, -2) + base.slice(-1);
+          ["e", "en", "em", "er", "es"].forEach(function (ending) { values.push(contracted + ending); });
+        }
+        values.push(umlaut(base) + "er", base + "er");
+      }
     }
     var entries = values.map(function (value) {
       value = value.trim();
-      return {text:value, caseMode:caseSensitive[value] ? "exact" : "fold", role:"standalone", pairKey:""};
-    }).concat(verbEntries);
+      return {
+        text:value, caseMode:caseSensitive[value] ? "exact" : "fold",
+        role:"standalone", pairKey:"", boundaryMode:"default",
+        sequenceIndex:-1, sequenceSize:0
+      };
+    }).concat(dictionaryEntries, verbEntries);
     var seenEntries = {};
     entries = entries.filter(function (entry) {
-      var key = entry.text.toLocaleLowerCase("de-DE") + "\u0000" + entry.caseMode + "\u0000" + entry.role + "\u0000" + entry.pairKey;
+      entry.boundaryMode = entry.boundaryMode || "default";
+      entry.sequenceIndex = Number.isInteger(entry.sequenceIndex) ? entry.sequenceIndex : -1;
+      entry.sequenceSize = Number.isInteger(entry.sequenceSize) ? entry.sequenceSize : 0;
+      var key = entry.text.toLocaleLowerCase("de-DE") + "\u0000" + entry.caseMode + "\u0000" + entry.role + "\u0000" + entry.pairKey
+        + "\u0000" + entry.boundaryMode + "\u0000" + entry.sequenceIndex + "\u0000" + entry.sequenceSize;
       if (!entry.text || seenEntries[key]) return false;
       seenEntries[key] = true; return true;
     }).sort(function (left, right) { return right.text.length - left.text.length; });
@@ -246,12 +367,21 @@
     candidates.forEach(function (candidate, candidateIndex) {
       var meta = candidates.meta ? candidates.meta[candidateIndex] : {
         caseMode:candidates.caseSensitive && candidates.caseSensitive[candidate] ? "exact" : "fold",
-        role:"standalone", pairKey:""
+        role:"standalone", pairKey:"", boundaryMode:"default", sequenceIndex:-1, sequenceSize:0
       };
       var escaped = escapeRegex(candidate);
-      var bounded = candidate.length < 4 || candidates.wholeWord
-        ? "(?<![\\p{L}\\p{N}_])" + escaped + "(?![\\p{L}\\p{N}_])"
-        : escaped;
+      var bounded;
+      if (meta.boundaryMode === "prefix") {
+        bounded = "(?<![\\p{L}\\p{N}_])" + escaped;
+      } else if (meta.boundaryMode === "suffix") {
+        bounded = "(?<=[\\p{L}\\p{N}_])" + escaped + "(?![\\p{L}\\p{N}_])";
+      } else if (meta.boundaryMode === "compound") {
+        bounded = "(?<=[\\p{L}\\p{N}_])" + escaped;
+      } else {
+        bounded = candidate.length < 4 || candidates.wholeWord
+          ? "(?<![\\p{L}\\p{N}_])" + escaped + "(?![\\p{L}\\p{N}_])"
+          : escaped;
+      }
       var flags = meta.caseMode === "exact" ? "gu" : "giu";
       var matcher = new RegExp(bounded, flags);
       var match;
@@ -260,7 +390,11 @@
           var prefix = source.slice(0, match.index).replace(/[\s"'„“»«(\[]+$/g, "");
           if (prefix && !/[.!?;:\n–—]$/.test(prefix)) continue;
         }
-        occurrences.push([match.index, match.index + match[0].length, meta.role || "standalone", meta.pairKey || ""]);
+        occurrences.push([
+          match.index, match.index + match[0].length, meta.role || "standalone", meta.pairKey || "",
+          Number.isInteger(meta.sequenceIndex) ? meta.sequenceIndex : -1,
+          Number.isInteger(meta.sequenceSize) ? meta.sequenceSize : 0
+        ]);
       }
     });
     function clauseAt(index) { return (source.slice(0, index).match(/[,.!?;:\n–—]/g) || []).length; }
@@ -272,6 +406,24 @@
     });
     Object.keys(grouped).forEach(function (key) {
       var items = grouped[key];
+      var sequenceItems = items.filter(function (item) { return item[2] === "sequence"; });
+      if (sequenceItems.length) {
+        var size = Math.max.apply(null, sequenceItems.map(function (item) { return item[5]; }));
+        var cursor = 0;
+        while (size > 0) {
+          var chain = [];
+          for (var sequenceIndex = 0; sequenceIndex < size; sequenceIndex += 1) {
+            var sequenceChoices = sequenceItems.filter(function (item) {
+              return item[4] === sequenceIndex && item[0] >= cursor;
+            }).sort(function (left, right) { return left[0] - right[0]; });
+            if (!sequenceChoices.length) { chain = []; break; }
+            chain.push(sequenceChoices[0]); cursor = sequenceChoices[0][1];
+          }
+          if (!chain.length) break;
+          chain.forEach(function (item) { ranges.push(item.slice(0, 2)); });
+        }
+        return;
+      }
       var heads = items.filter(function (item) { return item[2] === "head"; });
       var particles = items.filter(function (item) { return item[2] === "particle"; });
       var predicates = items.filter(function (item) { return item[2] === "predicate"; });
@@ -312,6 +464,11 @@
       if (item.source_id !== sourceId || item.example_index !== exampleIndex) return;
       if (item.text !== source) throw new Error("reviewed target override text drift: " + sourceId);
       ranges = ranges.concat(item.ranges.map(function (range) { return range.slice(); }));
+    });
+    (auditPolicy().cases || []).forEach(function (item) {
+      if (item.source_id !== sourceId || item.example_index !== exampleIndex) return;
+      if (item.text !== source) throw new Error("reviewed audit text drift: " + sourceId);
+      if (item.status === "missing_certain") ranges = ranges.concat(auditTargetRanges(source, item.targets));
     });
     var seen = {};
     return ranges.filter(function (range) {

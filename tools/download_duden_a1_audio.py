@@ -619,7 +619,13 @@ def headword_matches(source_word: str, page_headword: str) -> bool:
 
 
 def exact_audit_headword_matches(source_word: str, page_headword: str) -> bool:
-    return normalize_text(source_word) == normalize_text(page_headword)
+    source = normalize_text(source_word)
+    variants = [
+        normalize_text(value)
+        for value in re.split(r"\s*[,/]\s*", page_headword)
+        if normalize_text(value)
+    ]
+    return source in variants
 
 
 def lexeme_bucket_for_word(word: str) -> str:

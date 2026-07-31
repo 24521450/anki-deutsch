@@ -15,6 +15,13 @@ A German response treated as correct when grading a card. It does not imply pron
 The exact German text represented by a note's pronunciation audio. It is the lemma unless a different form has been explicitly reviewed.
 _Avoid_: Accepted answer
 
+**Copula-suppressed spoken form**:
+A reviewed deck convention in which a headword component such as `fit sein`
+uses `fit` as its word-audio spoken form because `sein` is only the basic
+copula. This convention is note-specific and does not apply to lexical or
+idiomatic phrases containing `sein`.
+_Avoid_: Automatic removal of every `sein` token
+
 **Pronunciation proxy**:
 Alternative synthesis-only text used to elicit an approved pronunciation while
 the displayed German and transcript target remain correctly spelled. It is
@@ -27,6 +34,13 @@ Human acceptance of one exact audio bitstream for one exact text and voice.
 Transcript equality and automated audio classification are preflight evidence,
 not pronunciation approval.
 _Avoid_: Transcript QA
+
+**Approved audio source**:
+A reviewed human recording whose source identity, URL, upstream revision,
+content hash, spoken form, and semantic transcript are pinned in the tracked
+approval registry. Any later drift blocks refresh instead of permitting a TTS
+fallback.
+_Avoid_: Temporary provider cache, unreviewed search hit
 
 **Removed or merged note**:
 A note that no longer exists as an independent deck entry because its useful content was merged into a surviving note or because the entry was excluded from the canonical lexeme inventory.

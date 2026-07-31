@@ -16,21 +16,20 @@ OCR_CORRECTIONS = {"WiIlst du diese Jacke?": "Willst du diese Jacke?"}
 
 
 def merge_dialogue_replies(examples: list[dict[str, Any]]) -> list[dict[str, str]]:
-    merged: list[dict[str, str]] = []
+    """Normalize example fields without inferring or changing boundaries.
+
+    The historical name remains for callers, but source boundaries are now
+    explicit and authoritative.
+    """
+    normalized: list[dict[str, str]] = []
     for raw in examples:
         german = str(raw.get("de") or "")
-        item = {
+        normalized.append({
             "de": OCR_CORRECTIONS.get(german, german),
             "en": str(raw.get("en") or ""),
             "audio": str(raw.get("audio") or ""),
-        }
-        if merged and re.match(r"^[–—-]\s*", item["de"]):
-            merged[-1]["de"] += "<br>" + item["de"]
-            merged[-1]["en"] += ("<br>" if merged[-1]["en"] and item["en"] else "") + item["en"]
-            merged[-1]["audio"] = ""
-        else:
-            merged.append(item)
-    return merged
+        })
+    return normalized
 
 
 def parse_overflow(value: str) -> list[dict[str, str]]:

@@ -1,6 +1,21 @@
 {
-  "schema_version": 3,
+  "schema_version": 4,
   "spoken_text": {
+    "A1-84887177192": "Million",
+    "A1-84887177193": "Milliarde",
+    "A2-0332": "fit",
+    "an sein": "an",
+    "aus sein": "aus",
+    "auf sein": "auf",
+    "weg sein": "weg",
+    "dagegen sein": "dagegen",
+    "einverstanden sein": "einverstanden",
+    "erkältet sein": "erkältet",
+    "erlaubt sein": "erlaubt",
+    "fertig sein": "fertig",
+    "gültig sein": "gültig",
+    "unterwegs sein": "unterwegs",
+    "verabredet sein": "verabredet",
     "B1-WG-0161": "hell, dunkel",
     "A2-0277": "einig",
     "A2-0378": "geehrt",
@@ -99,10 +114,10 @@
     "B1-WG-0267": "dreizehn bis zwanzig",
     "B1-WG-0268": "einundzwanzig",
     "B1-WG-0269": "dreißig bis neunzig",
-    "B1-WG-0270": "einhundert",
+    "B1-WG-0270": "hundert",
     "B1-WG-0271": "hunderteins",
     "B1-WG-0272": "zweihundert",
-    "B1-WG-0273": "eintausend",
+    "B1-WG-0273": "tausend",
     "B1-WG-0274": "eine Million",
     "B1-WG-0275": "eine Milliarde",
     "B1-WG-0295": "neunzehnhundertneunundneunzig",
@@ -130,8 +145,8 @@
     "unser-": "unser",
     "ander-": "ander",
     "welch-": "welch",
-    "(ein)hundert": "einhundert",
-    "(ein)tausend": "eintausend",
+    "(ein)hundert": "hundert",
+    "(ein)tausend": "tausend",
     "fünf Minuten vor/nach eins (ein Uhr)": "fünf Minuten vor eins, fünf Minuten nach eins",
     "ein halb; halb": "ein halb, halb",
     "ein Viertel; Viertel": "ein Viertel, Viertel",
@@ -173,6 +188,56 @@
     "3. drittens": "drittens",
     "4. viertens": "viertens"
   },
+  "duden_pages": {
+    "A1-WG-0083": {
+      "expected_lemma": "August",
+      "spoken_text": "August",
+      "url": "https://www.duden.de/rechtschreibung/August_Monat",
+      "headword": "August"
+    },
+    "A1-WG-0029": {
+      "expected_lemma": "(ein)hundert",
+      "spoken_text": "hundert",
+      "url": "https://www.duden.de/rechtschreibung/Hundert_Zahl",
+      "headword": "Hundert"
+    },
+    "A1-WG-0032": {
+      "expected_lemma": "(ein)tausend",
+      "spoken_text": "tausend",
+      "url": "https://www.duden.de/rechtschreibung/Tausend_Zahl",
+      "headword": "Tausend"
+    },
+    "B1-MAIN-0030": {
+      "expected_lemma": "absolut",
+      "spoken_text": "absolut",
+      "url": "https://www.duden.de/rechtschreibung/absolut_Adjektiv",
+      "headword": "absolut"
+    },
+    "B1-MAIN-0489": {
+      "expected_lemma": "dagegen",
+      "spoken_text": "dagegen",
+      "url": "https://www.duden.de/rechtschreibung/dagegen",
+      "headword": "dagegen"
+    },
+    "A2-0212": {
+      "expected_lemma": "dagegen sein",
+      "spoken_text": "dagegen",
+      "url": "https://www.duden.de/rechtschreibung/dagegen",
+      "headword": "dagegen"
+    },
+    "A1-84887177192": {
+      "expected_lemma": "Million",
+      "spoken_text": "Million",
+      "url": "https://www.duden.de/rechtschreibung/Million",
+      "headword": "Million"
+    },
+    "A1-84887177193": {
+      "expected_lemma": "Milliarde",
+      "spoken_text": "Milliarde",
+      "url": "https://www.duden.de/rechtschreibung/Milliarde",
+      "headword": "Milliarde"
+    }
+  },
   "protected_audio": {
     "A1-MAIN-0016": {
       "provider": "commons",
@@ -213,6 +278,32 @@
       "original_sha1": "efca7fdc1a6d579253d7e23883c4df0915fab9e9",
       "sha256": "f95670fae06724c95ec55e33089a014793b57f504821006c7809d5c1a1ec935f",
       "reason": "Intentional user-reviewed Wiktionary pronunciation; do not replace with Duden."
+    },
+    "A2-0293": {
+      "provider": "commons",
+      "expected_lemma": "erlaubt sein",
+      "spoken_text": "erlaubt",
+      "title": "File:De-erlaubt.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-erlaubt.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/3/3c/De-erlaubt.ogg",
+      "original_sha1": "75f392ef589c1f96ea97a73e426b3e936116a737",
+      "sha256": "49a4cc0c7f206a12d643e1155c236adab1fce8a07a3a39e74f1d701e58769ab8",
+      "license_short_name": "CC BY-SA 4.0",
+      "artist": "Jeuwre",
+      "reason": "User-reviewed exact pronunciation of the copula-suppressed spoken form; keep this recording across later refreshes."
+    },
+    "A2-1050": {
+      "provider": "commons",
+      "expected_lemma": "verabredet sein",
+      "spoken_text": "verabredet",
+      "title": "File:De-verabredet.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-verabredet.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/1/16/De-verabredet.ogg",
+      "original_sha1": "61d9e6788127af9197c079aed1fb17117d9b4f76",
+      "sha256": "201cf82a6a091a0c95efe7b5d976c4918cea2773647b34938bce691ef0b1d2b2",
+      "license_short_name": "CC BY-SA 4.0",
+      "artist": "Jeuwre",
+      "reason": "User-reviewed exact pronunciation of the copula-suppressed spoken form; keep this recording across later refreshes."
     },
     "A2-0610": {
       "provider": "commons",

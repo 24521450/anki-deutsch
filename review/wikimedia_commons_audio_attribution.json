@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_utc": "2026-07-29T14:10:07.847760+00:00",
+  "generated_utc": "2026-07-31T11:44:58.766938+00:00",
   "notice": "This file must accompany any redistributed APKG containing the referenced Wikimedia Commons audio.",
   "items": [
     {
@@ -100,6 +100,20 @@
       "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
       "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
       "checked_utc": "2026-07-13T00:59:33.850676+00:00"
+    },
+    {
+      "sha256": "abeeb9cf1e403322b46a942117dd14b30ac8bd4a018e1d8850664209b29a6b31",
+      "spoken_text": "aller",
+      "title": "File:De-aller.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-aller.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/e/e6/De-aller.ogg",
+      "artist": "Own work",
+      "credit": "recorded by myself using Zoom H2 Recorder",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 3.0",
+      "checked_utc": "2026-07-31T10:58:30.159802+00:00"
     },
     {
       "sha256": "2a6899aac13bd07d7196c7afff07608cd866ab7b84a29252febd8d7db641cf1e",
@@ -522,6 +536,20 @@
       "checked_utc": "2026-07-15T00:52:29.026657+00:00"
     },
     {
+      "sha256": "0f60de60b09fca11b3c5896804f821a3a8753ffdaa78fc5521f349005ddd7241",
+      "spoken_text": "Bio",
+      "title": "File:De-Bio.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-Bio.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/6/69/De-Bio.ogg",
+      "artist": "Jeuwre",
+      "credit": "Own work",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
+      "checked_utc": "2026-07-31T10:58:23.730839+00:00"
+    },
+    {
       "sha256": "0f0243a58cd12165ac1caee77770c1da36379ce93242b91f677606560283c17c",
       "spoken_text": "bloggen",
       "title": "File:De-bloggen.ogg",
@@ -802,6 +830,20 @@
       "checked_utc": "2026-07-13T00:59:32.429846+00:00"
     },
     {
+      "sha256": "a1d37ea5e03e8069cf962ee335c510ba011a74b9efe5e38c1a67ad103eb9e808",
+      "spoken_text": "dagegen",
+      "title": "File:De-dagegen.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-dagegen.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/0/00/De-dagegen.ogg",
+      "artist": "Anhezu",
+      "credit": "This file has been extracted from another file",
+      "attribution": "",
+      "license_short_name": "CC BY 3.0",
+      "license_url": "https://creativecommons.org/licenses/by/3.0",
+      "usage_terms": "Creative Commons Attribution 3.0",
+      "checked_utc": "2026-07-31T10:58:37.013435+00:00"
+    },
+    {
       "sha256": "d09a9ef49eec44f6af29f9e9b0a500e907af9ad003ee749b6f6c557a9e73ce06",
       "spoken_text": "dagegen sein",
       "title": "File:De-dagegen sein.ogg",
@@ -1038,6 +1080,20 @@
       "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
       "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
       "checked_utc": "2026-07-13T01:00:35.505509+00:00"
+    },
+    {
+      "sha256": "89aee93b5319849d35baae2d1c72c2e2c8d3dd1c73254c9a2c10cbe413e7d34a",
+      "spoken_text": "Doppel",
+      "title": "File:De-Doppel.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-Doppel.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/d/d5/De-Doppel.ogg",
+      "artist": "Jeuwre",
+      "credit": "Own work",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
+      "checked_utc": "2026-07-31T10:58:33.686556+00:00"
     },
     {
       "sha256": "e85dddc798a72cf51834ab7a4695fbf76a63205c13aaeb3078d229ca0e2168d7",
@@ -1432,6 +1488,20 @@
       "checked_utc": "2026-07-15T00:54:37.038020+00:00"
     },
     {
+      "sha256": "aeb2b43223bf96199d7512858315a95b4f9dbba0989cff17bd35e76aadd61055",
+      "spoken_text": "Einzel",
+      "title": "File:De-Einzel.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-Einzel.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/4/4f/De-Einzel.ogg",
+      "artist": "Jeuwre",
+      "credit": "Own work",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
+      "checked_utc": "2026-07-31T10:58:22.375312+00:00"
+    },
+    {
       "sha256": "076f50a02795d39d82497c2216354f587a44ba267d873e911ffd3af27194f1ee",
       "spoken_text": "Einzelkind",
       "title": "File:De-Einzelkind.ogg",
@@ -1542,6 +1612,20 @@
       "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
       "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
       "checked_utc": "2026-07-15T00:51:20.449171+00:00"
+    },
+    {
+      "sha256": "49a4cc0c7f206a12d643e1155c236adab1fce8a07a3a39e74f1d701e58769ab8",
+      "spoken_text": "erlaubt",
+      "title": "File:De-erlaubt.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-erlaubt.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/3/3c/De-erlaubt.ogg",
+      "artist": "Jeuwre",
+      "credit": "Own work",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
+      "checked_utc": "2026-07-31T10:04:22.811195+00:00"
     },
     {
       "sha256": "420723e92a223afb801daa59d556f09d17b5949b8886c40f9aeede6525ae44e2",
@@ -2004,6 +2088,20 @@
       "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
       "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
       "checked_utc": "2026-07-13T01:00:08.864983+00:00"
+    },
+    {
+      "sha256": "ab4dada631957341deda4a0927d2a00f2ad43fa798d2029017aed9b548478d33",
+      "spoken_text": "Groß",
+      "title": "File:De-Groß.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-Gro%C3%9F.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/a/a2/De-Gro%C3%9F.ogg",
+      "artist": "Jeuwre",
+      "credit": "Own work",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
+      "checked_utc": "2026-07-31T10:58:35.628059+00:00"
     },
     {
       "sha256": "2e8347eb96db1c78a8c3450a6b25221ce4546fbfe3040a6b80ac2390db448b48",
@@ -2720,6 +2818,20 @@
       "checked_utc": "2026-07-15T00:55:25.136981+00:00"
     },
     {
+      "sha256": "e31cb8aecde6fa351c3164a0cf5405d715547ff8db50bd86f579c4d0aede9b44",
+      "spoken_text": "letzt",
+      "title": "File:De-letzt.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-letzt.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/9/98/De-letzt.ogg",
+      "artist": "Jeuwre",
+      "credit": "Own work , recorded with Røde NT-USB and Audacity , converted with SoX (Sound eXchange audio editing software)",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
+      "checked_utc": "2026-07-31T10:58:25.118009+00:00"
+    },
+    {
       "sha256": "ae0e57e9597d32d07c830ba86a87f39a71bd987d97fcb19e691f20744bf97d17",
       "spoken_text": "letzte",
       "title": "File:De-letzte.ogg",
@@ -2760,6 +2872,20 @@
       "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
       "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
       "checked_utc": "2026-07-27T16:15:43.003339+00:00"
+    },
+    {
+      "sha256": "7953bbaf7cb2cc881c4eb1ca809b97bd8943ef78ba952c7d7682a4eb5d74f449",
+      "spoken_text": "Lieblings",
+      "title": "File:De-Lieblings.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-Lieblings.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/b/bf/De-Lieblings.ogg",
+      "artist": "Jeuwre",
+      "credit": "Own work , recorded with Rode NT-USB, converted with Audacity",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
+      "checked_utc": "2026-07-31T10:58:28.103564+00:00"
     },
     {
       "sha256": "90385742262e996a235f015cafec113989f223e1a45b9ca1f0144b38bbc4097d",
@@ -3098,6 +3224,20 @@
       "checked_utc": "2026-07-15T00:53:50.159510+00:00"
     },
     {
+      "sha256": "cf6a704745d98b51ea95669bc3248d2d2cefb65f2d746bf163515aaa9a15f037",
+      "spoken_text": "miss",
+      "title": "File:De-miss.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-miss.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/1/18/De-miss.ogg",
+      "artist": "Jeuwre",
+      "credit": "Own work , recorded with Rode NT-USB, converted with Audacity",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
+      "checked_utc": "2026-07-31T10:58:32.286166+00:00"
+    },
+    {
       "sha256": "aa40925c4554204b8488b3876319c9e2c95179557e548e305d411f0635534323",
       "spoken_text": "Mittag",
       "title": "File:De-Mittag.ogg",
@@ -3124,6 +3264,20 @@
       "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
       "usage_terms": "Creative Commons Attribution-Share Alike 3.0",
       "checked_utc": "2026-07-13T00:59:12.773204+00:00"
+    },
+    {
+      "sha256": "98244ca677622f8aa82ba8005353c6bb62f83c19aaca0bea772133442b418ca7",
+      "spoken_text": "mittler",
+      "title": "File:De-mittler.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-mittler.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/e/eb/De-mittler.ogg",
+      "artist": "Jeuwre",
+      "credit": "Own work , recorded with Røde NT-USB and Audacity , converted with SoX (Sound eXchange audio editing software)",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
+      "checked_utc": "2026-07-31T10:58:38.725982+00:00"
     },
     {
       "sha256": "58283f85052362d121832c02f7b590424b75299a5e0c36fcad6036d2af9a7365",
@@ -3390,6 +3544,20 @@
       "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
       "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
       "checked_utc": "2026-07-15T00:55:20.811919+00:00"
+    },
+    {
+      "sha256": "67c8e91e1822a79407c20a1c23b6e581ef9e7949f1659d82a61b558e1acd8dd8",
+      "spoken_text": "ober",
+      "title": "File:De-ober.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-ober.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/e/e2/De-ober.ogg",
+      "artist": "Jeuwre",
+      "credit": "Own work , recorded with Røde NT-USB and Audacity , converted with SoX (Sound eXchange audio editing software)",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
+      "checked_utc": "2026-07-31T10:58:20.513991+00:00"
     },
     {
       "sha256": "674aca655cdf645324e9f3027640710e3fd21068a4dd3a283ff1ba7f2c630890",
@@ -4624,6 +4792,20 @@
       "checked_utc": "2026-07-15T00:51:50.131230+00:00"
     },
     {
+      "sha256": "a19c7de2b26b768c8460643b742cb6ac7a9abd32f224599fe21957132ba93bb1",
+      "spoken_text": "un",
+      "title": "File:De-un.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-un.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/9/97/De-un.ogg",
+      "artist": "T.Voekler",
+      "credit": "Own work",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 3.0",
+      "checked_utc": "2026-07-31T10:58:26.526389+00:00"
+    },
+    {
       "sha256": "1e201d51dcb40cb1fd91068b5236bd540fc79fc9f8bc68dde9ccf22e299588d1",
       "spoken_text": "Uniform",
       "title": "File:De-Uniform.ogg",
@@ -5504,6 +5686,20 @@
       "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
       "usage_terms": "Creative Commons Attribution-Share Alike 3.0",
       "checked_utc": "2026-07-15T00:54:45.233494+00:00"
+    },
+    {
+      "sha256": "0dce312a58e8f45f97c8b9d05fad350cd2b1de482e562902d74244d3db710fe2",
+      "spoken_text": "Öko",
+      "title": "File:De-Öko.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-%C3%96ko.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/0/0b/De-%C3%96ko.ogg",
+      "artist": "Jeuwre",
+      "credit": "Own work",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
+      "checked_utc": "2026-07-31T10:58:18.878972+00:00"
     },
     {
       "sha256": "b0f8c3e16db4c3f3a88e68cd3711a617f10a4c106aeaf7c9abc4a45ae12b4a0b",

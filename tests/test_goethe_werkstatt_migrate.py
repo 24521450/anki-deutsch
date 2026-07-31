@@ -14,6 +14,7 @@ if str(TOOLS) not in sys.path:
     sys.path.insert(0, str(TOOLS))
 
 import goethe_werkstatt_migrate as gw  # noqa: E402
+import goethe_example_boundaries as boundaries  # noqa: E402
 
 
 @pytest.mark.parametrize(
@@ -125,13 +126,42 @@ def test_parse_markdown_keeps_dialogue_reply_in_the_same_example(tmp_path):
     source = tmp_path / "dialogue.md"
     source.write_text(
         "| **ander-** | det., pron. | | A1 | "
-        "Willst du diese Jacke?<br>– Nein, ich möchte die andere.<br>Ein weiterer Satz. | |\n",
+        "Willst du diese Jacke?<br>– Nein, ich möchte die andere."
+        "<br data-example-boundary>Ein weiterer Satz. | |\n",
         encoding="utf-8",
     )
     assert gw.parse_markdown(source)[0]["examples"] == [
         "Willst du diese Jacke?<br>– Nein, ich möchte die andere.",
         "Ein weiterer Satz.",
     ]
+
+
+def test_parse_markdown_uses_only_explicit_example_boundaries(tmp_path):
+    source = tmp_path / "examples.md"
+    source.write_text(
+        "| **billig** | adj. | | A2 | "
+        "Das Wörterbuch kostet nur fünf Euro.<br>Das ist aber billig!"
+        "<br data-example-boundary>Ein separates Beispiel. | |\n",
+        encoding="utf-8",
+    )
+    assert gw.parse_markdown(source)[0]["examples"] == [
+        "Das Wörterbuch kostet nur fünf Euro.<br>Das ist aber billig!",
+        "Ein separates Beispiel.",
+    ]
+
+
+def test_a2_billig_dialogue_is_one_pdf_faithful_example():
+    row = next(item for item in gw.parse_markdown(gw.SOURCE_A2) if item["word"] == "billig")
+    assert row["examples"] == [
+        "Das Wörterbuch kostet nur fünf Euro. - Fünf Euro? Das ist aber billig!"
+    ]
+
+
+def test_all_reviewed_boundaries_have_unique_pdf_evidence():
+    report = boundaries.check_sources()
+    assert report["rows"] == 4824
+    assert report["reviewed_merges"] == 12
+    assert report["unresolved"] == 0
 
 
 def test_a1_achtung_is_one_pdf_faithful_example():
@@ -409,7 +439,7 @@ if (grade("", "erkältet sein", "erkältet sein", "", "")) throw new Error("blan
     subprocess.run([node, "-e", harness], check=True, capture_output=True, text=True)
 
 
-def test_target_highlighter_handles_inflections_separable_verbs_and_short_words():
+def test_target_highlighter_handles_inflections_separable_verbs_and_short_words(tmp_path: Path):
     node = shutil.which("node")
     if not node:
         pytest.skip("Node.js is required for the card JavaScript regression test")
@@ -511,10 +541,12 @@ source = "Kann ich an der Ampel halten?";
 found = api.matchRanges(source, terms).map((range) => source.slice(range[0], range[1]));
 if (found.length !== 1 || found[0] !== "an") throw new Error("short target matched inside another word");
 '''
-    subprocess.run([node, "-e", harness], check=True, capture_output=True, text=True)
+    script_path = tmp_path / "target_highlighter_regression.js"
+    script_path.write_text(harness, encoding="utf-8")
+    subprocess.run([node, str(script_path)], check=True, capture_output=True, text=True)
 
 
-def test_assembled_target_highlighter_supports_reviewed_verb_families():
+def test_assembled_target_highlighter_supports_reviewed_verb_families(tmp_path: Path):
     node = shutil.which("node")
     if not node:
         pytest.skip("Node.js is required for the card JavaScript regression test")
@@ -544,7 +576,9 @@ check({"gw-source-id":"A2-1202","gw-lemma":"zurückkommen","gw-pos":""},
 check({"gw-lemma":"planen","gw-verb-forms":"plant, hat geplant","gw-pos":"v."},
   "Das ist ein guter Plan.", []);
 '''
-    subprocess.run([node, "-e", harness], check=True, capture_output=True, text=True)
+    script_path = tmp_path / "assembled_target_highlighter.js"
+    script_path.write_text(harness, encoding="utf-8")
+    subprocess.run([node, str(script_path)], check=True, capture_output=True, text=True)
 
 
 def test_field_contract_is_stable():

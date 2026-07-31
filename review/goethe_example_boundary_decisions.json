@@ -1,0 +1,66 @@
+{
+  "version": 1,
+  "boundary_marker": "<br data-example-boundary>",
+  "merges": {
+    "A1-MAIN-0031": {
+      "legacy_boundary_indexes": [0],
+      "example": "Wir sind im Moment nicht da. Sprechen Sie bitte auf den Anrufbeantworter.",
+      "reason": "The second sentence completes the answering-machine message and contains the headword."
+    },
+    "A1-MAIN-0350": {
+      "legacy_boundary_indexes": [2],
+      "example": "Ich möchte auch etwas essen. Bringen Sie mir die Karte, bitte.",
+      "reason": "The request for the menu depends on the preceding restaurant context."
+    },
+    "A1-MAIN-0363": {
+      "legacy_boundary_indexes": [1],
+      "example": "Im Zug fahre ich immer 2. Klasse.",
+      "reason": "The old boundary split the ordinal from its noun on one PDF line."
+    },
+    "A1-MAIN-0634": {
+      "legacy_boundary_indexes": [0],
+      "example": "Wir wollen uns kennenlernen. Können Sie sich bitte vorstellen?",
+      "reason": "The request to introduce oneself depends on the preceding context."
+    },
+    "A1-MAIN-0658": {
+      "legacy_boundary_indexes": [0],
+      "example": "Wir müssen jetzt Schluss machen. Also auf Wiederhören!",
+      "reason": "The farewell is the conclusion of the preceding utterance."
+    },
+    "A2-MAIN-0156": {
+      "legacy_boundary_indexes": [0],
+      "example": "Das Wörterbuch kostet nur fünf Euro. - Fünf Euro? Das ist aber billig!",
+      "reason": "The PDF wraps one price-reaction dialogue across two lines."
+    },
+    "A2-MAIN-0204": {
+      "legacy_boundary_indexes": [0],
+      "example": "Als Student hatte ich viel Zeit und wollte reisen. Aber damals hatte ich kein Geld.",
+      "reason": "Aber damals explicitly continues and contrasts the preceding sentence."
+    },
+    "A2-MAIN-0221": {
+      "legacy_boundary_indexes": [2],
+      "example": "Ich möchte nicht direkt nach der Schule studieren. Ich möchte erst reisen.",
+      "reason": "The second sentence explains the alternative to studying directly after school."
+    },
+    "A2-MAIN-0671": {
+      "legacy_boundary_indexes": [1],
+      "example": "Kommst du mit ins Kino? - Ich weiß es noch nicht. Ich schreibe dir später eine Nachricht.",
+      "reason": "The promised message answers the invitation in the same dialogue."
+    },
+    "A2-MAIN-0690": {
+      "legacy_boundary_indexes": [1],
+      "example": "Hier ist der Anrufbeantworter von Familie Klein. Leider ist im Moment niemand zu Hause.",
+      "reason": "Both sentences form one answering-machine message."
+    },
+    "A2-MAIN-0786": {
+      "legacy_boundary_indexes": [0],
+      "example": "Wir organisieren eine Rundreise durch Deutschland. Wir buchen die Reise im Reisebüro.",
+      "reason": "The first sentence supplies the trip context for the Reisebüro example."
+    },
+    "A2-MAIN-0883": {
+      "legacy_boundary_indexes": [1],
+      "example": "Lesen Sie die Anzeigen und die Aufgaben 11-15. Welche Anzeige passt zu welcher Situation?",
+      "reason": "The question is part of the same exercise instruction."
+    }
+  }
+}

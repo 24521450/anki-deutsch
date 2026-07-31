@@ -27,6 +27,7 @@ from zipfile import BadZipFile
 import goethe_apkg as apkg
 import goethe_werkstatt_migrate as gw
 import goethe_examples
+import goethe_example_boundaries
 import goethe_english_audit as english_audit
 import goethe_scope as scope
 import goethe_source_examples
@@ -1320,6 +1321,7 @@ def apply_final_english_audit(
 
 
 def build_manifest(*, finalize_production: bool = True) -> dict[str, Any]:
+    goethe_example_boundaries.check_source_grammar()
     records, _ = load_live()
     record_word_audio = {
         key: (

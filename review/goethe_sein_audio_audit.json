@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "policy": "copula-suppressed-spoken-form-v1",
+  "generated_from": "data/build/anki_notes.jsonl",
+  "entries": [
+    {"note_id": 1584886454455, "lemma": "an sein", "source_refs": ["A1-84886454455", "A1-84886455086", "A1-MAIN-0034"], "decision": "approved_strip", "spoken_text": "an", "reason": "sein is a basic copula; headword component an is the reviewed deck pronunciation"},
+    {"note_id": 1584886454492, "lemma": "aus sein", "source_refs": ["A1-84886454492", "A1-84886454493", "A1-MAIN-0067", "A2-MAIN-0090"], "decision": "approved_strip", "spoken_text": "aus", "reason": "sein is a basic copula; headword component aus is the reviewed deck pronunciation"},
+    {"note_id": 1584886455084, "lemma": "sein", "source_refs": ["A1-84886455083", "A1-84886455084", "A1-84886455085", "A1-MAIN-0546", "A2-MAIN-0874"], "decision": "keep", "spoken_text": "sein", "reason": "independent lexical verb"},
+    {"note_id": 1584886455087, "lemma": "auf sein", "source_refs": ["A1-84886454476", "A1-84886455087", "A1-MAIN-0052", "A2-MAIN-0091"], "decision": "approved_strip", "spoken_text": "auf", "reason": "sein is a basic copula; headword component auf is the reviewed deck pronunciation"},
+    {"note_id": 1584886455088, "lemma": "weg sein", "source_refs": ["A1-84886455088", "A1-MAIN-0547", "A2-MAIN-1090"], "decision": "approved_strip", "spoken_text": "weg", "reason": "sein is a basic copula; headword component weg is the reviewed deck pronunciation"},
+    {"note_id": 1584886455089, "lemma": "zu sein", "source_refs": ["A1-84886455089", "A1-MAIN-0548", "A2-MAIN-1158", "B1-MAIN-2918"], "decision": "keep", "spoken_text": "zu sein", "reason": "reviewed lexical phrase; sein is not a removable copula suffix"},
+    {"note_id": 1497484860929, "lemma": "dagegen sein", "source_refs": ["A2-0212", "A2-MAIN-0203"], "decision": "approved_strip", "spoken_text": "dagegen", "reason": "sein is a basic copula; headword component dagegen is the reviewed deck pronunciation"},
+    {"note_id": 1497484860967, "lemma": "einverstanden sein", "source_refs": ["A2-0250", "A2-MAIN-0267"], "decision": "approved_strip", "spoken_text": "einverstanden", "reason": "sein is a basic copula; headword component einverstanden is the reviewed deck pronunciation"},
+    {"note_id": 1497484861004, "lemma": "erkältet sein", "source_refs": ["A2-0287", "A2-MAIN-0283"], "decision": "approved_strip", "spoken_text": "erkältet", "reason": "sein is a basic copula; headword component erkältet is the reviewed deck pronunciation"},
+    {"note_id": 1497484861010, "lemma": "erlaubt sein", "source_refs": ["A2-0293", "A2-MAIN-0286"], "decision": "approved_strip", "spoken_text": "erlaubt", "reason": "sein is a basic copula; headword component erlaubt is the reviewed deck pronunciation"},
+    {"note_id": 1497484861032, "lemma": "fertig sein", "source_refs": ["A2-0315", "A2-MAIN-0319"], "decision": "approved_strip", "spoken_text": "fertig", "reason": "sein is a basic copula; headword component fertig is the reviewed deck pronunciation"},
+    {"note_id": 1497484861049, "lemma": "fit sein", "source_refs": ["A2-0332", "A2-MAIN-0328"], "decision": "approved_strip", "spoken_text": "fit", "reason": "sein is a basic copula; headword component fit is the reviewed deck pronunciation"},
+    {"note_id": 1497484861137, "lemma": "gültig sein", "source_refs": ["A2-0420", "A2-MAIN-0422"], "decision": "approved_strip", "spoken_text": "gültig", "reason": "sein is a basic copula; headword component gültig is the reviewed deck pronunciation"},
+    {"note_id": 1497484861762, "lemma": "unterwegs sein", "source_refs": ["A2-1045", "A2-MAIN-1028"], "decision": "approved_strip", "spoken_text": "unterwegs", "reason": "sein is a basic copula; headword component unterwegs is the reviewed deck pronunciation"},
+    {"note_id": 1497484861767, "lemma": "verabredet sein", "source_refs": ["A2-1050", "A2-MAIN-1030"], "decision": "approved_strip", "spoken_text": "verabredet", "reason": "sein is a basic copula; headword component verabredet is the reviewed deck pronunciation"},
+    {"note_id": 1784075564439, "lemma": "in Pension gehen", "source_refs": ["B1-MAIN-1218"], "decision": "keep", "spoken_text": "in Pension gehen", "reason": "lexical phrase; not a removable copula suffix"},
+    {"note_id": 1784075564529, "lemma": "in Rente gehen", "source_refs": ["B1-MAIN-1219"], "decision": "keep", "spoken_text": "in Rente gehen", "reason": "lexical phrase; not a removable copula suffix"},
+    {"note_id": 1784075597930, "lemma": "pensioniert werden", "source_refs": ["B1-MAIN-1830"], "decision": "keep", "spoken_text": "pensioniert werden", "reason": "lexical passive phrase; not a removable copula suffix"}
+  ]
+}

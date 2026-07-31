@@ -6,6 +6,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 
 ROOT = Path(__file__).resolve().parents[1]
 TOOLS = ROOT / "tools"
@@ -17,7 +19,7 @@ import goethe_werkstatt_migrate as gw  # noqa: E402
 
 
 EXPORT = ROOT / "data" / "build" / "anki_notes.jsonl"
-REPAIRS = ROOT / "review" / "goethe_target_highlight_repairs_v2.json"
+REPAIRS = ROOT / "review" / "goethe_target_highlight_repairs_v3.json"
 
 
 def as_fields(row: dict) -> dict[str, str]:
@@ -37,16 +39,42 @@ def as_fields(row: dict) -> dict[str, str]:
     return fields
 
 
-def test_python_and_card_javascript_match_all_reviewed_verb_examples(tmp_path: Path) -> None:
+def test_absolut_export_highlights_both_adverb_and_inflected_adjective():
+    row = next(
+        json.loads(line)
+        for line in EXPORT.read_text(encoding="utf-8").splitlines()
+        if '"source_id":"B1-MAIN-0030"' in line
+    )
+
+    assert row["pos"] == "adj., adv."
+    assert json.loads(highlights.build_target_spans(as_fields(row))) == [
+        [[22, 29]], [[9, 18]],
+    ]
+
+
+@pytest.mark.parametrize(
+    ("source_id", "expected"),
+    [
+        ("B1-MAIN-2784", [[[21, 26], [32, 36]]]),
+        ("B1-MAIN-2752", [[[30, 35]], [[17, 22]]]),
+    ],
+)
+def test_dictionary_notation_regression_fixtures(source_id: str, expected: list) -> None:
+    row = next(
+        json.loads(line)
+        for line in EXPORT.read_text(encoding="utf-8").splitlines()
+        if f'"source_id":"{source_id}"' in line
+    )
+    assert json.loads(highlights.build_spans(as_fields(row))) == expected
+
+
+def test_python_and_card_javascript_match_all_reviewed_examples(tmp_path: Path) -> None:
     node = shutil.which("node")
     if not node:
         return
     rows = [json.loads(line) for line in EXPORT.read_text(encoding="utf-8").splitlines() if line]
-    blank = set(highlights.verb_policy()["blank_pos_verb_source_ids"])
     payload = []
     for row in rows:
-        if row["pos"].lower().rstrip(".") != "v" and row["source_id"] not in blank:
-            continue
         fields = as_fields(row)
         payload.append({
             "fields": {
@@ -58,8 +86,8 @@ def test_python_and_card_javascript_match_all_reviewed_verb_examples(tmp_path: P
             "texts": highlights.example_texts(fields),
             "expected": json.loads(highlights.build_spans(fields)),
         })
-    assert len(payload) == 713
-    payload_path = tmp_path / "verb_examples.json"
+    assert len(payload) == 3425
+    payload_path = tmp_path / "all_examples.json"
     payload_path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
     back = gw.templates()["German → English"]["Back"]
     highlighter = back.split("</main>\n<script>\n", 1)[1].split("\n</script>\n<script>\n", 1)[0]
@@ -89,15 +117,15 @@ def test_reviewed_repair_manifest_is_valid_and_current_corpus_is_in_sync() -> No
     repairs = manifest["repairs"]
 
     assert manifest["schema_version"] == 1
-    assert manifest["expected_changed_notes"] == 141 == len(repairs)
+    assert manifest["expected_changed_notes"] == 208 == len(repairs)
     assert len({item["source_id"] for item in repairs}) == len(repairs)
     assert sum(
         before != after
         for item in repairs
         for before, after in zip(item["before"], item["after"])
-    ) == manifest["expected_changed_examples"] == 166
-    assert manifest["expected_added_ranges"] == 195
-    assert manifest["expected_removed_ranges"] == 8
+    ) == manifest["expected_changed_examples"] == 286
+    assert manifest["expected_added_ranges"] == 317
+    assert manifest["expected_removed_ranges"] == 34
 
     # The review manifest is the immutable record of the one-time migration.
     # Dedupe and source-owned example rebuilding may legitimately replace note
@@ -107,3 +135,25 @@ def test_reviewed_repair_manifest_is_valid_and_current_corpus_is_in_sync() -> No
         stored = row["example_target_spans"]
         built = json.loads(highlights.build_spans(as_fields(row)))
         assert built == stored, row["source_id"]
+
+
+def test_every_empty_example_has_a_reviewed_non_repair_classification() -> None:
+    rows = [json.loads(line) for line in EXPORT.read_text(encoding="utf-8").splitlines() if line]
+    cases = {
+        (case["source_id"], case["example_index"]): case
+        for case in highlights.highlight_policy()["cases"]
+    }
+    empty: set[tuple[str, int]] = set()
+    for row in rows:
+        spans = json.loads(highlights.build_spans(as_fields(row)))
+        for index, (example, ranges) in enumerate(zip(row["examples"], spans), 1):
+            if ranges:
+                continue
+            empty.add((row["source_id"], index))
+            assert cases[(row["source_id"], index)]["status"] in {"needs_review", "valid_blank"}
+
+    reviewed_blank = {
+        key for key, case in cases.items()
+        if case["status"] in {"needs_review", "valid_blank"}
+    }
+    assert empty == reviewed_blank

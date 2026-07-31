@@ -50,6 +50,126 @@ def test_candidates_cover_inflections_and_separable_verbs():
     assert surfaces(text, found) == ["fahren", "ab"]
 
 
+def test_mixed_adjective_adverb_headword_highlights_inflected_example():
+    value = fields(
+        Lemma="absolut",
+        AcceptedAnswersDE="absolut",
+        POS="adj., adv.",
+        SourceID="B1-MAIN-0030",
+        Example1DE="Was Sie da sagen, ist absolut falsch.",
+        Example2DE="Ich habe absolutes Vertrauen zu dir.",
+    )
+
+    assert json.loads(highlights.build_target_spans(value)) == [
+        [[22, 29]], [[9, 18]],
+    ]
+
+
+@pytest.mark.parametrize(
+    ("lemma", "example", "expected"),
+    [
+        ("weder … noch", "Für Urlaub haben wir weder Zeit noch Geld.", ["weder", "noch"]),
+        ("entweder ... oder", "Nur einer kann gewinnen, entweder du oder ich.", ["entweder", "oder"]),
+        ("je … desto …", "Je länger ich Deutsch lerne, desto besser kann ich es verstehen.", ["Je", "desto"]),
+        ("sowohl … als auch", "Sowohl Sie als auch Ihre Frau müssen unterschreiben.", ["Sowohl", "als auch"]),
+        ("um … zu", "Um gesund zu bleiben, musst du Sport machen.", ["Um", "zu"]),
+    ],
+)
+def test_discontinuous_headwords_highlight_each_ordered_component(
+    lemma: str, example: str, expected: list[str],
+) -> None:
+    value = fields(Lemma=lemma, AcceptedAnswersDE=lemma, POS="phrase")
+    found = highlights.match_ranges(example, highlights.candidate_terms(value), value["POS"])
+    assert surfaces(example, found) == expected
+
+
+def test_discontinuous_headword_requires_the_complete_ordered_expression() -> None:
+    value = fields(Lemma="weder … noch", AcceptedAnswersDE="weder … noch", POS="phrase")
+    candidates = highlights.candidate_terms(value)
+
+    assert highlights.match_ranges("Weder heute.", candidates, value["POS"]) == []
+    assert highlights.match_ranges("Noch heute, weder morgen.", candidates, value["POS"]) == []
+
+
+@pytest.mark.parametrize(
+    ("lemma", "example", "expected"),
+    [
+        ("-weise", "War der Test schwierig? – Teilweise.", ["weise"]),
+        ("-weise", "Das ist möglicherweise nicht so einfach.", ["weise"]),
+        ("un-", "Der Verkäufer war sehr unfreundlich.", ["un"]),
+        ("Feier-", "Am Montag ist Feiertag.", ["Feier"]),
+        ("dein-", "Ist das dein Auto?", ["dein"]),
+        ("Nord-/Ostsee", "Wir fahren an die Nord/Ostsee.", ["Nord", "Ostsee"]),
+        ("(Kredit)-Karte", "Kann ich mit Karte zahlen?", ["Karte"]),
+        ("Speise-/-speise", "Als Vorspeise nehme ich keine Nachspeise.", ["speise", "speise"]),
+        ("früher/früher-", "Früher nehmen wir den früheren Zug.", ["Früher", "früher"]),
+        ("gern(e)", "Ich gehe gerne und helfe gern.", ["gerne", "gern"]),
+    ],
+)
+def test_dictionary_notation_maps_to_visible_headword_morphemes(
+    lemma: str, example: str, expected: list[str],
+) -> None:
+    value = fields(Lemma=lemma, AcceptedAnswersDE=lemma, POS="adv.")
+    found = highlights.match_ranges(example, highlights.candidate_terms(value), value["POS"])
+    assert surfaces(example, found) == expected
+
+
+def test_bound_headword_respects_the_declared_word_edge() -> None:
+    prefix = fields(Lemma="un-", AcceptedAnswersDE="un-", POS="prefix")
+    suffix = fields(Lemma="-weise", AcceptedAnswersDE="-weise", POS="suffix")
+
+    assert highlights.match_ranges("Die Runde ist bunt.", highlights.candidate_terms(prefix), prefix["POS"]) == []
+    assert highlights.match_ranges("Der Weise spricht.", highlights.candidate_terms(suffix), suffix["POS"]) == []
+
+
+@pytest.mark.parametrize(
+    ("lemma", "pos", "example", "expected"),
+    [
+        ("Kollege", "n.", "Wie heißt die neue Kollegin?", ["Kollegin"]),
+        ("Trainerin", "n.", "Ich finde unseren Trainer nett.", ["Trainer"]),
+        ("Job", "n.", "Ich suche einen Ferienjob.", ["job"]),
+        ("Baum", "n.", "Wir haben zwei Apfelbäume.", ["bäume"]),
+        ("dunkel", "adj.", "Sie hat dunkle Haare.", ["dunkle"]),
+        ("regional", "adv.", "Wir nehmen eine Regionalbahn.", ["Regional"]),
+        ("jung", "adj.", "Mein Bruder ist jünger.", ["jünger"]),
+        ("sagen", "v.", "Was haben Sie gesagt?", ["gesagt"]),
+        ("ärgern", "v.", "Das hat mich geärgert.", ["geärgert"]),
+    ],
+)
+def test_common_morphology_and_compounds_keep_the_headword_visible(
+    lemma: str, pos: str, example: str, expected: list[str],
+) -> None:
+    value = fields(Lemma=lemma, AcceptedAnswersDE=lemma, POS=pos)
+    found = highlights.match_ranges(example, highlights.candidate_terms(value), pos)
+    assert surfaces(example, found) == expected
+
+
+def test_reviewed_highlight_audit_applies_only_missing_certain_ranges() -> None:
+    value = fields(
+        Lemma="Parfüm",
+        POS="n.",
+        SourceID="A2-0735",
+        Example1DE="Ich suche ein Parfum als Geschenk für meine Frau.",
+    )
+    assert json.loads(highlights.build_spans(value)) == [[[14, 20]]]
+
+    statuses = [case["status"] for case in highlights.highlight_policy()["cases"]]
+    assert statuses.count("missing_certain") == 51
+    assert statuses.count("valid_blank") == 3
+    assert statuses.count("needs_review") == 21
+
+
+def test_reviewed_highlight_audit_fails_closed_on_example_text_drift() -> None:
+    value = fields(
+        Lemma="Parfüm",
+        POS="n.",
+        SourceID="A2-0735",
+        Example1DE="Ich kaufe ein Parfum als Geschenk.",
+    )
+    with pytest.raises(highlights.HighlightError, match="reviewed audit text drift"):
+        highlights.build_spans(value)
+
+
 def test_noun_suffixes_apply_to_accepted_spelling_variants():
     noun = fields(
         Lemma="Bancomat",

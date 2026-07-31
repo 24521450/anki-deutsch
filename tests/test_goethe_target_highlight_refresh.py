@@ -16,16 +16,16 @@ import goethe_target_highlight_refresh as refresh  # noqa: E402
 import goethe_target_highlights as highlights  # noqa: E402
 
 
-def test_checked_in_review_manifest_has_the_locked_v2_contract() -> None:
+def test_checked_in_review_manifest_has_the_locked_v3_contract() -> None:
     manifest = refresh.load_manifest()
-    assert len(manifest["repairs"]) == 141
+    assert len(manifest["repairs"]) == 208
     assert sum(
         before != after
         for item in manifest["repairs"]
         for before, after in zip(item["before"], item["after"])
-    ) == 166
-    assert manifest["expected_added_ranges"] == 195
-    assert manifest["expected_removed_ranges"] == 8
+    ) == 286
+    assert manifest["expected_added_ranges"] == 317
+    assert manifest["expected_removed_ranges"] == 34
 
 
 def field_values(note: dict) -> dict[str, str]:

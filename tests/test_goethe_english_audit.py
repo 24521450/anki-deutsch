@@ -31,11 +31,11 @@ def test_v5_catalog_covers_the_fully_reviewed_canonical_a1_b1_corpus():
         "notes": audit.goethe_scope.EXPECTED_NOTES,
         "reviewed": audit.goethe_scope.EXPECTED_NOTES,
         "unreviewed": 0,
-        "keep": 2170,
-        "revise": 1255,
+        "keep": 2148,
+        "revise": 1277,
         "pending": 0,
         "meaning_updates": 85,
-        "example_updates": 1213,
+        "example_updates": 2222,
         "no_examples": audit.goethe_scope.EXPECTED_EMPTY_NOTES,
         "b1_no_examples": audit.goethe_scope.EXPECTED_EMPTY_NOTES_BY_LEVEL["B1"],
         "ambiguous_prompt_groups": 0,
@@ -183,11 +183,11 @@ def test_confirmed_a2_translation_repairs_are_canonical():
 
 def test_reviewed_lieblings_example_and_all_current_german_examples_are_retained():
     entries = manifest()["entries"]
-    assert sum(len(entry["desired_examples"]) for entry in entries.values()) == 5080
+    assert sum(len(entry["desired_examples"]) for entry in entries.values()) == 5067
     assert sum(
         len(entry["desired_examples"])
         for entry in entries.values() if entry["cefr"] == "A1"
-    ) == 1579
+    ) == 1571
     assert entries["A1-84886454917"]["desired_examples"][-1] == {
         "de": "Meine Lieblingsfarbe ist Blau.",
         "en": "My favorite color is blue.",

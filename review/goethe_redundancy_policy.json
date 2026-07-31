@@ -253,8 +253,6 @@
       "expected_lemma": "vorstellen",
       "expected_source_refs": ["A1-84886455189", "A1-MAIN-0634", "A2-MAIN-1070", "B1-MAIN-2744"],
       "survivor_examples": [
-        "Wir wollen uns kennenlernen.",
-        "Können Sie sich bitte vorstellen?",
         "Wir wollen uns kennenlernen. Können Sie sich bitte vorstellen?",
         "Darf ich Ihnen meine Frau vorstellen?"
       ],
