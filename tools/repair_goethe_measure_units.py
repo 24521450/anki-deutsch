@@ -20,6 +20,7 @@ import goethe_werkstatt_migrate as gw
 ROOT = Path(__file__).resolve().parents[1]
 STATE = ROOT / "tools" / ".goethe_measure_units"
 SNAPSHOT_PATH = STATE / "snapshot.json"
+SNAPSHOT_SCHEMA_VERSION = 2
 CONFIRMATION = "REPAIR_GOETHE_MEASURE_UNITS"
 MODEL = "Goethe Werkstatt"
 PARENT_DECK = "Goethe Institute"
@@ -74,7 +75,7 @@ COMMONS_TARGETS = {
     1584887177259: "Pfund",
     1584887177260: "Kilogramm",
 }
-EDGE_TARGETS = {1784075690361: "ein Kilometer pro Stunde"}
+GEMINI_TARGETS = {1784075690361: "ein Kilometer pro Stunde"}
 PHRASE_SURVIVORS = {1584887177251, 1584887177254, 1584887177255}
 
 
@@ -234,7 +235,7 @@ async def prepare_media(desired: dict[int, dict[str, str]]) -> dict[int, dict[st
             raise RepairError(f"unexpected Commons attribution for {lemma}")
         assignments[note_id] = audio.assignment("commons", Path(item["path"]), detail=item)
 
-    for note_id, spoken_text in EDGE_TARGETS.items():
+    for note_id, spoken_text in GEMINI_TARGETS.items():
         fields = desired[note_id]
         key = audio.canonical_hash({"text": spoken_text, "pos": fields.get("POS", ""), "gender": fields.get("Gender", "")})
         group = {key: {
@@ -242,12 +243,25 @@ async def prepare_media(desired: dict[int, dict[str, str]]) -> dict[int, dict[st
             "gender": fields.get("Gender", ""), "note_ids": [note_id], "skip_duden": True,
         }}
         unavailable = {"items": {key: {"status": "unresolved"}}}
-        edge = await audio.prepare_edge(group, unavailable, unavailable, unavailable)
-        item = edge.get("items", {}).get(audio.edge_audio_id(spoken_text), {})
+        gemini = await audio.prepare_gemini(
+            group, unavailable, unavailable, unavailable
+        )
+        item = gemini.get("items", {}).get(audio.gemini_audio_id(spoken_text), {})
         if item.get("status") != "ok" or item.get("spoken_text") != spoken_text:
-            raise RepairError(f"correct Edge phrase audio unavailable for note {note_id}")
-        assignments[note_id] = audio.assignment("edge", Path(item["path"]), detail=item)
+            raise RepairError(f"correct Gemini phrase audio unavailable for note {note_id}")
+        assignments[note_id] = audio.assignment(
+            "gemini", Path(item["path"]), detail=item
+        )
     return assignments
+
+
+async def prepare_media_and_close(
+    desired: dict[int, dict[str, str]],
+) -> dict[int, dict[str, Any]]:
+    try:
+        return await prepare_media(desired)
+    finally:
+        await audio.gemini_tts.close_client()
 
 
 def validate_backup(path: Path, expected_sha256: str | None = None) -> str:
@@ -297,7 +311,8 @@ def make_snapshot(
     )
     surviving_card_ids = sorted(set(state["cards"]) - set(delete_card_ids))
     snapshot = {
-        "schema_version": 1,
+        "schema_version": SNAPSHOT_SCHEMA_VERSION,
+        "gemini_config": audio.GEMINI_CONFIG,
         "created_utc": now_utc(),
         "completion_manifest": str(completion.MANIFEST),
         "completion_manifest_sha256": gw.sha256_file(completion.MANIFEST),
@@ -319,7 +334,11 @@ def make_snapshot(
 
 def load_snapshot(*, require_manifest_unchanged: bool = True) -> dict[str, Any]:
     snapshot = audio.load_json(SNAPSHOT_PATH, None)
-    if not snapshot or snapshot.get("schema_version") != 1:
+    if (
+        not snapshot
+        or snapshot.get("schema_version") != SNAPSHOT_SCHEMA_VERSION
+        or snapshot.get("gemini_config") != audio.GEMINI_CONFIG
+    ):
         raise RepairError("repair snapshot missing; run audit")
     if require_manifest_unchanged and (
         gw.sha256_file(completion.MANIFEST) != snapshot.get("completion_manifest_sha256")
@@ -415,8 +434,10 @@ def verify_state(snapshot: dict[str, Any] | None = None) -> dict[str, Any]:
             raise RepairError(f"missing or corrupt Anki media: {assignment['media_name']}")
     if any("_goethe_word_edge_" in state["notes"][note_id]["fields"].get("WordAudio", "") for note_id in COMMONS_TARGETS):
         raise RepairError("a noun survivor still uses Edge word audio")
-    if any("_goethe_word_edge_" not in state["notes"][note_id]["fields"].get("WordAudio", "") for note_id in PHRASE_SURVIVORS | set(EDGE_TARGETS)):
+    if any("_goethe_word_edge_" not in state["notes"][note_id]["fields"].get("WordAudio", "") for note_id in PHRASE_SURVIVORS):
         raise RepairError("a phrase unexpectedly lost its full-phrase Edge audio")
+    if any("_goethe_word_gemini_" not in state["notes"][note_id]["fields"].get("WordAudio", "") for note_id in GEMINI_TARGETS):
+        raise RepairError("a repaired phrase does not use its full-phrase Gemini audio")
 
     result = {
         "notes": len(state["notes"]),
@@ -438,8 +459,8 @@ def command_audit(_: argparse.Namespace) -> None:
     desired = desired_from_completion(manifest)
     state = collect_model_state()
     validate_live_baseline(state)
-    assignments = asyncio.run(prepare_media(desired))
-    if set(assignments) != set(COMMONS_TARGETS) | set(EDGE_TARGETS):
+    assignments = asyncio.run(prepare_media_and_close(desired))
+    if set(assignments) != set(COMMONS_TARGETS) | set(GEMINI_TARGETS):
         raise RepairError("prepared audio target set differs")
     snapshot = make_snapshot(state, desired, assignments)
     print(json.dumps({

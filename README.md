@@ -19,11 +19,40 @@ This repository is a German Anki resource project split out from the IELTS deck 
 
 Word audio:
 
-The Goethe word-audio fallback order is validated Duden, exact Wikimedia
-Commons pronunciation, Wiktionary German pronunciation audio, then Edge TTS.
+The Goethe word-audio fallback order is validated Duden audio (A1 before A2
+before B1), newly resolved exact Duden audio, exact Wikimedia Commons
+pronunciation, Wiktionary German pronunciation audio, then Gemini TTS.
 The canonical workflow covers A1, A2, and B1 together. Only the `WordAudio`
 field is updated; scheduling and review history are snapshotted and verified
 before and after an apply.
+
+Gemini fallback audio uses `gemini-3.1-flash-live-preview` with reusable
+`Kore` and `Charon` Live sessions. The voice is selected deterministically
+from the SHA-256 parity of the canonical spoken text, so a spoken identity
+keeps the same voice across runs. Every turn enables Live output-audio
+transcription; an empty or non-matching transcript fails closed. Accepted
+output normally passes that exact check directly. If the Live output
+transcription is truncated while the PCM is complete, `gemini-3.6-flash`
+independently transcribes the generated WAV and must match exactly before the
+audio is accepted. Output is mono 24 kHz, 128 kbps MP3 named
+`_goethe_word_gemini_<sha256>.mp3`.
+
+Install the pinned dependencies and provide the API key only through the
+process environment:
+
+```powershell
+python -m pip install -r requirements-word-audio.txt
+$env:GEMINI_API_KEY = "your-key"
+```
+
+Multiple distinct keys may be supplied only through the process environment as
+comma-separated `GEMINI_API_KEYS`; the single manifest writer keeps their Live
+session pools isolated and round-robins requests.
+
+Do not commit the key or write it into manifests, logs, or review files.
+The full example migration contains 4,992 resumable Live turns. The generator
+serializes turns within each voice session, reconnects expired sessions, and
+checkpoints completed batches so an interrupted run can resume safely.
 
 Protected audio takes precedence over every automatic provider. It is matched
 through `SourceID` and `SourceRefs`, locked to the reviewed media checksum, and
@@ -78,6 +107,25 @@ python tools/goethe_word_audio.py apply --scope full --confirmation APPLY_GOETHE
 python tools/goethe_word_audio.py verify --scope full
 ```
 
+To migrate only live `WordAudio` fields that still reference historical Edge
+media, use the deck-discovered `edge` scope. The prepared manifest is locked to
+that exact scope:
+
+```powershell
+python tools/goethe_word_audio.py audit
+python tools/goethe_word_audio.py prepare --scope edge --confirm-duden-usage --confirm-commons-license
+python tools/goethe_word_audio.py snapshot
+python tools/goethe_word_audio.py apply --scope edge --dry-run
+python tools/goethe_word_audio.py apply --scope edge --confirmation APPLY_GOETHE_WORD_AUDIO
+python tools/goethe_word_audio.py verify --scope edge
+```
+
+To restore those `WordAudio` fields from the snapshot:
+
+```powershell
+python tools/goethe_word_audio.py rollback --scope edge --confirmation ROLLBACK_GOETHE_WORD_AUDIO
+```
+
 The level-specific Duden downloaders remain source-audio preparation tools.
 They are not separate deck-update pipelines.
 
@@ -96,8 +144,13 @@ python tools/goethe_example_audio.py apply --scope full --confirmation APPLY_GOE
 python tools/goethe_example_audio.py verify --scope full
 ```
 
-This A1-B1 workflow uses deterministic Edge TTS voices and preserves Anki
-scheduling and review history. See `docs/GOETHE_EXAMPLE_AUDIO.md`.
+This A1-B1 workflow uses deterministic Gemini Live voices, fail-closed output
+transcription QA, and preserves Anki scheduling and review history. See
+`docs/GOETHE_EXAMPLE_AUDIO.md`.
+
+Historical `_goethe_example_edge_...` and `_goethe_word_edge_...` media can
+remain in Anki unreferenced after migration. The workflows do not delete them,
+because another deck may still use the same filenames.
 
 English audit and completion:
 

@@ -11,10 +11,10 @@ import sys
 import urllib.request
 import zipfile
 from datetime import datetime, timezone
-from importlib.metadata import version
 from pathlib import Path
 from typing import Any
 
+import gemini_tts
 import goethe_completion as completion
 import goethe_example_audio as example_audio
 import goethe_noun_policy as noun_policy
@@ -26,6 +26,7 @@ import goethe_word_audio as word_audio
 ROOT = Path(__file__).resolve().parents[1]
 STATE = ROOT / "tools" / ".goethe_noun_articles"
 SNAPSHOT_PATH = STATE / "snapshot.json"
+SNAPSHOT_SCHEMA_VERSION = 2
 MODEL = "Goethe Werkstatt"
 PARENT_DECK = "Goethe Institute"
 CONFIRMATION = "REPAIR_GOETHE_NOUN_ARTICLES"
@@ -211,26 +212,35 @@ def prepare_exact_duden_audio(lemma: str) -> dict[str, Any]:
 
 
 async def prepare_neujahr_example_audio() -> dict[str, Any]:
-    try:
-        import edge_tts
-    except ImportError as exc:
-        raise RepairError("edge-tts is not installed") from exc
-    if version("edge-tts") != example_audio.EDGE_CONFIG["engine_version"]:
-        raise RepairError(f"edge-tts {example_audio.EDGE_CONFIG['engine_version']} is required")
     text = example_audio.spoken_text("Neujahr fällt in diesem Jahr auf einen Mittwoch.")
-    voice = example_audio.voice_for(text)
-    voices = await edge_tts.list_voices()
-    if not any(item.get("ShortName") == voice and item.get("Locale") == "de-DE" for item in voices):
-        raise RepairError(f"Edge voice unavailable: {voice}")
-    item = {
-        "audio_id": example_audio.request_id(text, voice),
+    voice = example_audio.voice_for(NEW_SOURCE_ID, 0)
+    audio_id = example_audio.request_id(text, voice)
+    target = example_audio.GEMINI_DIR / f"{audio_id}.mp3"
+    try:
+        generated = await gemini_tts.generate_verified_mp3(
+            text=text,
+            voice=voice,
+            purpose="example",
+            target=target,
+        )
+    except gemini_tts.GeminiTTSError as exc:
+        raise RepairError(f"Gemini TTS failed for Neujahr example: {exc}") from exc
+    return {
+        **generated,
+        "audio_id": audio_id,
         "spoken_text": text,
         "voice": voice,
         "levels": ["A2"],
         "occurrences": 1,
-        "status": "pending",
+        "media_name": f"_goethe_example_gemini_{generated['sha256']}.mp3",
     }
-    return await example_audio.generate_one(item, edge_tts, asyncio.Semaphore(1))
+
+
+async def prepare_neujahr_example_audio_and_close() -> dict[str, Any]:
+    try:
+        return await prepare_neujahr_example_audio()
+    finally:
+        await gemini_tts.close_client()
 
 
 def validate_backup(path: Path, expected_sha256: str | None = None) -> str:
@@ -271,7 +281,8 @@ def make_snapshot(
     child["fields"]["Example1Audio"] = example_audio.audio_html(example_assignment["media_name"])
     card_ids = sorted(state["cards"])
     snapshot = {
-        "schema_version": 1,
+        "schema_version": SNAPSHOT_SCHEMA_VERSION,
+        "gemini_config": example_audio.GEMINI_CONFIG,
         "created_utc": now_utc(),
         "completion_manifest_sha256": gw.sha256_file(completion.MANIFEST),
         "backup": str(backup),
@@ -294,7 +305,11 @@ def make_snapshot(
 
 def load_snapshot(*, require_manifest_unchanged: bool = True) -> dict[str, Any]:
     snapshot = word_audio.load_json(SNAPSHOT_PATH, None)
-    if not snapshot or snapshot.get("schema_version") != 1:
+    if (
+        not snapshot
+        or snapshot.get("schema_version") != SNAPSHOT_SCHEMA_VERSION
+        or snapshot.get("gemini_config") != example_audio.GEMINI_CONFIG
+    ):
         raise RepairError("repair snapshot missing; run audit")
     if require_manifest_unchanged and gw.sha256_file(completion.MANIFEST) != snapshot["completion_manifest_sha256"]:
         raise RepairError("completion manifest changed after audit")
@@ -410,7 +425,7 @@ def command_audit(args: argparse.Namespace) -> None:
     state = collect_state()
     validate_live_baseline(state)
     assignments = {lemma: prepare_exact_duden_audio(lemma) for lemma in EXACT_DUDEN_AUDIO}
-    example_item = asyncio.run(prepare_neujahr_example_audio())
+    example_item = asyncio.run(prepare_neujahr_example_audio_and_close())
     snapshot = make_snapshot(state, desired, child, assignments, example_item)
     print(json.dumps({
         "status": "AUDITED", "backup": snapshot["backup"], "updates": len(TARGETS),

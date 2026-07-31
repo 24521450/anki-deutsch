@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_utc": "2026-07-28T08:04:33.468215+00:00",
+  "generated_utc": "2026-07-29T14:10:07.847760+00:00",
   "notice": "This file must accompany any redistributed APKG containing the referenced Wikimedia Commons audio.",
   "items": [
     {
@@ -3740,6 +3740,34 @@
       "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
       "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
       "checked_utc": "2026-07-18T06:25:51.137532+00:00"
+    },
+    {
+      "sha256": "11dc1bbb2e0be3f781687877666fb40145324345eb00eb63d53f69cd7f4db2ad",
+      "spoken_text": "rauf",
+      "title": "File:De-rauf.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-rauf.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/d/da/De-rauf.ogg",
+      "artist": "Jeuwre",
+      "credit": "Own work",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
+      "checked_utc": "2026-07-29T14:02:45.968570+00:00"
+    },
+    {
+      "sha256": "c5fc7d64f4e2c3dcef13e06966963888ac68bc659e6a882e24e3067b03183f5e",
+      "spoken_text": "raus",
+      "title": "File:De-raus.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-raus.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/8/8f/De-raus.ogg",
+      "artist": "Jeuwre",
+      "credit": "Own work , recorded with Rode NT-USB, converted with Audacity",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
+      "checked_utc": "2026-07-29T14:02:47.707655+00:00"
     },
     {
       "sha256": "83cdcbe78ed449be91d5f1f41e0243c3ff1a4cafda09db63073f0ee8a855ce2b",

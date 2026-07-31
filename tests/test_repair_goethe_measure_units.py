@@ -111,10 +111,10 @@ def test_live_baseline_requires_phrase_survivors_to_keep_edge_audio():
         repair.validate_live_baseline(state)
 
 
-def test_prepare_media_uses_only_nine_exact_commons_files_and_one_phrase_edge(monkeypatch, tmp_path: Path):
+def test_prepare_media_uses_only_nine_exact_commons_files_and_one_phrase_gemini(monkeypatch, tmp_path: Path):
     desired = repair.desired_from_completion(completion_manifest())
     commons_groups = {}
-    edge_groups = {}
+    gemini_groups = {}
 
     async def fake_commons(groups, _duden):
         commons_groups.update(groups)
@@ -127,10 +127,10 @@ def test_prepare_media_uses_only_nine_exact_commons_files_and_one_phrase_edge(mo
             }
         return {"items": items}
 
-    async def fake_edge(groups, _duden, _commons, _wiktionary):
-        edge_groups.update(groups)
+    async def fake_gemini(groups, _duden, _commons, _wiktionary):
+        gemini_groups.update(groups)
         spoken = next(iter(groups.values()))["spoken_text"]
-        return {"items": {repair.audio.edge_audio_id(spoken): {
+        return {"items": {repair.audio.gemini_audio_id(spoken): {
             "status": "ok", "spoken_text": spoken, "path": str(tmp_path / "phrase.mp3"),
         }}}
 
@@ -138,7 +138,7 @@ def test_prepare_media_uses_only_nine_exact_commons_files_and_one_phrase_edge(mo
         return {"source": source, "path": str(path), "media_name": f"{source}-{path.name}", "sha256": "abc", "size": 1}
 
     monkeypatch.setattr(repair.audio, "prepare_commons", fake_commons)
-    monkeypatch.setattr(repair.audio, "prepare_edge", fake_edge)
+    monkeypatch.setattr(repair.audio, "prepare_gemini", fake_gemini)
     monkeypatch.setattr(repair.audio, "assignment", fake_assignment)
 
     assignments = asyncio.run(repair.prepare_media(desired))
@@ -146,8 +146,9 @@ def test_prepare_media_uses_only_nine_exact_commons_files_and_one_phrase_edge(mo
     assert len(commons_groups) == 9
     assert {group["spoken_text"] for group in commons_groups.values()} == set(repair.COMMONS_TARGETS.values())
     assert {item["source"] for note_id, item in assignments.items() if note_id in repair.COMMONS_TARGETS} == {"commons"}
-    assert [group["spoken_text"] for group in edge_groups.values()] == ["ein Kilometer pro Stunde"]
-    assert set(assignments) == set(repair.COMMONS_TARGETS) | set(repair.EDGE_TARGETS)
+    assert [group["spoken_text"] for group in gemini_groups.values()] == ["ein Kilometer pro Stunde"]
+    assert assignments[next(iter(repair.GEMINI_TARGETS))]["source"] == "gemini"
+    assert set(assignments) == set(repair.COMMONS_TARGETS) | set(repair.GEMINI_TARGETS)
 
 
 def test_validate_backup_requires_a_scheduled_anki_collection(tmp_path: Path):
@@ -184,7 +185,11 @@ def test_scheduled_backup_uses_an_extended_http_timeout(monkeypatch, tmp_path: P
 
 
 def test_post_apply_snapshot_load_does_not_depend_on_rebuilt_completion_manifest(monkeypatch):
-    snapshot = {"schema_version": 1, "backup": "backup.apkg"}
+    snapshot = {
+        "schema_version": repair.SNAPSHOT_SCHEMA_VERSION,
+        "gemini_config": repair.audio.GEMINI_CONFIG,
+        "backup": "backup.apkg",
+    }
     monkeypatch.setattr(repair.audio, "load_json", lambda path, default: snapshot)
     monkeypatch.setattr(
         repair.gw, "sha256_file",

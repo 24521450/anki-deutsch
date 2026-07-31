@@ -111,6 +111,10 @@
     var stem = raw.slice(0, -1);
     return [raw, stem, stem + "e", stem + "er", stem + "es", stem + "em", stem + "en", stem + "s"];
   }
+  function optionalReflexiveVariants(lemma) {
+    var match = String(lemma || "").trim().match(/^\(sich\)\s+(.+)$/i);
+    return match ? [match[1], "sich " + match[1]] : [];
+  }
 
   if (!/^(?:1|true|yes)$/i.test(text("gw-production-enabled"))) return;
   var source = text("gw-source-id");
@@ -169,6 +173,9 @@
         acceptedCorrect[correctKey(article + " " + variant)] = true;
       });
     });
+  });
+  optionalReflexiveVariants(text("gw-lemma")).forEach(function (answer) {
+    acceptedCorrect[correctKey(answer)] = true;
   });
   function classify(value) {
     var trimmed = value.trim();

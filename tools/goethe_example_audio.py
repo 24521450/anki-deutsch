@@ -1,4 +1,4 @@
-"""Generate and safely wire Edge TTS audio for every Goethe A1-B1 example."""
+"""Generate and safely wire Gemini TTS audio for every Goethe A1-B1 example."""
 from __future__ import annotations
 
 import argparse
@@ -7,9 +7,7 @@ import base64
 import hashlib
 import html
 import json
-import os
 import re
-import tempfile
 import time
 import unicodedata
 from collections import Counter
@@ -22,16 +20,20 @@ import goethe_apkg as apkg
 import goethe_scope as scope
 import goethe_werkstatt_migrate as gw
 import goethe_word_audio as word_audio
+import gemini_tts
 
 
 ROOT = Path(__file__).resolve().parents[1]
 STATE = ROOT / "tools" / ".goethe_example_audio"
-EDGE_DIR = ROOT / "audio" / "goethe_example_audio" / "edge"
+GEMINI_DIR = ROOT / "audio" / "goethe_example_audio" / "gemini"
 MANIFEST_PATH = STATE / "manifest.json"
 SNAPSHOT_PATH = STATE / "snapshot.json"
+PRONUNCIATION_AUDIO_OVERRIDES = (
+    ROOT / "review" / "goethe_example_pronunciation_audio.json"
+)
 MODEL = "Goethe Werkstatt"
 PARENT_DECK = "Goethe Institute"
-MANIFEST_SCHEMA_VERSION = 2
+MANIFEST_SCHEMA_VERSION = 3
 EXPECTED_NOTES = scope.EXPECTED_NOTES
 EXPECTED_CARDS = scope.EXPECTED_CARDS
 EXPECTED_NOTES_BY_LEVEL = dict(scope.EXPECTED_NOTES_BY_LEVEL)
@@ -40,25 +42,64 @@ EXPECTED_OCCURRENCES_BY_LEVEL = dict(scope.EXPECTED_EXAMPLE_OCCURRENCES_BY_LEVEL
 EXPECTED_OCCURRENCES = scope.EXPECTED_EXAMPLE_OCCURRENCES
 EXPECTED_UNIQUE = scope.EXPECTED_UNIQUE_EXAMPLE_AUDIO
 PILOT_SIZE = 20
-CONCURRENCY = 4
+# Sustain two parallel turns per configured API key without concurrent
+# manifest writers. A two-key worker therefore runs four turns at once.
+CONCURRENCY_PER_KEY = 2
 AUDIO_FIELDS = tuple(f"Example{index}Audio" for index in range(1, 5)) + ("MoreExamplesHTML",)
-EDGE_CONFIG = {
-    "engine": "edge-tts",
-    "engine_version": "7.2.8",
-    "voices": ["de-DE-KatjaNeural", "de-DE-ConradNeural"],
-    "voice_policy": "sha256-parity",
-    "rate": "+0%",
-    "volume": "+0%",
-    "pitch": "+0Hz",
+EXTERNALLY_OWNED_FIELDS = frozenset({"WordAudio"})
+GEMINI_VOICES = tuple(gemini_tts.VOICES)
+GEMINI_CONFIG = {
+    **gemini_tts.CONFIG,
+    "voices": list(GEMINI_VOICES),
+    "voice_policy": "sha256-note-id-start-alternating-occurrence-v1",
     "spoken_normalization": "nfc-whitespace-leading-dash-slash-pause-v1",
-    "config_version": 1,
+    "example_config_version": 1,
 }
+PASSING_QA_STATUSES = frozenset({"exact", "verified_equivalent"})
 APPLY_CONFIRMATION = "APPLY_GOETHE_EXAMPLE_AUDIO"
 ROLLBACK_CONFIRMATION = "ROLLBACK_GOETHE_EXAMPLE_AUDIO"
+_REVIEWED_PRONUNCIATION_AUDIO: dict[str, Any] | None = None
 
 
 class ExampleAudioError(RuntimeError):
     pass
+
+
+def reviewed_pronunciation_audio(
+    text: str, voice: str
+) -> dict[str, Any] | None:
+    global _REVIEWED_PRONUNCIATION_AUDIO
+    if _REVIEWED_PRONUNCIATION_AUDIO is None:
+        _REVIEWED_PRONUNCIATION_AUDIO = word_audio.load_json(
+            PRONUNCIATION_AUDIO_OVERRIDES, None
+        )
+    data = _REVIEWED_PRONUNCIATION_AUDIO
+    if not isinstance(data, dict) or data.get("schema_version") != 1:
+        raise ExampleAudioError(
+            "reviewed pronunciation-audio overrides are missing or stale"
+        )
+    overrides = data.get("overrides")
+    if not isinstance(overrides, dict):
+        raise ExampleAudioError("reviewed pronunciation-audio overrides are invalid")
+    item = overrides.get(text)
+    if item is None or item.get("voice") != voice:
+        return None
+    required = {
+        "generation_text", "engine", "model", "prompt_version", "path",
+        "size", "sha256", "duration_seconds", "qa_status",
+        "asr_transcript", "review_status", "reviewed_utc",
+    }
+    if (
+        not isinstance(item, dict)
+        or not required.issubset(item)
+        or item.get("review_status") != "human-approved"
+        or item.get("qa_status") != "verified_equivalent"
+        or not re.fullmatch(r"[0-9a-f]{64}", str(item.get("sha256") or ""))
+    ):
+        raise ExampleAudioError(
+            f"reviewed pronunciation-audio override is invalid: {text!r}"
+        )
+    return item
 
 
 def now_utc() -> str:
@@ -78,13 +119,37 @@ def spoken_text(value: str) -> str:
     return re.sub(r"\s+/\s+", " — ", text)
 
 
-def voice_for(text: str) -> str:
-    digest = hashlib.sha256(text.encode("utf-8")).digest()
-    return EDGE_CONFIG["voices"][digest[0] & 1]
+def voice_for(note_id: int | str, occurrence_index: int) -> str:
+    """Choose the starting voice by note ID, then alternate by zero-based index."""
+    digest = hashlib.sha256(str(note_id).encode("utf-8")).digest()
+    return GEMINI_VOICES[((digest[0] & 1) + occurrence_index) & 1]
 
 
 def request_id(text: str, voice: str) -> str:
-    return canonical_hash({"spoken_text": text, "voice": voice, **EDGE_CONFIG})
+    payload = {
+        "spoken_text": text,
+        "voice": voice,
+        "config": GEMINI_CONFIG,
+    }
+    pronunciation_override = gemini_tts.pronunciation_override_identity(
+        text, "example"
+    )
+    if pronunciation_override is not None:
+        payload["pronunciation_override"] = pronunciation_override
+    reviewed_audio = reviewed_pronunciation_audio(text, voice)
+    if reviewed_audio is not None:
+        payload["reviewed_pronunciation_audio"] = {
+            "version": 1,
+            "engine": reviewed_audio["engine"],
+            "model": reviewed_audio["model"],
+            "prompt_version": reviewed_audio["prompt_version"],
+            "sha256": reviewed_audio["sha256"],
+        }
+    return canonical_hash(payload)
+
+
+def media_name_for(sha256: str) -> str:
+    return f"_goethe_example_gemini_{sha256}.mp3"
 
 
 def audio_html(media_name: str) -> str:
@@ -115,23 +180,25 @@ def build_manifest(records: dict[int, dict[str, Any]], previous: dict[str, Any] 
     previous_compatible = (
         (previous or {}).get("schema_version") == MANIFEST_SCHEMA_VERSION
         and (previous or {}).get("levels") == list(scope.LEVELS)
-        and (previous or {}).get("config") == EDGE_CONFIG
+        and (previous or {}).get("config") == GEMINI_CONFIG
     )
     previous_unique = (previous or {}).get("unique", {}) if previous_compatible else {}
     occurrences_by_level: Counter[str] = Counter()
     for note_id, record in sorted(records.items()):
         examples = goethe_examples.parse_fields(record["fields"])
         occurrences = []
-        for index, example in enumerate(examples, 1):
+        for occurrence_index, example in enumerate(examples):
             spoken = spoken_text(example["de"])
             if not spoken:
-                raise ExampleAudioError(f"blank spoken text: note={note_id} example={index}")
-            voice = voice_for(spoken)
+                raise ExampleAudioError(
+                    f"blank spoken text: note={note_id} example={occurrence_index + 1}"
+                )
+            voice = voice_for(note_id, occurrence_index)
             audio_id = request_id(spoken, voice)
             occurrences.append({
-                "index": index, "de": example["de"], "en": example["en"],
+                "index": occurrence_index + 1, "de": example["de"], "en": example["en"],
                 "spoken_text": spoken, "voice": voice, "audio_id": audio_id,
-                "overflow": index > 4,
+                "overflow": occurrence_index >= 4,
             })
             entry = unique.setdefault(audio_id, {
                 "audio_id": audio_id, "spoken_text": spoken, "voice": voice,
@@ -142,7 +209,33 @@ def build_manifest(records: dict[int, dict[str, Any]], previous: dict[str, Any] 
                 entry["levels"].append(record["fields"]["CEFR"])
             cached = previous_unique.get(audio_id)
             if cached:
-                entry.update({key: cached[key] for key in ("status", "path", "size", "sha256", "media_name", "created_utc") if key in cached})
+                entry.update({
+                    key: cached[key]
+                    for key in (
+                        "status", "path", "size", "sha256", "media_name",
+                        "duration_seconds", "qa_status", "asr_transcript",
+                        "created_utc",
+                    )
+                    if key in cached
+                })
+            reviewed_audio = reviewed_pronunciation_audio(spoken, voice)
+            if reviewed_audio is not None:
+                entry.update({
+                    "status": "ok",
+                    "path": str(ROOT / reviewed_audio["path"]),
+                    "size": reviewed_audio["size"],
+                    "sha256": reviewed_audio["sha256"],
+                    "media_name": media_name_for(reviewed_audio["sha256"]),
+                    "duration_seconds": reviewed_audio["duration_seconds"],
+                    "qa_status": reviewed_audio["qa_status"],
+                    "asr_transcript": reviewed_audio["asr_transcript"],
+                    "generation_text": reviewed_audio["generation_text"],
+                    "generation_engine": reviewed_audio["engine"],
+                    "generation_model": reviewed_audio["model"],
+                    "prompt_version": reviewed_audio["prompt_version"],
+                    "review_status": reviewed_audio["review_status"],
+                    "reviewed_utc": reviewed_audio["reviewed_utc"],
+                })
             occurrence_count += 1
             occurrences_by_level[record["fields"]["CEFR"]] += 1
         notes[str(note_id)] = {
@@ -176,7 +269,7 @@ def build_manifest(records: dict[int, dict[str, Any]], previous: dict[str, Any] 
     pilot_audio_ids = choose_pilot(unique, notes)
     pilot_note_ids = choose_pilot_notes(notes, pilot_audio_ids)
     manifest = {
-        "schema_version": MANIFEST_SCHEMA_VERSION, "created_utc": now_utc(), "config": EDGE_CONFIG,
+        "schema_version": MANIFEST_SCHEMA_VERSION, "created_utc": now_utc(), "config": GEMINI_CONFIG,
         "levels": list(scope.LEVELS), "level_counts": level_counts,
         "counts": {"notes": len(records), "cards": card_count, "occurrences": occurrence_count, "unique": len(unique)},
         "pilot_audio_ids": pilot_audio_ids, "pilot_note_ids": pilot_note_ids,
@@ -210,7 +303,7 @@ def choose_pilot(unique: dict[str, Any], notes: dict[str, Any]) -> list[str]:
     selected: list[str] = []
     categories = []
     for level in scope.LEVELS:
-        for voice in EDGE_CONFIG["voices"]:
+        for voice in GEMINI_VOICES:
             categories.append([key for key, item in sorted(unique.items()) if level in item["levels"] and item["voice"] == voice])
     categories.extend([sorted(overflow_ids), sorted(changed_ids)])
     for candidates in categories:
@@ -253,7 +346,7 @@ def validate_manifest(manifest: dict[str, Any]) -> None:
         raise ExampleAudioError("example-audio manifest schema is stale; rebuild it")
     if manifest.get("levels") != list(scope.LEVELS):
         raise ExampleAudioError("example-audio manifest level set is stale; rebuild it")
-    if manifest.get("config") != EDGE_CONFIG:
+    if manifest.get("config") != GEMINI_CONFIG:
         raise ExampleAudioError("example-audio TTS config is stale; rebuild it")
     expected_counts = {
         "notes": EXPECTED_NOTES, "cards": EXPECTED_CARDS,
@@ -273,8 +366,26 @@ def validate_manifest(manifest: dict[str, Any]) -> None:
     occurrences = [occurrence for item in notes.values() for occurrence in item.get("occurrences", [])]
     if len(occurrences) != EXPECTED_OCCURRENCES or len(unique) != EXPECTED_UNIQUE:
         raise ExampleAudioError("example-audio manifest occurrence index is incomplete")
-    if any(occurrence.get("audio_id") not in unique for occurrence in occurrences):
-        raise ExampleAudioError("example-audio manifest references an unknown audio ID")
+    for note_id, note in notes.items():
+        for occurrence_index, occurrence in enumerate(note.get("occurrences", [])):
+            expected_voice = voice_for(note_id, occurrence_index)
+            expected_audio_id = request_id(occurrence.get("spoken_text", ""), expected_voice)
+            if (
+                occurrence.get("index") != occurrence_index + 1
+                or occurrence.get("voice") != expected_voice
+                or occurrence.get("audio_id") != expected_audio_id
+            ):
+                raise ExampleAudioError(
+                    f"example-audio voice assignment is stale: note={note_id} "
+                    f"example={occurrence_index + 1}"
+                )
+            item = unique.get(expected_audio_id)
+            if (
+                not isinstance(item, dict)
+                or item.get("spoken_text") != occurrence.get("spoken_text")
+                or item.get("voice") != expected_voice
+            ):
+                raise ExampleAudioError("example-audio manifest references an unknown audio ID")
     usage = Counter(occurrence["audio_id"] for occurrence in occurrences)
     usage_levels: dict[str, set[str]] = {audio_id: set() for audio_id in usage}
     for note in notes.values():
@@ -300,76 +411,100 @@ def validate_manifest(manifest: dict[str, Any]) -> None:
 def validate_cached(item: dict[str, Any]) -> bool:
     try:
         word_audio.validate_audio(Path(item["path"]), item.get("sha256"), item.get("size"))
-        return item.get("status") == "ok" and item.get("media_name") == f"_goethe_example_edge_{item['sha256']}.mp3"
-    except (KeyError, word_audio.WordAudioError):
+        return (
+            item.get("status") == "ok"
+            and item.get("voice") in GEMINI_VOICES
+            and item.get("qa_status") in PASSING_QA_STATUSES
+            and isinstance(item.get("asr_transcript"), str)
+            and bool(item["asr_transcript"].strip())
+            and float(item.get("duration_seconds", 0)) > 0
+            and item.get("media_name") == media_name_for(item["sha256"])
+        )
+    except (KeyError, TypeError, ValueError, word_audio.WordAudioError):
         return False
 
 
-async def generate_one(item: dict[str, Any], edge_tts: Any, semaphore: asyncio.Semaphore) -> dict[str, Any]:
+async def generate_one(item: dict[str, Any], semaphore: asyncio.Semaphore) -> dict[str, Any]:
     if validate_cached(item):
         return item
-    EDGE_DIR.mkdir(parents=True, exist_ok=True)
-    existing = EDGE_DIR / f"{item['audio_id']}.mp3"
-    if existing.exists():
-        try:
-            size, sha256 = word_audio.validate_audio(existing)
-            return {**item, "status": "ok", "path": str(existing), "size": size, "sha256": sha256,
-                    "media_name": f"_goethe_example_edge_{sha256}.mp3", "created_utc": now_utc()}
-        except word_audio.WordAudioError:
-            existing.unlink(missing_ok=True)
-    last_error: Exception | None = None
+    GEMINI_DIR.mkdir(parents=True, exist_ok=True)
+    target = GEMINI_DIR / f"{item['audio_id']}.mp3"
     async with semaphore:
-        for delay in (0, 2, 5, 10):
-            if delay:
-                await asyncio.sleep(delay)
-            fd, tmp_name = tempfile.mkstemp(dir=EDGE_DIR, suffix=".mp3.tmp")
-            os.close(fd)
-            tmp = Path(tmp_name)
-            try:
-                communicate = edge_tts.Communicate(
-                    item["spoken_text"], item["voice"], rate=EDGE_CONFIG["rate"],
-                    volume=EDGE_CONFIG["volume"], pitch=EDGE_CONFIG["pitch"],
-                )
-                await communicate.save(str(tmp))
-                size, sha256 = word_audio.validate_audio(tmp)
-                os.replace(tmp, existing)
-                return {**item, "status": "ok", "path": str(existing), "size": size, "sha256": sha256,
-                        "media_name": f"_goethe_example_edge_{sha256}.mp3", "created_utc": now_utc()}
-            except Exception as exc:  # network/codec errors are retried and surfaced
-                last_error = exc
-                tmp.unlink(missing_ok=True)
-    raise ExampleAudioError(f"Edge TTS failed for {item['spoken_text']!r}: {last_error}")
+        try:
+            metadata = await gemini_tts.generate_verified_mp3(
+                item["spoken_text"],
+                item["voice"],
+                "example",
+                target,
+            )
+        except gemini_tts.GeminiTTSError as exc:
+            raise ExampleAudioError(
+                f"Gemini TTS failed for {item['spoken_text']!r}: {exc}"
+            ) from exc
+    generated = {
+        **item,
+        **metadata,
+        "media_name": media_name_for(metadata["sha256"]),
+    }
+    if not validate_cached(generated):
+        raise ExampleAudioError(
+            f"Gemini TTS returned incomplete QA metadata for {item['spoken_text']!r}"
+        )
+    return generated
+
+
+async def checkpoint_manifest(manifest: dict[str, Any]) -> None:
+    delays = (0.05, 0.1, 0.2, 0.4, 0.8)
+    for attempt in range(len(delays) + 1):
+        try:
+            word_audio.atomic_json(MANIFEST_PATH, manifest)
+            return
+        except PermissionError:
+            if attempt == len(delays):
+                raise
+            await asyncio.sleep(delays[attempt])
 
 
 async def generate_scope(manifest: dict[str, Any], scope: str) -> None:
     validate_manifest(manifest)
-    try:
-        import edge_tts
-        from importlib.metadata import version
-    except ImportError as exc:
-        raise ExampleAudioError("edge-tts is not installed") from exc
-    if version("edge-tts") != EDGE_CONFIG["engine_version"]:
-        raise ExampleAudioError(f"edge-tts {EDGE_CONFIG['engine_version']} is required")
-    voices = await edge_tts.list_voices()
-    available = {item.get("ShortName") for item in voices if item.get("Locale") == "de-DE"}
-    missing = set(EDGE_CONFIG["voices"]) - available
-    if missing:
-        raise ExampleAudioError(f"Edge voices unavailable: {sorted(missing)}")
+    if GEMINI_VOICES != ("Kore", "Charon"):
+        raise ExampleAudioError(
+            f"Gemini example voices must be Kore then Charon, got {GEMINI_VOICES}"
+        )
     ids = manifest["pilot_audio_ids"] if scope == "pilot" else sorted(manifest["unique"])
     pending = [audio_id for audio_id in ids if not validate_cached(manifest["unique"][audio_id])]
     print(json.dumps({"scope": scope, "selected": len(ids), "pending": len(pending)}, ensure_ascii=False))
-    semaphore = asyncio.Semaphore(CONCURRENCY)
-    tasks = [asyncio.create_task(generate_one(manifest["unique"][audio_id], edge_tts, semaphore)) for audio_id in pending]
+    key_count = len(gemini_tts._api_keys())
+    concurrency = CONCURRENCY_PER_KEY * key_count
+    semaphore = asyncio.Semaphore(concurrency)
     completed = 0
-    for future in asyncio.as_completed(tasks):
-        item = await future
-        manifest["unique"][item["audio_id"]] = item
-        completed += 1
-        if completed % 10 == 0 or completed == len(pending):
-            word_audio.atomic_json(MANIFEST_PATH, manifest)
-        if completed % 25 == 0 or completed == len(pending):
-            print(f"edge {completed}/{len(pending)}")
-    word_audio.atomic_json(MANIFEST_PATH, manifest)
+    tasks = [
+        asyncio.create_task(
+            generate_one(manifest["unique"][audio_id], semaphore)
+        )
+        for audio_id in pending
+    ]
+    failures: list[Exception] = []
+    try:
+        for future in asyncio.as_completed(tasks):
+            try:
+                result = await future
+            except Exception as exc:
+                failures.append(exc)
+                continue
+            manifest["unique"][result["audio_id"]] = result
+            completed += 1
+            if completed % 25 == 0:
+                await checkpoint_manifest(manifest)
+            if completed % 25 == 0 or completed == len(pending):
+                print(f"gemini {completed}/{len(pending)}")
+    finally:
+        await checkpoint_manifest(manifest)
+    if failures:
+        raise ExampleAudioError(
+            f"Gemini generation completed after checkpointing {completed} successful "
+            f"items with {len(failures)} failures: {failures[0]}"
+        ) from failures[0]
 
 
 def live_records() -> dict[int, dict[str, Any]]:
@@ -382,22 +517,26 @@ def live_records() -> dict[int, dict[str, Any]]:
 def command_audit(_: argparse.Namespace) -> None:
     records = live_records()
     examples = [
-        (record["fields"]["CEFR"], item)
-        for record in records.values()
-        for item in goethe_examples.parse_fields(record["fields"])
+        (note_id, record["fields"]["CEFR"], occurrence_index, item)
+        for note_id, record in records.items()
+        for occurrence_index, item in enumerate(
+            goethe_examples.parse_fields(record["fields"])
+        )
     ]
-    occurrences_by_level = Counter(level for level, _ in examples)
+    occurrences_by_level = Counter(level for _, level, _, _ in examples)
     if sum(occurrences_by_level.values()) != EXPECTED_OCCURRENCES or dict(occurrences_by_level) != {
         level: EXPECTED_OCCURRENCES_BY_LEVEL[level] for level in scope.LEVELS
     }:
         raise ExampleAudioError(f"example baseline drift: occurrences={dict(occurrences_by_level)}")
     sources = Counter()
     unique_ids = set()
-    for _, item in examples:
+    for note_id, _, occurrence_index, item in examples:
         audio = item["audio"]
         spoken = spoken_text(item["de"])
-        unique_ids.add(request_id(spoken, voice_for(spoken)))
-        if "_goethe_example_edge_" in audio:
+        unique_ids.add(request_id(spoken, voice_for(note_id, occurrence_index)))
+        if "_goethe_example_gemini_" in audio:
+            sources["gemini-example"] += 1
+        elif "_goethe_example_edge_" in audio:
             sources["edge-example"] += 1
         elif "googletts" in audio:
             sources["googletts"] += 1
@@ -439,7 +578,7 @@ def command_snapshot(_: argparse.Namespace) -> None:
     if not manifest:
         raise ExampleAudioError("prepared manifest missing or incompatible")
     validate_manifest(manifest)
-    if manifest.get("config") != EDGE_CONFIG:
+    if manifest.get("config") != GEMINI_CONFIG:
         raise ExampleAudioError("prepared manifest TTS config is incompatible")
     require_full_ready(manifest)
     records = live_records()
@@ -520,6 +659,8 @@ def verify_baseline(records: dict[int, dict[str, Any]], manifest: dict[str, Any]
         if record["model"] != before["model"] or record["tags"] != before["tags"]:
             raise ExampleAudioError(f"model or tags changed: {note_id}")
         for name, value in before["fields"].items():
+            if name in EXTERNALLY_OWNED_FIELDS:
+                continue
             actual = record["fields"].get(name, "")
             if name in AUDIO_FIELDS and any(
                 audio_field_equivalent(actual, candidate)
@@ -597,6 +738,41 @@ def command_apply(args: argparse.Namespace) -> None:
         raise
 
 
+def verify_review_progress(
+    cards: list[dict[str, Any]],
+    reviews: dict[str, list[dict[str, Any]]],
+    snapshot: dict[str, Any],
+) -> list[int]:
+    current_cards = {
+        str(card["cardId"]): word_audio.schedule_projection(card)
+        for card in cards
+    }
+    expected_cards = snapshot["cards"]
+    if set(current_cards) != set(expected_cards):
+        raise ExampleAudioError("card ID set changed")
+    try:
+        appended = word_audio.appended_review_cards(
+            snapshot["reviews"],
+            reviews,
+        )
+    except word_audio.WordAudioError as exc:
+        raise ExampleAudioError(str(exc)) from exc
+    card_notes = {
+        str(card["cardId"]): int(card["note"])
+        for card in cards
+    }
+    changed_cards = {
+        card_id
+        for card_id in current_cards
+        if current_cards[card_id] != expected_cards[card_id]
+    }
+    changed_notes = {card_notes[card_id] for card_id in changed_cards}
+    reviewed_notes = {card_notes[card_id] for card_id in appended}
+    if changed_notes - reviewed_notes:
+        raise ExampleAudioError("card IDs or scheduling changed")
+    return sorted(changed_notes)
+
+
 def verify_state(scope: str, baseline: bool = False) -> dict[str, Any]:
     manifest, snapshot = load_ready()
     records = live_records()
@@ -609,6 +785,8 @@ def verify_state(scope: str, baseline: bool = False) -> dict[str, Any]:
         if record["model"] != before["model"] or record["tags"] != before["tags"]:
             raise ExampleAudioError(f"model or tags changed: {note_id}")
         for name, value in before["fields"].items():
+            if name in EXTERNALLY_OWNED_FIELDS:
+                continue
             expected = expected_audio[name] if name in AUDIO_FIELDS and note_id in selected else value
             actual = record["fields"].get(name, "")
             matches = (
@@ -619,11 +797,12 @@ def verify_state(scope: str, baseline: bool = False) -> dict[str, Any]:
             if not matches:
                 raise ExampleAudioError(f"field mismatch: note={note_id} field={name}")
     cards = [card for record in records.values() for card in record["cards"]]
-    if {str(card["cardId"]): word_audio.schedule_projection(card) for card in cards} != snapshot["cards"]:
-        raise ExampleAudioError("card IDs or scheduling changed")
     reviews = word_audio.all_reviews([int(card["cardId"]) for card in cards])
-    if canonical_hash(reviews) != snapshot["reviews_sha256"]:
-        raise ExampleAudioError("review history changed")
+    concurrent_review_notes = verify_review_progress(
+        cards,
+        reviews,
+        snapshot,
+    )
     if word_audio.model_snapshot() != snapshot["model"]:
         raise ExampleAudioError("model fields/templates/styling changed")
     for note_id in selected:
@@ -633,7 +812,8 @@ def verify_state(scope: str, baseline: bool = False) -> dict[str, Any]:
             if not media or hashlib.sha256(base64.b64decode(media)).hexdigest() != item["sha256"]:
                 raise ExampleAudioError(f"missing or corrupt Anki media: {item['media_name']}")
     return {"scope": scope, "baseline": baseline, "notes": len(records), "cards": len(cards),
-            "verified_notes": len(selected)}
+            "verified_notes": len(selected),
+            "concurrent_review_notes": concurrent_review_notes}
 
 
 def command_verify(args: argparse.Namespace) -> None:
@@ -685,12 +865,19 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+async def run_async_command(command: Any) -> None:
+    try:
+        await command
+    finally:
+        await gemini_tts.close_client()
+
+
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
         result = args.func(args)
         if asyncio.iscoroutine(result):
-            asyncio.run(result)
+            asyncio.run(run_async_command(result))
     except (ExampleAudioError, word_audio.WordAudioError, gw.MigrationError, RuntimeError) as exc:
         print(f"ERROR: {exc}")
         return 1

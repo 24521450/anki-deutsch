@@ -2,7 +2,7 @@
 
 Source precedence is validated Duden (A1 before A2 before B1), newly resolved exact
 Duden audio, exact Wikimedia Commons pronunciation, Wiktionary pronunciation,
-then Edge TTS.  The only
+then Gemini TTS.  The only
 Anki note field this tool writes is ``WordAudio``.
 """
 from __future__ import annotations
@@ -29,6 +29,7 @@ import aiohttp
 from lxml import html as lxml_html
 
 import download_duden_a1_audio as duden
+import gemini_tts
 import goethe_completion as completion
 import goethe_apkg as apkg
 import goethe_scope as scope
@@ -39,14 +40,16 @@ ROOT = Path(__file__).resolve().parents[1]
 STATE = ROOT / "tools" / ".goethe_word_audio"
 WORK_AUDIO = ROOT / "audio" / "goethe_word_audio"
 DUDEN_EXTRA_DIR = WORK_AUDIO / "duden"
-EDGE_DIR = WORK_AUDIO / "edge"
+GEMINI_DIR = WORK_AUDIO / "gemini"
 COMMONS_DIR = WORK_AUDIO / "commons"
 WIKTIONARY_DIR = WORK_AUDIO / "wiktionary"
 PROTECTED_DIR = ROOT / "audio" / "protected"
 MANIFEST_PATH = STATE / "manifest.json"
 DUDEN_EXTRA_INDEX = STATE / "duden_extra.json"
 DUDEN_RESCAN_REPORT = STATE / "duden_fallback_rescan.json"
+# Retained only to identify provenance for historical media already in Anki.
 EDGE_INDEX = STATE / "edge.json"
+GEMINI_INDEX = STATE / "gemini.json"
 COMMONS_INDEX = STATE / "commons.json"
 WIKTIONARY_INDEX = STATE / "wiktionary.json"
 SNAPSHOT_PATH = STATE / "snapshot.json"
@@ -55,18 +58,17 @@ COMMONS_ATTRIBUTION_PATH = ROOT / "review" / "wikimedia_commons_audio_attributio
 MODEL = "Goethe Werkstatt"
 PARENT_DECK = "Goethe Institute"
 LEVEL_DECKS = scope.LEVEL_DECK
-MANIFEST_SCHEMA_VERSION = 6
+MANIFEST_SCHEMA_VERSION = 7
 DUDEN_RESOLVER_VERSION = 2
 APPLY_CONFIRMATION = "APPLY_GOETHE_WORD_AUDIO"
 ROLLBACK_CONFIRMATION = "ROLLBACK_GOETHE_WORD_AUDIO"
-EDGE_CONFIG = {
-    "engine": "edge-tts",
-    "engine_version": "7.2.8",
-    "voice": "de-DE-KatjaNeural",
-    "rate": "+0%",
-    "volume": "+0%",
-    "pitch": "+0Hz",
-    "config_version": 1,
+GEMINI_VOICES = tuple(gemini_tts.VOICES)
+GEMINI_CONFIG = {
+    **gemini_tts.CONFIG,
+    "voices": list(GEMINI_VOICES),
+    "voice_policy": "sha256-canonical-spoken-text-parity-v1",
+    "spoken_normalization": "nfc-bound-markers-alternative-dedupe-v1",
+    "word_config_version": 1,
 }
 COMMONS_CONFIG = {
     "api": "https://commons.wikimedia.org/w/api.php",
@@ -604,7 +606,7 @@ def validate_assignment_identity(
     if (
         expected_spoken is not None
         and canonical_spoken_identity(assigned_spoken).casefold()
-        != expected_spoken.casefold()
+        != canonical_spoken_identity(expected_spoken).casefold()
     ):
         raise WordAudioError(
             f"audio spoken identity mismatch: {assigned_spoken!r} != {expected_spoken!r}"
@@ -644,11 +646,11 @@ def validate_manifest(manifest: dict[str, Any], *, require_prepared: bool = Fals
         raise WordAudioError("word-audio Duden catalog contract is stale; rebuild it")
     if manifest.get("duden_statuses") != sorted(DUDEN_STABLE_STATUSES):
         raise WordAudioError("word-audio Duden status contract is stale; rebuild it")
-    if manifest.get("edge_config") != EDGE_CONFIG or manifest.get("commons_config") != COMMONS_CONFIG:
+    if manifest.get("gemini_config") != GEMINI_CONFIG or manifest.get("commons_config") != COMMONS_CONFIG:
         raise WordAudioError("word-audio generator config is stale; rebuild it")
     if manifest.get("wiktionary_config") != WIKTIONARY_CONFIG:
         raise WordAudioError("word-audio Wiktionary config is stale; rebuild it")
-    if manifest.get("source_order") != ["duden_local", "duden_extra", "commons", "wiktionary", "edge"]:
+    if manifest.get("source_order") != ["duden_local", "duden_extra", "commons", "wiktionary", "gemini"]:
         raise WordAudioError("word-audio source precedence is stale; rebuild it")
     if manifest.get("duden_level_order") != list(scope.LEVELS):
         raise WordAudioError("word-audio Duden level precedence is stale; rebuild it")
@@ -666,12 +668,26 @@ def validate_manifest(manifest: dict[str, Any], *, require_prepared: bool = Fals
         if not manifest.get("prepared_utc"):
             raise WordAudioError("word-audio manifest is not prepared")
         prepared_scope = manifest.get("prepared_scope", "full")
+        if prepared_scope not in {"full", "protected", "targeted", "edge"}:
+            raise WordAudioError("word-audio manifest has an unsupported prepared scope")
         if prepared_scope == "protected":
             required = [item for item in notes.values() if item.get("protected_audio")]
-        elif prepared_scope == "targeted":
+        elif prepared_scope in {"targeted", "edge"}:
             prepared_ids = set(map(int, manifest.get("prepared_note_ids", [])))
             if not prepared_ids:
-                raise WordAudioError("targeted word-audio manifest has no note IDs")
+                raise WordAudioError(f"{prepared_scope} word-audio manifest has no note IDs")
+            if not prepared_ids <= set(map(int, notes)):
+                raise WordAudioError(f"{prepared_scope} word-audio manifest has unknown note IDs")
+            if prepared_scope == "edge":
+                expected_ids = {
+                    int(item["note_id"])
+                    for item in notes.values()
+                    if word_audio_provider(item.get("old_word_audio", "")) == "edge"
+                }
+                if prepared_ids != expected_ids:
+                    raise WordAudioError(
+                        "edge word-audio manifest does not preserve the exact audited Edge note IDs"
+                    )
             required = [
                 item for item in notes.values()
                 if int(item.get("note_id", 0)) in prepared_ids
@@ -759,10 +775,10 @@ def build_audit() -> dict[str, Any]:
         "level_counts": level_counts(records),
         "duden_rows": dict(scope.DUDEN_ROWS),
         "duden_statuses": sorted(DUDEN_STABLE_STATUSES),
-        "edge_config": EDGE_CONFIG,
+        "gemini_config": GEMINI_CONFIG,
         "commons_config": COMMONS_CONFIG,
         "wiktionary_config": WIKTIONARY_CONFIG,
-        "source_order": ["duden_local", "duden_extra", "commons", "wiktionary", "edge"],
+        "source_order": ["duden_local", "duden_extra", "commons", "wiktionary", "gemini"],
         "duden_level_order": list(scope.LEVELS),
         "note_count": len(notes),
         "card_count": sum(len(record["cards"]) for record in records.values()),
@@ -1270,78 +1286,139 @@ async def prepare_wiktionary(groups: dict[str, dict[str, Any]], duden_index: dic
     return index
 
 
-def edge_audio_id(text: str) -> str:
-    return canonical_hash({"spoken_text": text, **EDGE_CONFIG})
+def gemini_voice_for(text: str) -> str:
+    identity = canonical_spoken_identity(text)
+    parity = hashlib.sha256(identity.encode("utf-8")).digest()[0] & 1
+    return GEMINI_VOICES[parity]
 
 
-async def prepare_edge(groups: dict[str, dict[str, Any]], duden_index: dict[str, Any], commons_index: dict[str, Any], wiktionary_index: dict[str, Any] | None = None) -> dict[str, Any]:
-    wiktionary_index = wiktionary_index or {"items": {}}
+def gemini_audio_id(text: str) -> str:
+    spoken_text = canonical_spoken_identity(text)
+    return canonical_hash({
+        "spoken_text": spoken_text,
+        "voice": gemini_voice_for(spoken_text),
+        "config": GEMINI_CONFIG,
+    })
+
+
+def valid_gemini_item(
+    item: dict[str, Any], *, spoken_text: str, voice: str
+) -> bool:
     try:
-        import edge_tts
-        from importlib.metadata import version
-    except ImportError as exc:
-        raise WordAudioError("edge-tts is not installed") from exc
-    if version("edge-tts") != EDGE_CONFIG["engine_version"]:
-        raise WordAudioError(f"edge-tts {EDGE_CONFIG['engine_version']} is required")
-    voices = await edge_tts.list_voices()
-    if not any(item.get("ShortName") == EDGE_CONFIG["voice"] and item.get("Locale") == "de-DE" for item in voices):
-        raise WordAudioError(f"Edge voice unavailable: {EDGE_CONFIG['voice']}")
-    index = load_json(EDGE_INDEX, {"schema_version": 1, "config": EDGE_CONFIG, "items": {}})
-    if index.get("config") != EDGE_CONFIG:
-        raise WordAudioError("existing Edge index uses a different configuration")
+        validate_audio(Path(item["path"]), item.get("sha256"), item.get("size"))
+        return (
+            item.get("status") == "ok"
+            and item.get("spoken_text") == spoken_text
+            and item.get("voice") == voice
+            and item.get("qa_status") in {"exact", "verified_equivalent"}
+            and bool(clean(item.get("asr_transcript")))
+            and float(item.get("duration_seconds", 0)) > 0
+        )
+    except (KeyError, TypeError, ValueError, WordAudioError):
+        return False
+
+
+async def prepare_gemini(
+    groups: dict[str, dict[str, Any]],
+    duden_index: dict[str, Any],
+    commons_index: dict[str, Any],
+    wiktionary_index: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    wiktionary_index = wiktionary_index or {"items": {}}
+    if GEMINI_VOICES != ("Kore", "Charon"):
+        raise WordAudioError(
+            f"Gemini word voices must be Kore then Charon, got {GEMINI_VOICES}"
+        )
+    index = load_json(
+        GEMINI_INDEX,
+        {"schema_version": 1, "config": GEMINI_CONFIG, "items": {}},
+    )
+    if index.get("schema_version") != 1 or index.get("config") != GEMINI_CONFIG:
+        raise WordAudioError("existing Gemini index uses a different configuration")
     items = index.setdefault("items", {})
-    EDGE_DIR.mkdir(parents=True, exist_ok=True)
+    GEMINI_DIR.mkdir(parents=True, exist_ok=True)
     needed = [
         group for key, group in sorted(groups.items())
         if duden_index["items"].get(key, {}).get("status") != "ok"
         and commons_index["items"].get(key, {}).get("status") != "ok"
         and wiktionary_index["items"].get(key, {}).get("status") != "ok"
     ]
-    for number, group in enumerate(needed, 1):
-        audio_id = edge_audio_id(group["spoken_text"])
+    pending: list[tuple[dict[str, Any], str, str, str, Path]] = []
+    for group in needed:
+        spoken_text = canonical_spoken_identity(group["spoken_text"])
+        voice = gemini_voice_for(spoken_text)
+        audio_id = gemini_audio_id(spoken_text)
         cached = items.get(audio_id)
-        if cached:
-            try:
-                validate_audio(Path(cached["path"]), cached.get("sha256"), cached.get("size"))
-                continue
-            except WordAudioError:
-                pass
-        last_error: Exception | None = None
-        for delay in (0, 2, 5, 10):
-            if delay:
-                await asyncio.sleep(delay)
-            fd, tmp_name = tempfile.mkstemp(dir=EDGE_DIR, suffix=".mp3.tmp")
-            os.close(fd)
-            tmp = Path(tmp_name)
-            try:
-                communicate = edge_tts.Communicate(
-                    group["spoken_text"], EDGE_CONFIG["voice"], rate=EDGE_CONFIG["rate"],
-                    volume=EDGE_CONFIG["volume"], pitch=EDGE_CONFIG["pitch"],
+        if cached and valid_gemini_item(
+            cached, spoken_text=spoken_text, voice=voice
+        ):
+            continue
+        target = GEMINI_DIR / f"{audio_id}.mp3"
+        pending.append((group, spoken_text, voice, audio_id, target))
+
+    semaphore = asyncio.Semaphore(2 * len(gemini_tts._api_keys()))
+
+    async def generate_word(
+        request: tuple[dict[str, Any], str, str, str, Path]
+    ) -> dict[str, Any]:
+        _, spoken_text, voice, audio_id, target = request
+        try:
+            async with semaphore:
+                generated = await gemini_tts.generate_verified_mp3(
+                    text=spoken_text,
+                    voice=voice,
+                    purpose="word",
+                    target=target,
                 )
-                await communicate.save(str(tmp))
-                size, sha256 = validate_audio(tmp)
-                final = EDGE_DIR / f"{audio_id}.mp3"
-                os.replace(tmp, final)
-                items[audio_id] = {
-                    "audio_id": audio_id, "spoken_text": group["spoken_text"], "path": str(final),
-                    "size": size, "sha256": sha256, "status": "ok", "created_utc": now_utc(),
-                }
-                atomic_json(EDGE_INDEX, index)
-                print(console_text(f"edge {number}/{len(needed)} {group['spoken_text']!r}: ok"))
-                last_error = None
-                break
-            except Exception as exc:
-                last_error = exc
-                if tmp.exists():
-                    tmp.unlink()
-        if last_error is not None:
-            raise WordAudioError(f"Edge TTS failed for {group['spoken_text']!r}: {last_error}")
+        except gemini_tts.GeminiTTSError as exc:
+            raise WordAudioError(
+                f"Gemini TTS failed for {spoken_text!r}: {exc}"
+            ) from exc
+        item = {
+            **generated,
+            "audio_id": audio_id,
+            "spoken_text": spoken_text,
+            "voice": voice,
+        }
+        if not valid_gemini_item(item, spoken_text=spoken_text, voice=voice):
+            raise WordAudioError(
+                f"Gemini TTS returned incomplete QA metadata for {spoken_text!r}"
+            )
+        return item
+
+    tasks = [
+        asyncio.create_task(generate_word(request))
+        for request in pending
+    ]
+    failures: list[Exception] = []
+    completed = 0
+    for future in asyncio.as_completed(tasks):
+        try:
+            item = await future
+        except Exception as exc:
+            failures.append(exc)
+            continue
+        audio_id = item["audio_id"]
+        items[audio_id] = item
+        completed += 1
+        if completed % 25 == 0:
+            atomic_json(GEMINI_INDEX, index)
+        print(console_text(
+            f"gemini {completed}/{len(pending)} "
+            f"{item['spoken_text']!r} ({item['voice']}): ok"
+        ))
+    atomic_json(GEMINI_INDEX, index)
+    if failures:
+        raise WordAudioError(
+            f"Gemini generation completed with {completed} successes and "
+            f"{len(failures)} failures: {failures[0]}"
+        ) from failures[0]
     return index
 
 
 def word_audio_provider(value: str) -> str:
     text = value.casefold()
-    for provider in ("duden", "commons", "wiktionary", "edge"):
+    for provider in ("duden", "commons", "wiktionary", "gemini", "edge"):
         if f"_goethe_word_{provider}_" in text or (provider == "duden" and "[sound:duden-" in text):
             return provider
     return "unknown"
@@ -1370,6 +1447,7 @@ def cached_audio_provenance() -> dict[str, dict[str, list[str]]]:
             add(row.get("sha256"), row.get("word"), "duden")
     for provider, path in (
         ("edge", EDGE_INDEX),
+        ("gemini", GEMINI_INDEX),
         ("commons", COMMONS_INDEX),
         ("wiktionary", WIKTIONARY_INDEX),
     ):
@@ -1480,7 +1558,7 @@ def validate_change_set(manifest: dict[str, Any]) -> None:
     }
     prepared_ids = (
         set(map(int, manifest.get("prepared_note_ids", [])))
-        if manifest.get("prepared_scope") == "targeted"
+        if manifest.get("prepared_scope") in {"targeted", "edge"}
         else None
     )
     for item in manifest["notes"].values():
@@ -1502,7 +1580,9 @@ def validate_change_set(manifest: dict[str, Any]) -> None:
             continue
         if int(item["note_id"]) in semantic_repairs:
             continue
-        if old_provider in {"commons", "wiktionary", "edge"} and desired_provider == "duden":
+        if old_provider in {"commons", "wiktionary", "edge", "gemini"} and desired_provider == "duden":
+            continue
+        if old_provider == "edge" and desired_provider in {"commons", "wiktionary", "gemini"}:
             continue
         raise WordAudioError(
             f"unapproved audio transition: note={item['note_id']} {old_provider}->{desired_provider}"
@@ -1563,10 +1643,11 @@ def finalize_manifest(
     manifest: dict[str, Any],
     duden_index: dict[str, Any],
     commons_index: dict[str, Any],
-    edge_index: dict[str, Any],
+    gemini_index: dict[str, Any],
     wiktionary_index: dict[str, Any] | None = None,
     *,
     note_ids: list[int] | None = None,
+    prepared_scope: str | None = None,
 ) -> dict[str, Any]:
     validate_manifest(manifest)
     wiktionary_index = wiktionary_index or {"items": {}}
@@ -1627,14 +1708,14 @@ def finalize_manifest(
                 spoken_text=item["spoken_text"],
             )
         else:
-            edge_id = edge_audio_id(item["spoken_text"])
-            edge = edge_index["items"].get(edge_id)
-            if not edge or edge.get("status") != "ok":
-                raise WordAudioError(f"missing Edge result for {item['lemma']!r}")
+            gemini_id = gemini_audio_id(item["spoken_text"])
+            gemini = gemini_index["items"].get(gemini_id)
+            if not gemini or gemini.get("status") != "ok":
+                raise WordAudioError(f"missing Gemini result for {item['lemma']!r}")
             item["assignment"] = assignment(
-                "edge",
-                Path(edge["path"]),
-                detail=edge,
+                "gemini",
+                Path(gemini["path"]),
+                detail=gemini,
                 lemma_identity=item["lemma_identity"],
                 spoken_text=item["spoken_text"],
             )
@@ -1644,7 +1725,7 @@ def finalize_manifest(
         raise WordAudioError("prepared manifest is incomplete")
     manifest.update({
         "prepared_utc": now_utc(),
-        "prepared_scope": "targeted" if selected else "full",
+        "prepared_scope": prepared_scope or ("targeted" if selected else "full"),
         "prepared_note_ids": sorted(selected),
         "counts": dict(counts),
         "missing_overrides": [],
@@ -1709,16 +1790,23 @@ async def command_prepare(_: argparse.Namespace) -> None:
             f"{len(manifest['missing_overrides'])} notes need spoken-text overrides; see {MANIFEST_PATH}"
         )
     groups = request_groups(manifest)
-    target_ids = selected_ids(manifest, "full", _.note_id) if _.note_id else []
+    if _.scope in {"protected", "edge"} and _.note_id:
+        raise WordAudioError(f"--note-id cannot be combined with {_.scope} scope")
+    if _.scope == "edge":
+        if _.offline:
+            raise WordAudioError("Edge migration scope must be discovered from the live deck")
+        target_ids = selected_ids(manifest, "edge")
+        if not target_ids:
+            raise WordAudioError("live deck has no historical Edge WordAudio notes")
+    else:
+        target_ids = selected_ids(manifest, "full", _.note_id) if _.note_id else []
     if target_ids:
         target_set = set(target_ids)
         groups = {
             key: group for key, group in groups.items()
             if target_set.intersection(map(int, group["note_ids"]))
-        }
+    }
     if _.scope == "protected":
-        if target_ids:
-            raise WordAudioError("--note-id cannot be combined with protected scope")
         groups = {
             key: group for key, group in groups.items()
             if group.get("protected_audio")
@@ -1740,14 +1828,15 @@ async def command_prepare(_: argparse.Namespace) -> None:
     duden_index = await prepare_duden(groups, refresh_negative=_.refresh_duden_fallbacks)
     commons_index = await prepare_commons(groups, duden_index)
     wiktionary_index = await prepare_wiktionary(groups, duden_index, commons_index)
-    edge_index = await prepare_edge(groups, duden_index, commons_index, wiktionary_index)
+    gemini_index = await prepare_gemini(groups, duden_index, commons_index, wiktionary_index)
     final = finalize_manifest(
         manifest,
         duden_index,
         commons_index,
-        edge_index,
+        gemini_index,
         wiktionary_index,
         note_ids=target_ids,
+        prepared_scope="edge" if _.scope == "edge" else None,
     )
     print(json.dumps({
         "notes": len(target_ids) if target_ids else final["note_count"],
@@ -1817,17 +1906,26 @@ def model_snapshot() -> dict[str, Any]:
     }
 
 
+def validate_prepared_live_baseline(
+    manifest: dict[str, Any], records: dict[int, dict[str, Any]]
+) -> None:
+    if set(map(int, manifest["notes"])) != set(records):
+        raise WordAudioError("prepared note ID set differs from live deck")
+    for note_id, record in records.items():
+        prepared = manifest["notes"][str(note_id)]
+        if prepared["source_signature"] != source_signature(record["fields"]):
+            raise WordAudioError(f"source fields changed after preparation: {note_id}")
+        if prepared.get("old_word_audio", "") != record["fields"].get("WordAudio", ""):
+            raise WordAudioError(f"WordAudio changed after preparation: {note_id}")
+
+
 def command_snapshot(_: argparse.Namespace) -> None:
     manifest = load_json(MANIFEST_PATH, None)
     if not manifest:
         raise WordAudioError("prepared manifest missing")
     validate_manifest(manifest, require_prepared=True)
     records = live_records()
-    if set(map(int, manifest["notes"])) != set(records):
-        raise WordAudioError("prepared note ID set differs from live deck")
-    for note_id, record in records.items():
-        if manifest["notes"][str(note_id)]["source_signature"] != source_signature(record["fields"]):
-            raise WordAudioError(f"source fields changed after preparation: {note_id}")
+    validate_prepared_live_baseline(manifest, records)
     STATE.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + f"_{time.time_ns() % 1_000_000_000:09d}"
     backup = STATE / f"Goethe_Institute_pre_word_audio_{stamp}.apkg"
@@ -1916,6 +2014,15 @@ def selected_ids(
             for item in manifest["notes"].values()
             if item.get("protected_audio")
         )
+    elif scope == "edge":
+        if manifest.get("prepared_scope") == "edge":
+            selected = sorted(set(map(int, manifest.get("prepared_note_ids", []))))
+        else:
+            selected = sorted(
+                int(item["note_id"])
+                for item in manifest["notes"].values()
+                if word_audio_provider(item.get("old_word_audio", "")) == "edge"
+            )
     else:
         selected = sorted(map(int, manifest["notes"]))
     if note_ids:
@@ -1937,6 +2044,8 @@ def require_prepared_scope(
     prepared = manifest.get("prepared_scope", "full")
     if prepared == "protected" and requested != "protected":
         raise WordAudioError("manifest is prepared only for protected audio")
+    if prepared == "edge" and requested != "edge":
+        raise WordAudioError("manifest is prepared only for the audited Edge migration scope")
     if prepared == "targeted":
         allowed = set(map(int, manifest.get("prepared_note_ids", [])))
         requested_ids = set(map(int, note_ids or []))
@@ -2027,7 +2136,7 @@ def verify_state(
     require_prepared_scope(manifest, scope, note_ids)
     records = live_records()
     selected = set(selected_ids(manifest, scope, note_ids))
-    targeted = scope == "protected" or bool(note_ids)
+    targeted = scope in {"protected", "edge"} or bool(note_ids)
     if set(records) != set(map(int, snapshot["notes"])):
         raise WordAudioError("note ID set changed")
     checked_records = (
@@ -2173,6 +2282,7 @@ def command_rollback(args: argparse.Namespace) -> None:
     manifest, snapshot = load_ready()
     require_prepared_scope(manifest, args.scope, args.note_id)
     records = live_records()
+    verify_baseline(records, snapshot, manifest)
     ids = [
         note_id
         for note_id in selected_ids(manifest, args.scope, args.note_id)
@@ -2200,7 +2310,7 @@ def build_parser() -> argparse.ArgumentParser:
     prepare.add_argument("--confirm-duden-usage", action="store_true", required=True)
     prepare.add_argument("--confirm-commons-license", action="store_true")
     prepare.add_argument("--offline", action="store_true", help="Resume from the existing audit manifest without AnkiConnect.")
-    prepare.add_argument("--scope", choices=("protected", "full"), default="full")
+    prepare.add_argument("--scope", choices=("edge", "protected", "full"), default="full")
     prepare.add_argument("--note-id", type=int, action="append")
     prepare.add_argument(
         "--refresh-duden-fallbacks", action="store_true",
@@ -2209,13 +2319,13 @@ def build_parser() -> argparse.ArgumentParser:
     prepare.set_defaults(func=command_prepare)
     sub.add_parser("snapshot").set_defaults(func=command_snapshot)
     apply = sub.add_parser("apply")
-    apply.add_argument("--scope", choices=("pilot", "protected", "full"), default="full")
+    apply.add_argument("--scope", choices=("edge", "pilot", "protected", "full"), default="full")
     apply.add_argument("--dry-run", action="store_true")
     apply.add_argument("--confirmation")
     apply.add_argument("--note-id", type=int, action="append")
     apply.set_defaults(func=command_apply)
     verify = sub.add_parser("verify")
-    verify.add_argument("--scope", choices=("pilot", "protected", "full"), default="full")
+    verify.add_argument("--scope", choices=("edge", "pilot", "protected", "full"), default="full")
     verify.add_argument("--baseline", action="store_true")
     verify.add_argument("--note-id", type=int, action="append")
     verify.set_defaults(func=command_verify)
@@ -2224,11 +2334,18 @@ def build_parser() -> argparse.ArgumentParser:
     protect.add_argument("--reason", required=True)
     protect.set_defaults(func=command_protect_current)
     rollback = sub.add_parser("rollback")
-    rollback.add_argument("--scope", choices=("pilot", "protected", "full"), default="full")
+    rollback.add_argument("--scope", choices=("edge", "pilot", "protected", "full"), default="full")
     rollback.add_argument("--confirmation", required=True)
     rollback.add_argument("--note-id", type=int, action="append")
     rollback.set_defaults(func=command_rollback)
     return parser
+
+
+async def run_async_command(command: Any) -> None:
+    try:
+        await command
+    finally:
+        await gemini_tts.close_client()
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -2236,7 +2353,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         result = args.func(args)
         if asyncio.iscoroutine(result):
-            asyncio.run(result)
+            asyncio.run(run_async_command(result))
     except (WordAudioError, gw.MigrationError, RuntimeError) as exc:
         print(console_text(f"ERROR: {exc}", getattr(sys.stderr, "encoding", None)), file=sys.stderr)
         return 1

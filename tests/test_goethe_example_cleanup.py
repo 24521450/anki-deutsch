@@ -137,7 +137,7 @@ def test_example_audio_baseline_matches_cleanup_projection():
     assert (
         goethe_example_audio.EXPECTED_UNIQUE
         == cleanup.scope.EXPECTED_UNIQUE_EXAMPLE_AUDIO
-        == 4922
+        == 4992
     )
     assert cleanup.EXPECTED_EMPTY_BY_LEVEL == cleanup.scope.EXPECTED_EMPTY_NOTES_BY_LEVEL
     assert cleanup.EXPECTED_EMPTY_BY_LEVEL["B1"] == 0

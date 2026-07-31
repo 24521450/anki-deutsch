@@ -269,7 +269,7 @@ function sentence(text) {
 function audio() {
   const listeners = {};
   return {
-    currentTime: 9, paused: true, playCount: 0, pauseCount: 0, listeners,
+    currentTime: 9, paused: true, volume: 1, playCount: 0, pauseCount: 0, listeners,
     addEventListener: function (name, callback) { listeners[name] = callback; },
     pause: function () { this.pauseCount += 1; this.paused = true; if (listeners.pause) listeners.pause(); },
     play: function () { this.playCount += 1; this.paused = false; if (listeners.play) listeners.play(); return { catch: function () {} }; },
@@ -288,6 +288,7 @@ const articles = [article(firstSentence, firstAudio), article(secondSentence, se
 globalThis.document = { querySelectorAll: (selector) => selector === ".gw-example" ? articles : [] };
 ''' + script + r'''
 if (globalThis.goetheWerkstattExampleAudio.count !== 2) throw new Error("wrong playable count");
+if (firstAudio.volume !== 0.5 || secondAudio.volume !== 0.5) throw new Error("wrong example volume");
 if (!firstSentence.classList.contains("gw-example-playable")) throw new Error("sentence not playable");
 if (silentSentence.classList.contains("gw-example-playable")) throw new Error("silent sentence is playable");
 if (firstSentence.attributes.role !== "button" || firstSentence.attributes.tabindex !== "0") throw new Error("missing accessibility attributes");

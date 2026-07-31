@@ -305,14 +305,19 @@ if (value.state !== 'incorrect') throw Error('fixed phrase treated as article-be
 const disabled = Object.assign({{}}, base, {{ 'gw-production-enabled': '' }});
 value = run(disabled, '', false);
 if (value.state !== undefined) throw Error('disabled note rendered a grading result');
-const reflexive = Object.assign({{}}, base, {{ 'gw-lemma': 'anziehen', 'gw-accepted-answers': 'sich anziehen', 'gw-accepted-full-answers': 'sich anziehen|s anziehen', 'gw-accepted-articles': '', 'gw-article': '' }});
-for (const answer of ['sich anziehen', 's anziehen']) {{
+const reflexive = Object.assign({{}}, base, {{ 'gw-lemma': '(sich) duschen', 'gw-accepted-answers': 'duschen|sich duschen', 'gw-accepted-full-answers': 'sich duschen|s duschen', 'gw-accepted-articles': '', 'gw-article': '' }});
+for (const answer of ['duschen', 'sich duschen', 's duschen']) {{
   value = run(reflexive, answer);
   if (value.state !== 'correct') throw Error('reflexive answer not green: ' + answer);
 }}
-for (const answer of ['anziehen', '(sich) anziehen', 'mich anziehen']) {{
+for (const answer of ['(sich) duschen', 'mich duschen']) {{
   value = run(reflexive, answer);
-  if (value.state !== 'incorrect') throw Error('bare/parenthetical reflexive accepted: ' + answer);
+  if (value.state !== 'incorrect') throw Error('invalid optional-reflexive answer accepted: ' + answer);
+}}
+const requiredReflexive = Object.assign({{}}, reflexive, {{ 'gw-lemma': 'sich anmelden', 'gw-accepted-answers': 'sich anmelden', 'gw-accepted-full-answers': 'sich anmelden|s anmelden' }});
+value = run(requiredReflexive, 'anmelden');
+if (value.state !== 'incorrect') {{
+  throw Error('required reflexive was treated as optional');
 }}
 const ordinal = Object.assign({{}}, base, {{ 'gw-lemma': 'dritte', 'gw-accepted-answers': 'dritte', 'gw-accepted-full-answers': 'dritte', 'gw-accepted-articles': '', 'gw-article': '' }});
 for (const answer of ['dritte']) {{

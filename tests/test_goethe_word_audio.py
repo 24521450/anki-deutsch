@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -166,9 +168,59 @@ def test_select_local_duden_rejects_expanded_word_for_bound_stem():
     ) is None
 
 
-def test_edge_audio_id_is_deterministic_and_case_sensitive():
-    assert gwa.edge_audio_id("Bahnhof") == gwa.edge_audio_id("Bahnhof")
-    assert gwa.edge_audio_id("Bahnhof") != gwa.edge_audio_id("bahnhof")
+def test_gemini_audio_id_and_voice_are_deterministic_and_case_sensitive():
+    assert gwa.gemini_audio_id("Bahnhof") == gwa.gemini_audio_id("Bahnhof")
+    assert gwa.gemini_audio_id("Bahnhof") != gwa.gemini_audio_id("bahnhof")
+    assert gwa.GEMINI_VOICES == ("Kore", "Charon")
+    assert gwa.GEMINI_CONFIG["voices"] == ["Kore", "Charon"]
+    assert gwa.gemini_voice_for("Bahnhof") in gwa.GEMINI_VOICES
+
+
+def test_prepare_gemini_uses_deterministic_voice_and_verified_generator(
+    monkeypatch, tmp_path: Path
+):
+    monkeypatch.setenv("GEMINI_API_KEY", "test-key")
+    monkeypatch.delenv("GEMINI_API_KEYS", raising=False)
+    calls = []
+    monkeypatch.setattr(gwa, "GEMINI_DIR", tmp_path / "audio")
+    monkeypatch.setattr(gwa, "GEMINI_INDEX", tmp_path / "gemini.json")
+    monkeypatch.setattr(
+        gwa,
+        "validate_audio",
+        lambda path, sha256=None, size=None: (size or 12, sha256 or "a" * 64),
+    )
+
+    async def fake_generate_verified_mp3(*, text, voice, purpose, target):
+        calls.append((text, voice, purpose, target))
+        return {
+            "status": "ok",
+            "path": str(target),
+            "size": 12,
+            "sha256": "a" * 64,
+            "qa_status": "exact",
+            "asr_transcript": text,
+            "duration_seconds": 1.0,
+            "voice": voice,
+        }
+
+    monkeypatch.setattr(
+        gwa.gemini_tts, "generate_verified_mp3", fake_generate_verified_mp3
+    )
+    key = "request"
+    groups = {key: {"spoken_text": "Bahnhof"}}
+    unavailable = {"items": {key: {"status": "unresolved"}}}
+    index = asyncio.run(
+        gwa.prepare_gemini(groups, unavailable, unavailable, unavailable)
+    )
+    audio_id = gwa.gemini_audio_id("Bahnhof")
+
+    assert calls == [(
+        "Bahnhof",
+        gwa.gemini_voice_for("Bahnhof"),
+        "word",
+        gwa.GEMINI_DIR / f"{audio_id}.mp3",
+    )]
+    assert index["items"][audio_id]["voice"] == gwa.gemini_voice_for("Bahnhof")
 
 
 def test_console_text_escapes_unicode_that_windows_cp1252_cannot_encode():
@@ -239,6 +291,22 @@ def test_assignment_identity_rejects_audio_after_lemma_change():
             fields(Lemma="eigen-", SourceRefs="A2-0266|B1-MAIN-0599"),
             item,
         )
+
+
+def test_assignment_identity_canonicalizes_bound_comma_alternatives():
+    item = {
+        "lemma_identity": "hell-, dunkel",
+        "spoken_text": "hell-, dunkel",
+        "assignment": {
+            "lemma_identity": "hell-, dunkel",
+            "spoken_text": "hell-, dunkel",
+        },
+    }
+
+    gwa.validate_assignment_identity(
+        fields(Lemma="hell-, dunkel"),
+        item,
+    )
 
 
 def test_live_assignment_mismatches_separates_semantics_from_provider_drift():
@@ -472,10 +540,10 @@ def test_protected_manifest_requires_only_protected_assignments(monkeypatch):
         "levels": list(gwa.scope.LEVELS),
         "duden_rows": gwa.scope.DUDEN_ROWS,
         "duden_statuses": sorted(gwa.DUDEN_STABLE_STATUSES),
-        "edge_config": gwa.EDGE_CONFIG,
+        "gemini_config": gwa.GEMINI_CONFIG,
         "commons_config": gwa.COMMONS_CONFIG,
         "wiktionary_config": gwa.WIKTIONARY_CONFIG,
-        "source_order": ["duden_local", "duden_extra", "commons", "wiktionary", "edge"],
+        "source_order": ["duden_local", "duden_extra", "commons", "wiktionary", "gemini"],
         "duden_level_order": list(gwa.scope.LEVELS),
         "note_count": 3,
         "card_count": 6,
@@ -623,16 +691,34 @@ def test_change_set_guard_allows_only_duden_upgrades_and_protected_audio():
         "2": {"note_id": 2, "old_word_audio": "[sound:_goethe_word_duden_old.mp3]", "protected_audio": {"provider": "commons"}, "assignment": {"source": "commons", "media_name": "_goethe_word_commons_new.mp3"}},
     }}
     gwa.validate_change_set(manifest)
-    manifest["notes"]["1"]["assignment"] = {"source": "edge", "media_name": "_goethe_word_edge_new.mp3"}
+    manifest["notes"]["1"]["assignment"] = {"source": "gemini", "media_name": "_goethe_word_gemini_new.mp3"}
     with pytest.raises(gwa.WordAudioError, match="unapproved audio transition"):
         gwa.validate_change_set(manifest)
+
+
+def test_change_set_guard_allows_historical_edge_migration_to_gemini():
+    manifest = {"notes": {
+        "1": {
+            "note_id": 1,
+            "old_word_audio": "[sound:_goethe_word_edge_old.mp3]",
+            "assignment": {
+                "source": "gemini",
+                "media_name": "_goethe_word_gemini_new.mp3",
+            },
+        },
+    }}
+    gwa.validate_change_set(manifest)
+    assert gwa.word_audio_provider(manifest["notes"]["1"]["old_word_audio"]) == "edge"
+    assert gwa.word_audio_provider(
+        "[sound:_goethe_word_gemini_new.mp3]"
+    ) == "gemini"
 
 
 def test_word_pilot_covers_all_levels():
     notes = {}
     note_id = 1
     for level in gwa.scope.LEVELS:
-        for source in ("duden_local", "edge", "commons", "wiktionary"):
+        for source in ("duden_local", "gemini", "commons", "wiktionary"):
             notes[str(note_id)] = {
                 "note_id": note_id, "level": level, "old_word_audio": "",
                 "assignment": {"source": source, "media_name": f"{source}-{note_id}.mp3"},
@@ -659,6 +745,69 @@ def test_protected_scope_selects_only_protected_audio():
         "2": {"note_id": 2},
     }}
     assert gwa.selected_ids(manifest, "protected") == [1]
+
+
+def test_edge_scope_selects_and_persists_exact_historical_edge_notes():
+    manifest = {"notes": {
+        "1": {
+            "note_id": 1,
+            "old_word_audio": "[sound:_goethe_word_edge_old.mp3]",
+        },
+        "2": {
+            "note_id": 2,
+            "old_word_audio": "[sound:_goethe_word_gemini_new.mp3]",
+        },
+        "3": {"note_id": 3, "old_word_audio": ""},
+    }}
+    assert gwa.selected_ids(manifest, "edge") == [1]
+    manifest.update({"prepared_scope": "edge", "prepared_note_ids": [1]})
+    assert gwa.selected_ids(manifest, "edge") == [1]
+    gwa.require_prepared_scope(manifest, "edge")
+    with pytest.raises(gwa.WordAudioError, match="only for the audited Edge"):
+        gwa.require_prepared_scope(manifest, "full")
+
+
+def test_snapshot_baseline_rejects_word_audio_changed_after_prepare():
+    original = fields(
+        SourceID="A1-MAIN-0080",
+        WordAudio="[sound:_goethe_word_edge_old.mp3]",
+    )
+    manifest = {"notes": {"1": {
+        "source_signature": gwa.source_signature(original),
+        "old_word_audio": original["WordAudio"],
+    }}}
+    records = {1: {"fields": dict(original)}}
+
+    gwa.validate_prepared_live_baseline(manifest, records)
+    records[1]["fields"]["WordAudio"] = "[sound:_goethe_word_duden_new.mp3]"
+
+    with pytest.raises(gwa.WordAudioError, match="WordAudio changed"):
+        gwa.validate_prepared_live_baseline(manifest, records)
+
+
+def test_rollback_verifies_baseline_before_writing(monkeypatch):
+    args = SimpleNamespace(
+        confirmation=gwa.ROLLBACK_CONFIRMATION,
+        scope="edge",
+        note_id=None,
+    )
+    manifest = {"notes": {}}
+    snapshot = {"notes": {}}
+    records = {}
+    writes = []
+    monkeypatch.setattr(gwa, "load_ready", lambda: (manifest, snapshot))
+    monkeypatch.setattr(gwa, "require_prepared_scope", lambda *args: None)
+    monkeypatch.setattr(gwa, "live_records", lambda: records)
+    monkeypatch.setattr(
+        gwa,
+        "verify_baseline",
+        lambda *args: (_ for _ in ()).throw(gwa.WordAudioError("stale baseline")),
+    )
+    monkeypatch.setattr(gwa, "update_word_audio", lambda *args: writes.append(args))
+
+    with pytest.raises(gwa.WordAudioError, match="stale baseline"):
+        gwa.command_rollback(args)
+    assert writes == []
 
 
 def test_exact_note_filter_is_repeatable_and_fails_closed():

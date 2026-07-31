@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "overrides": {
+    "Für Pommes frites braucht man Kartoffeln.": {
+      "voice": "Charon",
+      "generation_text": "Für Pomm fritt braucht man Kartoffeln.",
+      "engine": "gemini-native-tts",
+      "model": "gemini-3.1-flash-tts-preview",
+      "prompt_version": 3,
+      "path": "audio/goethe_example_audio/native_tts_pommes/g31flash_phonetic_proxy_charon_kartoffeln.mp3",
+      "size": 48768,
+      "sha256": "5efa0da14e280ea761d3f5571148dc1c812b7f8cb3d65d5973154b717b79ffbb",
+      "duration_seconds": 3.048,
+      "qa_status": "verified_equivalent",
+      "asr_transcript": "Für Pommes frites braucht man Kartoffeln.",
+      "review_status": "human-approved",
+      "reviewed_utc": "2026-07-30"
+    },
+    "Die Kinder essen Hähnchen mit Pommes frites.": {
+      "voice": "Charon",
+      "generation_text": "Die Kinder essen Hähnchen mit Pommes frites.",
+      "engine": "gemini-native-tts",
+      "model": "gemini-3.1-flash-tts-preview",
+      "prompt_version": 3,
+      "path": "audio/goethe_example_audio/native_tts_pommes/g31flash_unicode_v3_charon_haehnchen.mp3",
+      "size": 53376,
+      "sha256": "9ce246e5c264d21f6d2a96b26db6c75c1fea2d022d4f9f4444294e2e02a31fa0",
+      "duration_seconds": 3.336,
+      "qa_status": "verified_equivalent",
+      "asr_transcript": "Die Kinder essen Hähnchen mit Pommes frites.",
+      "review_status": "human-approved",
+      "reviewed_utc": "2026-07-30"
+    },
+    "Die Kinder essen Bratwurst mit Pommes frites.": {
+      "voice": "Kore",
+      "generation_text": "Die Kinder essen Bratwurst mit Pommes frites.",
+      "engine": "gemini-native-tts",
+      "model": "gemini-3.1-flash-tts-preview",
+      "prompt_version": 3,
+      "path": "audio/goethe_example_audio/native_tts_pommes/g31flash_unicode_v3_kore_bratwurst.mp3",
+      "size": 56448,
+      "sha256": "fe8dd0ce249423d5029417f5275aef7967f7db27bd57b8d17461d36d39ef1595",
+      "duration_seconds": 3.528,
+      "qa_status": "verified_equivalent",
+      "asr_transcript": "Die Kinder essen Bratwurst mit Pommes frites.",
+      "review_status": "human-approved",
+      "reviewed_utc": "2026-07-30"
+    }
+  }
+}

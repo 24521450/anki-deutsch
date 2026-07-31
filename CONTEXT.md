@@ -15,6 +15,19 @@ A German response treated as correct when grading a card. It does not imply pron
 The exact German text represented by a note's pronunciation audio. It is the lemma unless a different form has been explicitly reviewed.
 _Avoid_: Accepted answer
 
+**Pronunciation proxy**:
+Alternative synthesis-only text used to elicit an approved pronunciation while
+the displayed German and transcript target remain correctly spelled. It is
+allowed only for a protected, human-reviewed artifact and must never be written
+into note content.
+_Avoid_: Spoken form, spelling correction
+
+**Pronunciation approval**:
+Human acceptance of one exact audio bitstream for one exact text and voice.
+Transcript equality and automated audio classification are preflight evidence,
+not pronunciation approval.
+_Avoid_: Transcript QA
+
 **Removed or merged note**:
 A note that no longer exists as an independent deck entry because its useful content was merged into a surviving note or because the entry was excluded from the canonical lexeme inventory.
 _Avoid_: Deleted word

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import copy
 import sys
 from pathlib import Path
@@ -40,6 +41,40 @@ def test_target_scope_is_the_exact_fourteen_reviewed_articleless_notes():
     assert {source_id for source_id, _ in repair.TARGETS.values()} == EXPECTED_TARGET_SOURCE_IDS
     assert repair.TARGETS[repair.SILVESTER_NOTE_ID] == ("A2-WG-0130", "Neujahr/Silvester")
     assert set(repair.EXACT_DUDEN_AUDIO) == {"Neujahr", "Silvester"}
+
+
+def test_neujahr_example_audio_uses_gemini_with_durable_source_identity(
+    monkeypatch, tmp_path: Path
+):
+    calls = []
+    monkeypatch.setattr(repair.example_audio, "GEMINI_DIR", tmp_path)
+
+    async def fake_generate_verified_mp3(*, text, voice, purpose, target):
+        calls.append((text, voice, purpose, target))
+        return {
+            "status": "ok",
+            "path": str(target),
+            "size": 12,
+            "sha256": "a" * 64,
+            "qa_status": "exact",
+            "asr_transcript": text,
+            "duration_seconds": 1.0,
+        }
+
+    monkeypatch.setattr(
+        repair.gemini_tts,
+        "generate_verified_mp3",
+        fake_generate_verified_mp3,
+    )
+    item = asyncio.run(repair.prepare_neujahr_example_audio())
+    expected_voice = repair.example_audio.voice_for(repair.NEW_SOURCE_ID, 0)
+
+    assert calls[0][1:3] == (expected_voice, "example")
+    assert calls[0][3] == (
+        tmp_path
+        / f"{repair.example_audio.request_id(calls[0][0], expected_voice)}.mp3"
+    )
+    assert item["media_name"] == f"_goethe_example_gemini_{'a' * 64}.mp3"
 
 
 def test_live_baseline_fails_closed_on_article_or_identity_drift(monkeypatch):

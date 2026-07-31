@@ -30,6 +30,7 @@
     var sentence = example.querySelector(".gw-example-main");
     var audio = example.querySelector(".gw-example-audio audio");
     if (!sentence || !audio) return;
+    audio.volume = 0.5;
 
     var pair = { sentence: sentence, audio: audio };
     pairs.push(pair);
