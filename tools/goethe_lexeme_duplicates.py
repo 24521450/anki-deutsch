@@ -30,14 +30,29 @@ JSON_REPORT = ROOT / "review" / "goethe_lexeme_duplicate_audit.json"
 MARKDOWN_REPORT = ROOT / "review" / "goethe_lexeme_duplicate_audit.md"
 APPLY_REPORT = ROOT / "review" / "goethe_lexeme_variant_apply.json"
 APPLY_MARKDOWN = ROOT / "review" / "goethe_lexeme_variant_apply.md"
+REGIONAL_APPLY_REPORT = ROOT / "review" / "goethe_regional_apply.json"
+REGIONAL_APPLY_MARKDOWN = ROOT / "review" / "goethe_regional_apply.md"
 STATE = ROOT / "tools" / ".goethe_lexeme_duplicates"
 MODEL = gw.MODEL
 PARENT_DECK = "Goethe Institute"
 ARCHIVE_TAG = "goethe::archive::merged_duplicate"
 MERGED_TAG = "goethe::quality::lexeme_merged"
 APPLY_CONFIRMATION = "APPLY-13-LEXEME-MERGES"
+REGIONAL_APPLY_CONFIRMATION = "APPLY-REGIONAL-LEXEME-FIXES"
 LEVEL_RANK = {"A1": 0, "A2": 1, "B1": 2}
 DECISIONS = ("MERGE_PROPOSED", "REVIEW_REQUIRED", "KEEP_SEPARATE_HOMOGRAPH")
+REGIONAL_PREFIX_RE = re.compile(
+    r"^(?P<region>Deutschland|Österreich|Schweiz)\s*:\s*",
+    re.IGNORECASE,
+)
+ENGLISH_REGIONAL_PREFIX_RE = re.compile(
+    r"^(?:Germany|Austria|Switzerland)\s*:\s*",
+    re.IGNORECASE,
+)
+EXPECTED_CARD_ORDS = (0, 1)
+EXPECTED_DECKS = {
+    level: f"Goethe Institute::{level} Wordlist" for level in LEVEL_RANK
+}
 EVIDENCE_REVIEWS = {
     (1497484860819, 1497484860820, 1584886454531): {
         "status": "REVIEWED",
@@ -305,6 +320,22 @@ EXPECTED_CARD_IDS = {
     1784075584927: (1784075584927, 1784075584928),
     1784075600003: (1784075600003, 1784075600004),
 }
+REGIONAL_EXPECTED_MERGES = {
+    (1784075681483, 1784075681953, 1784075682230): 1784075681483,
+    (1784075685798, 1784075686077): 1784075685798,
+    (1784075686172, 1784075686737): 1784075686172,
+}
+REGIONAL_EXPECTED_CARD_IDS = {
+    1784075681483: (1784075681483, 1784075681484),
+    1784075681858: (1784075681858, 1784075681859),
+    1784075681953: (1784075681953, 1784075681954),
+    1784075682137: (1784075682137, 1784075682138),
+    1784075682230: (1784075682230, 1784075682231),
+    1784075685798: (1784075685798, 1784075685799),
+    1784075686077: (1784075686077, 1784075686078),
+    1784075686172: (1784075686172, 1784075686173),
+    1784075686737: (1784075686737, 1784075686738),
+}
 QUALIFIER_RE = re.compile(
     r"\s*\((?:männlich|weiblich|maskulin|feminin|neutral|singular|plural|regional)\)\s*$",
     re.IGNORECASE,
@@ -353,6 +384,23 @@ def orthographic_key(value: str) -> str:
     base = min(bases, key=lambda item: (len(item), item)) if bases else ""
     base = base.replace("ä", "ae").replace("ö", "oe").replace("ü", "ue").replace("ß", "ss")
     return re.sub(r"[\s./_()\-]+", "", base)
+
+
+def split_regional_prefix(value: str) -> tuple[str, str]:
+    text = clean(value)
+    match = REGIONAL_PREFIX_RE.match(text)
+    if not match:
+        return "", text
+    return match.group("region"), text[match.end():].strip()
+
+
+def regional_core_lemma(value: str) -> str:
+    _, core = split_regional_prefix(value)
+    return strip_article(core)
+
+
+def regional_core_meaning(value: str) -> str:
+    return ENGLISH_REGIONAL_PREFIX_RE.sub("", clean(value)).strip()
 
 
 def split_answers(value: str) -> list[str]:
@@ -554,6 +602,156 @@ def candidate_groups(records: list[dict[str, Any]]) -> list[list[dict[str, Any]]
     return groups
 
 
+def regional_candidate_groups(records: list[dict[str, Any]]) -> list[list[dict[str, Any]]]:
+    grouped: dict[tuple[str, str], list[dict[str, Any]]] = defaultdict(list)
+    for record in records:
+        fields = record["fields"]
+        core = regional_core_lemma(fields.get("Lemma", ""))
+        if not core:
+            continue
+        key = (normalized(core), normalized(fields.get("POS", "")))
+        grouped[key].append(record)
+    return [
+        sorted(group, key=lambda item: int(item["note_id"]))
+        for group in grouped.values()
+        if len(group) > 1
+        and any(split_regional_prefix(record["fields"].get("Lemma", ""))[0] for record in group)
+    ]
+
+
+def classify_regional_group(group: list[dict[str, Any]]) -> dict[str, Any]:
+    meanings = {
+        normalized(regional_core_meaning(record["fields"].get("MeaningEN", "")))
+        for record in group
+    }
+    regions = sorted({
+        split_regional_prefix(record["fields"].get("Lemma", ""))[0]
+        for record in group
+        if split_regional_prefix(record["fields"].get("Lemma", ""))[0]
+    })
+    reasons = ["regional_prefix", "same_regional_core"]
+    if len(meanings) == 1:
+        decision = "MERGE_PROPOSED"
+        reasons.append("same_normalized_meaning")
+        explanation = (
+            "The notes share one lemma and POS; the country prefix is display context "
+            "and the normalized English sense is identical."
+        )
+    else:
+        decision = "REVIEW_REQUIRED"
+        reasons.append("regional_meaning_difference")
+        explanation = (
+            "The notes share one lemma and POS across country-prefixed entries, "
+            "but their normalized English meanings differ."
+        )
+    return {
+        "decision": decision,
+        "reason_codes": reasons,
+        "explanation": explanation,
+        "same_pos": True,
+        "pos_overlap": True,
+        "minimum_meaning_overlap": round(
+            min(
+                (
+                    meaning_overlap(
+                        regional_core_meaning(left["fields"].get("MeaningEN", "")),
+                        regional_core_meaning(right["fields"].get("MeaningEN", "")),
+                    )
+                    for index, left in enumerate(group)
+                    for right in group[index + 1:]
+                ),
+                default=1.0 if len(meanings) == 1 else 0.0,
+            ),
+            3,
+        ),
+        "regions": regions,
+    }
+
+
+def regional_merge_preview(
+    group: list[dict[str, Any]], survivor: dict[str, Any],
+) -> dict[str, Any]:
+    refs = unique_values([
+        ref for record in group for ref in split_answers(record["fields"].get("SourceRefs", ""))
+    ])
+    refs.sort(key=lambda ref: (LEVEL_RANK.get(ref.split("-", 1)[0], 99), ref))
+    return {
+        "survivor_note_id": int(survivor["note_id"]),
+        "canonical_lemma": regional_core_lemma(survivor["fields"].get("Lemma", "")),
+        "regions": sorted({
+            split_regional_prefix(record["fields"].get("Lemma", ""))[0]
+            for record in group
+            if split_regional_prefix(record["fields"].get("Lemma", ""))[0]
+        }),
+        "levels": sorted(
+            unique_values([
+                record["fields"].get("CEFR", "") for record in group
+                if record["fields"].get("CEFR")
+            ]),
+            key=lambda level: LEVEL_RANK.get(level, 99),
+        ),
+        "meanings_en": unique_values([
+            regional_core_meaning(record["fields"].get("MeaningEN", ""))
+            for record in group if record["fields"].get("MeaningEN")
+        ]),
+        "accepted_answers_de": [regional_core_lemma(
+            record["fields"].get("Lemma", "")
+        ) for record in group],
+        "source_refs": refs,
+        "history_policy": (
+            "Keep the lowest-level survivor cards and delete every redundant "
+            "non-survivor only after explicit approval and backup."
+        ),
+    }
+
+
+def build_regional_reports(groups: list[list[dict[str, Any]]]) -> list[dict[str, Any]]:
+    output = []
+    for group in groups:
+        classification = classify_regional_group(group)
+        survivor = choose_survivor(group)
+        actions = proposed_actions(group, survivor) if classification["decision"] == "MERGE_PROPOSED" else {
+            int(record["note_id"]): "KEEP_CURRENT" for record in group
+        }
+        member_ids = sorted(int(record["note_id"]) for record in group)
+        group_id = "regional-" + hashlib.sha256(
+            ",".join(map(str, member_ids)).encode()
+        ).hexdigest()[:10]
+        core = regional_core_lemma(survivor["fields"].get("Lemma", ""))
+        output.append({
+            "group_id": group_id,
+            "approval": "PENDING_APPROVAL",
+            "regional": True,
+            **classification,
+            "proposed_survivor": (
+                int(survivor["note_id"])
+                if classification["decision"] == "MERGE_PROPOSED" else None
+            ),
+            "canonical_lemma": core,
+            "members": [
+                member_projection(record, actions[int(record["note_id"])])
+                for record in sorted(group, key=lambda item: int(item["note_id"]))
+            ],
+            "merge_preview": (
+                regional_merge_preview(group, survivor)
+                if classification["decision"] == "MERGE_PROPOSED" else None
+            ),
+            "evidence_status": (
+                "RULE_REVIEWED"
+                if classification["decision"] == "MERGE_PROPOSED"
+                else "LOOKUP_REQUIRED"
+            ),
+            "evidence_assessment": classification["explanation"],
+            "evidence_links": evidence_links(core),
+        })
+    output.sort(key=lambda item: (
+        DECISIONS.index(item["decision"]),
+        normalized(item["canonical_lemma"]),
+        item["group_id"],
+    ))
+    return output
+
+
 def live_records() -> list[dict[str, Any]]:
     if gw.anki("version") != 6:
         raise AuditError("unexpected AnkiConnect version")
@@ -582,6 +780,142 @@ def live_records() -> list[dict[str, Any]]:
 def card_projection(card: dict[str, Any]) -> dict[str, Any]:
     keys = ("cardId", "ord", "deckName", "queue", "type", "due", "interval", "reps", "lapses", "left", "flags")
     return {key: card.get(key) for key in keys}
+
+
+def field_anomalies(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    anomalies: list[dict[str, Any]] = []
+    for record in records:
+        fields = record["fields"]
+        region, _ = split_regional_prefix(fields.get("Lemma", ""))
+        if not region:
+            continue
+        core = regional_core_lemma(fields.get("Lemma", ""))
+        articles = split_answers(fields.get("AcceptedArticlesDE", ""))
+        article = articles[0] if articles else clean(fields.get("Article", ""))
+        expected_full = " ".join(value for value in (article, core) if value)
+        for value in split_answers(fields.get("AcceptedAnswersDE", "")):
+            if REGIONAL_PREFIX_RE.match(value):
+                anomalies.append({
+                    "note_id": int(record["note_id"]),
+                    "source_id": fields.get("SourceID", ""),
+                    "lemma": fields.get("Lemma", ""),
+                    "code": "regional_prefix_in_answer",
+                    "field": "AcceptedAnswersDE",
+                    "value": value,
+                    "expected": core,
+                })
+        for value in split_answers(fields.get("AcceptedFullAnswersDE", "")):
+            article_match = re.match(r"^(?:der|die|das)\s+", value, re.IGNORECASE)
+            remainder = value[article_match.end():] if article_match else value
+            if article_match and REGIONAL_PREFIX_RE.match(remainder):
+                code = "malformed_regional_full_answer"
+            elif REGIONAL_PREFIX_RE.match(value):
+                code = "regional_prefix_in_answer"
+            else:
+                continue
+            anomalies.append({
+                "note_id": int(record["note_id"]),
+                "source_id": fields.get("SourceID", ""),
+                "lemma": fields.get("Lemma", ""),
+                "code": code,
+                "field": "AcceptedFullAnswersDE",
+                "value": value,
+                "expected": expected_full,
+            })
+    return anomalies
+
+
+def card_anomalies(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    anomalies: list[dict[str, Any]] = []
+    for record in records:
+        fields = record["fields"]
+        cards = record.get("cards", [])
+        note_id = int(record["note_id"])
+        lemma = fields.get("Lemma", "")
+        source_id = fields.get("SourceID", "")
+        if len(cards) != len(EXPECTED_CARD_ORDS):
+            anomalies.append({
+                "note_id": note_id,
+                "source_id": source_id,
+                "lemma": lemma,
+                "code": "card_count",
+                "actual": len(cards),
+                "expected": len(EXPECTED_CARD_ORDS),
+            })
+        ords = sorted(card.get("ord") for card in cards)
+        if tuple(ords) != EXPECTED_CARD_ORDS:
+            anomalies.append({
+                "note_id": note_id,
+                "source_id": source_id,
+                "lemma": lemma,
+                "code": "card_template_ord",
+                "actual": ords,
+                "expected": list(EXPECTED_CARD_ORDS),
+            })
+        card_ids = [card.get("cardId") for card in cards]
+        if len(card_ids) != len(set(card_ids)):
+            anomalies.append({
+                "note_id": note_id,
+                "source_id": source_id,
+                "lemma": lemma,
+                "code": "duplicate_card_id",
+                "actual": card_ids,
+                "expected": "unique card IDs",
+            })
+        expected_deck = EXPECTED_DECKS.get(fields.get("CEFR", ""))
+        if expected_deck:
+            for card in cards:
+                if card.get("deckName") != expected_deck:
+                    anomalies.append({
+                        "note_id": note_id,
+                        "source_id": source_id,
+                        "lemma": lemma,
+                        "code": "card_deck",
+                        "card_id": card.get("cardId"),
+                        "actual": card.get("deckName"),
+                        "expected": expected_deck,
+                    })
+    return anomalies
+
+
+def template_anomalies(templates: dict[str, Any]) -> list[dict[str, Any]]:
+    expected_templates = gw.templates()
+    expected_names = sorted(expected_templates)
+    actual_names = sorted(templates)
+    anomalies: list[dict[str, Any]] = []
+    if actual_names != expected_names:
+        anomalies.append({
+            "code": "template_names",
+            "actual": actual_names,
+            "expected": expected_names,
+        })
+    for name in sorted(set(expected_names) & set(actual_names)):
+        expected = expected_templates[name]
+        actual = templates.get(name)
+        if not isinstance(actual, dict) or not all(
+            isinstance(actual.get(side), str) for side in ("Front", "Back")
+        ):
+            anomalies.append({
+                "code": "template_shape",
+                "template": name,
+                "actual": actual,
+                "expected": ["Front", "Back"],
+            })
+            continue
+        expected_hash = canonical_hash({
+            side: expected.get(side, "") for side in ("Front", "Back")
+        })
+        actual_hash = canonical_hash({
+            side: actual.get(side, "") for side in ("Front", "Back")
+        })
+        if actual_hash != expected_hash:
+            anomalies.append({
+                "code": "template_content",
+                "template": name,
+                "actual_hash": actual_hash,
+                "expected_hash": expected_hash,
+            })
+    return anomalies
 
 
 def attach_review_counts(groups: list[list[dict[str, Any]]]) -> None:
@@ -688,10 +1022,13 @@ def merge_preview(group: list[dict[str, Any]], survivor: dict[str, Any]) -> dict
 
 
 def best_word_audio(group: list[dict[str, Any]], survivor: dict[str, Any]) -> str:
-    priority = {"duden": 0, "commons": 1, "edge": 2, "other": 3, "missing": 4}
+    priority = {"duden": 0, "commons": 1, "edge": 2, "gemini": 3, "other": 4, "missing": 5}
     values = [record["fields"].get("WordAudio", "") for record in group]
     current = survivor["fields"].get("WordAudio", "")
-    return min(values, key=lambda value: (priority[word_audio_source(value)], value != current)) if values else current
+    return min(
+        values,
+        key=lambda value: (priority.get(word_audio_source(value), priority["other"]), value != current),
+    ) if values else current
 
 
 def merged_fields(group: list[dict[str, Any]], survivor: dict[str, Any]) -> dict[str, str]:
@@ -748,6 +1085,119 @@ def merged_fields(group: list[dict[str, Any]], survivor: dict[str, Any]) -> dict
     return result
 
 
+def regional_canonical_fields(fields: dict[str, str]) -> dict[str, str]:
+    result = deepcopy(fields)
+    if not split_regional_prefix(result.get("Lemma", ""))[0]:
+        return result
+    core = regional_core_lemma(result.get("Lemma", ""))
+    answers = unique_values([
+        regional_core_lemma(value)
+        for value in split_answers(result.get("AcceptedAnswersDE", ""))
+        if regional_core_lemma(value)
+    ])
+    if core and core not in answers:
+        answers.insert(0, core)
+    result["Lemma"] = core
+    result["AcceptedAnswersDE"] = "|".join(answers)
+    articles = split_answers(result.get("AcceptedArticlesDE", ""))
+    if not articles:
+        articles = split_answers(result.get("Article", ""))
+    result["AcceptedArticlesDE"] = "|".join(articles)
+    if articles:
+        result["AcceptedFullAnswersDE"] = "|".join(unique_values([
+            f"{article} {answer}" for article in articles for answer in answers
+        ]))
+    else:
+        result["AcceptedFullAnswersDE"] = "|".join(answers)
+    result["MeaningEN"] = regional_core_meaning(result.get("MeaningEN", ""))
+    try:
+        production_policy.apply_policy([{"fields": result}], strict=False)
+    except production_policy.PolicyError as exc:
+        raise AuditError(f"regional production fields failed: {result.get('Lemma')}: {exc}") from exc
+    result["ExampleTargetSpansJSON"] = target_highlights.build_target_spans(result)
+    return result
+
+
+def regional_merged_fields(
+    group: list[dict[str, Any]], survivor: dict[str, Any],
+) -> dict[str, str]:
+    result = merged_fields(group, survivor)
+    result["AcceptedAnswersDE"] = "|".join(unique_values([
+        regional_core_lemma(value)
+        for record in group
+        for value in split_answers(record["fields"].get("AcceptedAnswersDE", ""))
+        if regional_core_lemma(value)
+    ]))
+    result["FormOrVariantNote"] = " | ".join(unique_values([
+        record["fields"].get("FormOrVariantNote", "")
+        for record in group
+        if record["fields"].get("FormOrVariantNote", "")
+    ]))
+    return regional_canonical_fields(result)
+
+
+def compile_regional_apply_plan(records: list[dict[str, Any]]) -> dict[str, Any]:
+    report = build_report(records)
+    merge_groups = [
+        group for group in report["regional_groups"]
+        if group["decision"] == "MERGE_PROPOSED"
+    ]
+    actual = {
+        tuple(sorted(int(member["note_id"]) for member in group["members"]))
+        for group in merge_groups
+    }
+    if actual != set(REGIONAL_EXPECTED_MERGES):
+        raise AuditError(f"regional merge groups changed: {sorted(actual)}")
+    by_id = {int(record["note_id"]): record for record in records}
+    groups: list[dict[str, Any]] = []
+    merged_ids: set[int] = set()
+    for report_group in merge_groups:
+        member_ids = tuple(sorted(int(member["note_id"]) for member in report_group["members"]))
+        group = [by_id[note_id] for note_id in member_ids]
+        survivor = choose_survivor(group)
+        expected_survivor = REGIONAL_EXPECTED_MERGES[member_ids]
+        if int(survivor["note_id"]) != expected_survivor:
+            raise AuditError(
+                f"unexpected regional survivor for {member_ids}: "
+                f"{survivor['note_id']} != {expected_survivor}"
+            )
+        merged_ids.update(member_ids)
+        groups.append({
+            "group_id": report_group["group_id"],
+            "member_ids": list(member_ids),
+            "survivor_id": expected_survivor,
+            "delete_ids": [note_id for note_id in member_ids if note_id != expected_survivor],
+            "fields": regional_merged_fields(group, survivor),
+            "evidence_assessment": report_group["evidence_assessment"],
+        })
+
+    group_fields = {
+        int(group["survivor_id"]): group["fields"] for group in groups
+    }
+    updates: list[dict[str, Any]] = []
+    for record in records:
+        note_id = int(record["note_id"])
+        if note_id in {item for group in groups for item in group["delete_ids"]}:
+            continue
+        if not split_regional_prefix(record["fields"].get("Lemma", ""))[0]:
+            continue
+        fields = group_fields.get(note_id) or regional_canonical_fields(record["fields"])
+        if fields != record["fields"]:
+            updates.append({"note_id": note_id, "fields": fields})
+
+    delete_ids = sorted(
+        note_id for group in groups for note_id in group["delete_ids"]
+    )
+    return {
+        "created_utc": now_utc(),
+        "inventory_signature": inventory_signature(records),
+        "groups": groups,
+        "updates": updates,
+        "delete_ids": delete_ids,
+        "affected_ids": sorted(merged_ids | {item["note_id"] for item in updates}),
+    }
+
+
 def compile_apply_plan(records: list[dict[str, Any]]) -> dict[str, Any]:
     report = build_report(records)
     merge_groups = [group for group in report["groups"] if group["decision"] == "MERGE_PROPOSED"]
@@ -787,10 +1237,18 @@ def compile_apply_plan(records: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
-def build_report(records: list[dict[str, Any]]) -> dict[str, Any]:
+def build_report(
+    records: list[dict[str, Any]],
+    template_issue_output: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
     active_records = [record for record in records if ARCHIVE_TAG not in record.get("tags", [])]
     groups = candidate_groups(active_records)
-    attach_review_counts(groups)
+    regional_groups = regional_candidate_groups(active_records)
+    attach_review_counts(groups + regional_groups)
+    regional_output = build_regional_reports(regional_groups)
+    field_issue_output = field_anomalies(records)
+    card_issue_output = card_anomalies(records)
+    template_issue_output = template_issue_output or []
     output = []
     for group in groups:
         classification = classify_group(group)
@@ -815,22 +1273,108 @@ def build_report(records: list[dict[str, Any]]) -> dict[str, Any]:
         })
     output.sort(key=lambda item: (DECISIONS.index(item["decision"]), normalized(item["members"][0]["lemma"]), item["group_id"]))
     summary = Counter(item["decision"] for item in output)
+    regional_summary = Counter(item["decision"] for item in regional_output)
     return {
-        "schema_version": 1, "generated_utc": now_utc(), "policy": "conservative_same_lexeme",
+        "schema_version": 2, "generated_utc": now_utc(), "policy": "conservative_same_lexeme",
         "scope": {
             "model": MODEL, "notes": len(records), "cards": sum(len(record["cards"]) for record in records),
             "archived_notes": len(records) - len(active_records),
             "levels": dict(Counter(record["fields"].get("CEFR", "") for record in records)),
+            "regional_prefix_notes": sum(
+                bool(split_regional_prefix(record["fields"].get("Lemma", ""))[0])
+                for record in records
+            ),
             "inventory_signature": inventory_signature(records),
         },
-        "summary": {**{decision: summary.get(decision, 0) for decision in DECISIONS}, "candidate_groups": len(output)},
+        "summary": {
+            **{decision: summary.get(decision, 0) for decision in DECISIONS},
+            "candidate_groups": len(output),
+            "regional_groups": len(regional_output),
+            "regional_merge_proposed": regional_summary.get("MERGE_PROPOSED", 0),
+            "regional_review_required": regional_summary.get("REVIEW_REQUIRED", 0),
+            "field_anomalies": len(field_issue_output),
+            "card_anomalies": len(card_issue_output),
+            "template_anomalies": len(template_issue_output),
+        },
         "rules": {
             "survivor_priority": "A1 -> A2 -> B1; then reps, MAIN provenance, OriginalOrder, note ID",
             "redundant_duplicate": "DELETE_AFTER_APPROVAL_REGARDLESS_OF_REVIEW_HISTORY",
             "derivational_gender_pairs": "OUT_OF_SCOPE",
+            "regional_prefixes": "Strip country display prefixes for a separate same-lexeme audit; do not alter source provenance.",
         },
         "groups": output,
+        "regional_groups": regional_output,
+        "field_anomalies": field_issue_output,
+        "card_anomalies": card_issue_output,
+        "template_anomalies": template_issue_output,
     }
+
+
+def markdown_integrity_sections(report: dict[str, Any]) -> list[str]:
+    scope = report["scope"]
+    summary = report["summary"]
+    lines = [
+        "## Integrity checks", "",
+        f"- Regional-prefix notes: **{scope.get('regional_prefix_notes', 0)}**",
+        f"- Regional duplicate groups: **{summary.get('regional_groups', 0)}** "
+        f"({summary.get('regional_merge_proposed', 0)} proposed merges, "
+        f"{summary.get('regional_review_required', 0)} reviews)",
+        f"- Field anomalies: **{summary.get('field_anomalies', 0)}**",
+        f"- Card anomalies: **{summary.get('card_anomalies', 0)}**",
+        f"- Template anomalies: **{summary.get('template_anomalies', 0)}**",
+    ]
+    field_issues = report.get("field_anomalies", [])
+    if field_issues:
+        lines.extend([
+            "", "### Field anomalies", "",
+            "| Code | Note | Source | Field | Value | Expected |",
+            "|---|---:|---|---|---|---|",
+        ])
+        for issue in field_issues:
+            lines.append(
+                f"| {issue['code']} | {issue['note_id']} | {issue['source_id']} | "
+                f"{issue['field']} | {issue['value']} | {issue['expected']} |"
+            )
+    card_issues = report.get("card_anomalies", [])
+    if card_issues:
+        lines.extend([
+            "", "### Card anomalies", "",
+            "| Code | Note | Source | Card | Actual | Expected |",
+            "|---|---:|---|---:|---|---|",
+        ])
+        for issue in card_issues:
+            lines.append(
+                f"| {issue['code']} | {issue['note_id']} | {issue['source_id']} | "
+                f"{issue.get('card_id', '')} | {issue['actual']} | {issue['expected']} |"
+            )
+    template_issues = report.get("template_anomalies", [])
+    if template_issues:
+        lines.extend([
+            "", "### Template anomalies", "",
+            "| Code | Template | Actual | Expected |",
+            "|---|---|---|---|",
+        ])
+        for issue in template_issues:
+            lines.append(
+                f"| {issue['code']} | {issue.get('template', '')} | "
+                f"{issue.get('actual', issue.get('actual_hash', ''))} | "
+                f"{issue.get('expected', issue.get('expected_hash', ''))} |"
+            )
+    regional_groups = report.get("regional_groups", [])
+    if regional_groups:
+        lines.extend([
+            "", "## Regional duplicate groups", "",
+            "| Decision | Core lemma | Regions | Note IDs | Survivor |",
+            "|---|---|---|---|---:|",
+        ])
+        for group in regional_groups:
+            regions = ", ".join(group.get("regions", []))
+            note_ids = ", ".join(str(member["note_id"]) for member in group["members"])
+            lines.append(
+                f"| {group['decision']} | {group['canonical_lemma']} | {regions} | "
+                f"{note_ids} | {group.get('proposed_survivor') or '—'} |"
+            )
+    return lines + [""]
 
 
 def markdown_report(report: dict[str, Any]) -> str:
@@ -847,6 +1391,7 @@ def markdown_report(report: dict[str, Any]) -> str:
     for decision in DECISIONS:
         lines.append(f"| `{decision}` | {summary[decision]} |")
     lines.extend(["", "All proposed actions are pending explicit user approval.", ""])
+    lines.extend(markdown_integrity_sections(report))
     for group in report["groups"]:
         title = " / ".join(dict.fromkeys(member["lemma"] for member in group["members"]))
         lines.extend([
@@ -889,7 +1434,8 @@ def markdown_report(report: dict[str, Any]) -> str:
 
 def command_audit(_: argparse.Namespace) -> None:
     records = live_records()
-    report = build_report(records)
+    templates = gw.anki("modelTemplates", modelName=MODEL)
+    report = build_report(records, template_anomalies(templates))
     JSON_REPORT.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     MARKDOWN_REPORT.write_text(markdown_report(report), encoding="utf-8")
     print(json.dumps({"json": str(JSON_REPORT), "markdown": str(MARKDOWN_REPORT), **report["scope"], **report["summary"]}, indent=2))
@@ -947,6 +1493,166 @@ def apply_markdown(result: dict[str, Any]) -> str:
             f"{group['evidence_assessment']} |"
         )
     return "\n".join(lines).rstrip() + "\n"
+
+
+def regional_apply_markdown(result: dict[str, Any]) -> str:
+    lines = [
+        "# Goethe regional lexeme apply report", "",
+        f"Applied: `{result['applied_utc']}`", "",
+        f"Backup: `{result['backup']}`", "",
+        f"Backup SHA-256: `{result['backup_sha256']}`", "",
+        "## Result", "",
+        f"- Updated regional notes: **{len(result['updated_ids'])}**",
+        f"- Applied regional merge groups: **{len(result['groups'])}**",
+        f"- Deleted redundant notes: **{len(result['delete_ids'])}**",
+        f"- Live inventory: **{result['after']['notes']} notes / {result['after']['cards']} cards**",
+        "", "## Applied groups", "",
+        "| Survivor | Deleted | Evidence |", "|---:|---|---|",
+    ]
+    for group in result["groups"]:
+        lines.append(
+            f"| `{group['survivor_id']}` | `{', '.join(map(str, group['delete_ids']))}` | "
+            f"{group['evidence_assessment']} |"
+        )
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def command_apply_regional(args: argparse.Namespace) -> None:
+    if args.confirmation != REGIONAL_APPLY_CONFIRMATION:
+        raise AuditError(f"confirmation must equal {REGIONAL_APPLY_CONFIRMATION}")
+    records = live_records()
+    plan = compile_regional_apply_plan(records)
+    backup = export_backup()
+    rechecked = live_records()
+    if inventory_signature(rechecked) != plan["inventory_signature"]:
+        raise AuditError("live inventory changed after backup; refusing regional apply")
+    records = rechecked
+    by_id = {int(record["note_id"]): record for record in records}
+    affected_ids = set(plan["affected_ids"])
+    for note_id in sorted(affected_ids):
+        expected_cards = REGIONAL_EXPECTED_CARD_IDS.get(note_id)
+        actual_cards = tuple(sorted(int(card["cardId"]) for card in by_id[note_id]["cards"]))
+        if expected_cards is not None and actual_cards != expected_cards:
+            raise AuditError(
+                f"regional card IDs changed for note {note_id}: "
+                f"{actual_cards} != {expected_cards}"
+            )
+    affected_card_ids = [
+        int(card["cardId"])
+        for note_id in affected_ids
+        for card in by_id[note_id]["cards"]
+    ]
+    reviews_before = reviews_for_cards(affected_card_ids)
+    STATE.mkdir(parents=True, exist_ok=True)
+    snapshot_path = STATE / f"snapshot_regional_{backup.stem}.json"
+    snapshot_path.write_text(json.dumps({
+        "created_utc": now_utc(), "inventory_signature": plan["inventory_signature"],
+        "affected_notes": {str(note_id): by_id[note_id] for note_id in sorted(affected_ids)},
+        "reviews": reviews_before, "backup": str(backup.resolve()),
+        "backup_sha256": hash_file(backup),
+    }, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+    before_notes = len(records)
+    before_cards = sum(len(record["cards"]) for record in records)
+    before_projection = {
+        int(record["note_id"]): {
+            "fields": record["fields"], "tags": record["tags"],
+            "cards": [card_projection(card) for card in record["cards"]],
+        }
+        for record in records
+    }
+    for update in plan["updates"]:
+        gw.anki("updateNoteFields", note={
+            "id": update["note_id"], "fields": update["fields"],
+        })
+    for group in plan["groups"]:
+        gw.anki("addTags", notes=[group["survivor_id"]], tags=MERGED_TAG)
+    if plan["delete_ids"]:
+        gw.anki("deleteNotes", notes=plan["delete_ids"])
+
+    after = live_records()
+    after_by_id = {int(record["note_id"]): record for record in after}
+    expected_notes = before_notes - len(plan["delete_ids"])
+    expected_cards = before_cards - sum(
+        len(by_id[note_id]["cards"]) for note_id in plan["delete_ids"]
+    )
+    if (len(after), sum(len(record["cards"]) for record in after)) != (
+        expected_notes, expected_cards,
+    ):
+        raise AuditError("post-regional-apply note/card inventory differs from policy")
+    if set(plan["delete_ids"]) & set(after_by_id):
+        raise AuditError("a regional duplicate still exists after deletion")
+
+    expected_fields = {
+        update["note_id"]: update["fields"] for update in plan["updates"]
+    }
+    survivor_ids = {group["survivor_id"] for group in plan["groups"]}
+    for note_id, fields in expected_fields.items():
+        if after_by_id[note_id]["fields"] != fields:
+            raise AuditError(f"regional field verification failed: {note_id}")
+    for group in plan["groups"]:
+        if MERGED_TAG not in after_by_id[group["survivor_id"]]["tags"]:
+            raise AuditError(f"regional merge tag missing: {group['survivor_id']}")
+    allowed_changed = affected_ids | set(plan["delete_ids"])
+    for note_id, record in after_by_id.items():
+        if note_id in allowed_changed:
+            continue
+        current = {
+            "fields": record["fields"], "tags": record["tags"],
+            "cards": [card_projection(card) for card in record["cards"]],
+        }
+        if current != before_projection[note_id]:
+            raise AuditError(f"unrelated note or scheduling changed: {note_id}")
+    retained_ids = affected_ids - set(plan["delete_ids"])
+    for note_id in retained_ids:
+        if [card_projection(card) for card in after_by_id[note_id]["cards"]] != before_projection[note_id]["cards"]:
+            raise AuditError(f"regional scheduling changed: {note_id}")
+
+    retained_card_ids = [
+        int(card["cardId"])
+        for note_id in retained_ids
+        for card in after_by_id[note_id]["cards"]
+    ]
+    reviews_after = reviews_for_cards(retained_card_ids)
+    expected_reviews = {
+        key: value for key, value in reviews_before.items()
+        if int(key) in set(retained_card_ids)
+    }
+    if canonical_hash(reviews_after) != canonical_hash(expected_reviews):
+        raise AuditError("retained regional-card review history changed")
+
+    after_audit = build_report(after)
+    after_summary = after_audit["summary"]
+    if any(after_summary.get(key, 0) for key in (
+        "regional_groups", "regional_merge_proposed", "field_anomalies",
+        "card_anomalies", "template_anomalies",
+    )):
+        raise AuditError(f"post-regional audit is not clean: {after_summary}")
+    result = {
+        "schema_version": 1, "applied_utc": now_utc(),
+        "backup": str(backup.resolve()), "backup_sha256": hash_file(backup),
+        "snapshot": str(snapshot_path.resolve()),
+        "before": {
+            "notes": before_notes, "cards": before_cards,
+            "inventory_signature": plan["inventory_signature"],
+        },
+        "after": {
+            "notes": len(after), "cards": sum(len(record["cards"]) for record in after),
+            "inventory_signature": after_audit["scope"]["inventory_signature"],
+        },
+        "updated_ids": sorted(expected_fields),
+        "groups": [{key: value for key, value in group.items() if key != "fields"} for group in plan["groups"]],
+        "delete_ids": plan["delete_ids"], "after_audit": after_summary,
+    }
+    REGIONAL_APPLY_REPORT.write_text(
+        json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
+    REGIONAL_APPLY_MARKDOWN.write_text(
+        regional_apply_markdown(result), encoding="utf-8"
+    )
+    JSON_REPORT.write_text(json.dumps(after_audit, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    MARKDOWN_REPORT.write_text(markdown_report(after_audit), encoding="utf-8")
+    print(json.dumps(result, ensure_ascii=False, indent=2))
 
 
 def command_apply(args: argparse.Namespace) -> None:
@@ -1079,6 +1785,11 @@ def build_parser() -> argparse.ArgumentParser:
     apply = sub.add_parser("apply", help="backup and apply the thirteen reviewed merges")
     apply.add_argument("--confirmation", required=True)
     apply.set_defaults(func=command_apply)
+    apply_regional = sub.add_parser(
+        "apply-regional", help="backup and apply reviewed regional duplicate fixes"
+    )
+    apply_regional.add_argument("--confirmation", required=True)
+    apply_regional.set_defaults(func=command_apply_regional)
     return parser
 
 

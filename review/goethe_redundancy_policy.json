@@ -80,7 +80,11 @@
     {"survivor": 1584887177258, "survivor_source_ref": "A1-WG-0102", "duplicate": 1784075689985, "duplicate_source_ref": "B1-WG-0250"},
     {"survivor": 1584887177259, "survivor_source_ref": "A1-WG-0103", "duplicate": 1784075690077, "duplicate_source_ref": "B1-WG-0251"},
     {"survivor": 1584887177260, "survivor_source_ref": "A1-WG-0104", "duplicate": 1784075690172, "duplicate_source_ref": "B1-WG-0252"},
-    {"survivor": 1497484861847, "survivor_source_ref": "A2-1130", "duplicate": 1784075664324, "duplicate_source_ref": "B1-MAIN-2786"}
+    {"survivor": 1497484861847, "survivor_source_ref": "A2-1130", "duplicate": 1784075664324, "duplicate_source_ref": "B1-MAIN-2786"},
+    {"survivor": 1784075681483, "survivor_source_ref": "B1-WG-0120", "duplicate": 1784075681953, "duplicate_source_ref": "B1-WG-0127"},
+    {"survivor": 1784075681483, "survivor_source_ref": "B1-WG-0120", "duplicate": 1784075682230, "duplicate_source_ref": "B1-WG-0134"},
+    {"survivor": 1784075685798, "survivor_source_ref": "B1-WG-0199", "duplicate": 1784075686077, "duplicate_source_ref": "B1-WG-0202"},
+    {"survivor": 1784075686172, "survivor_source_ref": "B1-WG-0203", "duplicate": 1784075686737, "duplicate_source_ref": "B1-WG-0209"}
   ],
   "skip_wortgruppen": [
     "A1-WG-0044",
@@ -574,6 +578,10 @@
     "B1-WG-0275": {"target_source_ref": "A1-WG-0034"},
     "B1-WG-0292": {"target_source_ref": "A1-WG-0040"},
     "B1-WG-0294": {"target_source_ref": "A1-WG-0041"},
-    "B1-WG-0295": {"target_source_ref": "A1-WG-0042"}
+    "B1-WG-0295": {"target_source_ref": "A1-WG-0042"},
+    "B1-WG-0127": {"target_source_ref": "B1-WG-0120"},
+    "B1-WG-0134": {"target_source_ref": "B1-WG-0120"},
+    "B1-WG-0202": {"target_source_ref": "B1-WG-0199"},
+    "B1-WG-0209": {"target_source_ref": "B1-WG-0203"}
   }
 }

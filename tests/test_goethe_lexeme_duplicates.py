@@ -119,6 +119,121 @@ def test_explicit_reviewed_spelling_variants_are_candidates() -> None:
     ]
 
 
+def test_regional_prefix_groups_same_lexeme_and_normalizes_country_meaning() -> None:
+    records = [
+        item(1, "Deutschland: die Volkshochschule", "Germany: adult education center", "n.", "B1"),
+        item(2, "Österreich: die Volkshochschule", "Austria: adult education center", "n.", "B1"),
+        item(3, "Schweiz: die Volkshochschule", "Switzerland: adult education center", "n.", "B1"),
+    ]
+
+    groups = audit.regional_candidate_groups(records)
+
+    assert [[record["note_id"] for record in group] for group in groups] == [[1, 2, 3]]
+    assert audit.regional_core_lemma(records[0]["fields"]["Lemma"]) == "Volkshochschule"
+    assert audit.classify_regional_group(groups[0])["decision"] == "MERGE_PROPOSED"
+    assert audit.regional_merge_preview(groups[0], records[0])["canonical_lemma"] == "Volkshochschule"
+
+
+def test_regional_prefix_group_with_different_meanings_requires_review() -> None:
+    records = [
+        item(1, "Österreich: die Pädagogische Hochschule", "Austria: university college of teacher education", "n.", "B1"),
+        item(2, "Schweiz: die Pädagogische Hochschule", "Switzerland: university of teacher education", "n.", "B1"),
+    ]
+
+    group = audit.regional_candidate_groups(records)[0]
+
+    assert audit.classify_regional_group(group)["decision"] == "REVIEW_REQUIRED"
+
+
+def test_regional_field_anomalies_report_expected_answer_forms() -> None:
+    record = item(
+        1,
+        "Deutschland: die Volkshochschule",
+        "Germany: adult education center",
+        "n.",
+        "B1",
+    )
+    record["fields"].update({
+        "Article": "die",
+        "AcceptedArticlesDE": "die",
+        "AcceptedAnswersDE": "Deutschland: die Volkshochschule",
+        "AcceptedFullAnswersDE": "die Deutschland: die Volkshochschule",
+    })
+
+    issues = audit.field_anomalies([record])
+
+    assert {(issue["code"], issue["field"]) for issue in issues} == {
+        ("regional_prefix_in_answer", "AcceptedAnswersDE"),
+        ("malformed_regional_full_answer", "AcceptedFullAnswersDE"),
+    }
+    assert {issue["expected"] for issue in issues} == {"Volkshochschule", "die Volkshochschule"}
+
+
+def test_regional_canonical_fields_strip_display_context_but_keep_provenance() -> None:
+    record = item(
+        1,
+        "Deutschland: die Volkshochschule",
+        "Germany: adult education center",
+        "n.",
+        "B1",
+    )
+    record["fields"].update({
+        "SourceID": "B1-WG-0120",
+        "SourceRefs": "B1-WG-0120",
+        "Article": "die",
+        "AcceptedArticlesDE": "die",
+        "AcceptedFullAnswersDE": "die Deutschland: die Volkshochschule",
+        "Example1DE": "Deutschland: Die Volkshochschule bietet Kurse an.",
+        "Example1EN": "The adult education center offers courses.",
+        "Example1Audio": "",
+        "ExampleTargetSpansJSON": "",
+        "ProductionEnabled": "1",
+    })
+
+    fields = audit.regional_canonical_fields(record["fields"])
+
+    assert fields["Lemma"] == "Volkshochschule"
+    assert fields["MeaningEN"] == "adult education center"
+    assert fields["AcceptedAnswersDE"] == "Volkshochschule"
+    assert fields["AcceptedFullAnswersDE"] == "die Volkshochschule"
+
+
+def test_card_anomalies_require_two_cards_in_expected_template_order_and_deck() -> None:
+    good = item(1, "Volkshochschule", "adult education center", "n.", "B1")
+    good["cards"] = [
+        {"cardId": 10, "ord": 0, "deckName": audit.EXPECTED_DECKS["B1"]},
+        {"cardId": 11, "ord": 1, "deckName": audit.EXPECTED_DECKS["B1"]},
+    ]
+    bad = item(2, "Other", "other", "n.", "B1")
+    bad["cards"] = [{"cardId": 20, "ord": 2, "deckName": "Wrong"}]
+
+    assert audit.card_anomalies([good]) == []
+    assert {issue["code"] for issue in audit.card_anomalies([bad])} == {
+        "card_count",
+        "card_template_ord",
+        "card_deck",
+    }
+
+
+def test_template_anomalies_compare_live_names_and_rendered_content(monkeypatch) -> None:
+    expected = {
+        "German → English": {"Front": "front-de", "Back": "back-de"},
+        "English → German": {"Front": "front-en", "Back": "back-en"},
+    }
+    monkeypatch.setattr(audit.gw, "templates", lambda: expected)
+
+    assert audit.template_anomalies(expected) == []
+    issues = audit.template_anomalies({
+        "German → English": {"Front": "changed", "Back": "back-de"},
+        "Unexpected": {"Front": "front", "Back": "back"},
+    })
+
+    assert {issue["code"] for issue in issues} == {
+        "template_names",
+        "template_content",
+    }
+
+
 def test_pending_reviewed_merge_set_has_thirteen_groups_and_fourteen_deletions() -> None:
     assert len(audit.EXPECTED_MERGE_GROUPS) == 13
     assert sum(len(group) - 1 for group in audit.EXPECTED_MERGE_GROUPS) == 14

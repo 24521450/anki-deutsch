@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "applied_utc": "2026-08-24T14:01:11.161206+00:00",
+  "backup": "C:\\Users\\admin\\Downloads\\anki-deutsch\\tools\\.goethe_lexeme_duplicates\\Goethe_Institute_pre_lexeme_merge_20260824T135817792809Z.apkg",
+  "backup_sha256": "10f2b5b6fd8a72c3afbd1877a8686db11a7c9d4c0016f3f8d68152e4be893168",
+  "snapshot": "C:\\Users\\admin\\Downloads\\anki-deutsch\\tools\\.goethe_lexeme_duplicates\\snapshot_regional_Goethe_Institute_pre_lexeme_merge_20260824T135817792809Z.json",
+  "before": {
+    "notes": 3425,
+    "cards": 6850,
+    "inventory_signature": "4c6c109d9440a22900425a340a84bd9f0dffeae46028ee82ba9fcb3cafcb2a5a"
+  },
+  "after": {
+    "notes": 3421,
+    "cards": 6842,
+    "inventory_signature": "a049911e603921881b42a07a447a0117914d51d8d89e1cae1d49830aca1eb311"
+  },
+  "updated_ids": [
+    1784075681297,
+    1784075681390,
+    1784075681483,
+    1784075681577,
+    1784075681671,
+    1784075681766,
+    1784075681858,
+    1784075682043,
+    1784075682137,
+    1784075685798,
+    1784075685890,
+    1784075685983,
+    1784075686172,
+    1784075686266,
+    1784075686359,
+    1784075686453,
+    1784075686548,
+    1784075686642,
+    1784075686829,
+    1784075686922,
+    1784075687014,
+    1784527085581,
+    1784527085611
+  ],
+  "groups": [
+    {
+      "group_id": "regional-7eb692a795",
+      "member_ids": [
+        1784075685798,
+        1784075686077
+      ],
+      "survivor_id": 1784075685798,
+      "delete_ids": [
+        1784075686077
+      ],
+      "evidence_assessment": "The notes share one lemma and POS; the country prefix is display context and the normalized English sense is identical."
+    },
+    {
+      "group_id": "regional-3149aeaa19",
+      "member_ids": [
+        1784075686172,
+        1784075686737
+      ],
+      "survivor_id": 1784075686172,
+      "delete_ids": [
+        1784075686737
+      ],
+      "evidence_assessment": "The notes share one lemma and POS; the country prefix is display context and the normalized English sense is identical."
+    },
+    {
+      "group_id": "regional-7be4a7a6b2",
+      "member_ids": [
+        1784075681483,
+        1784075681953,
+        1784075682230
+      ],
+      "survivor_id": 1784075681483,
+      "delete_ids": [
+        1784075681953,
+        1784075682230
+      ],
+      "evidence_assessment": "The notes share one lemma and POS; the country prefix is display context and the normalized English sense is identical."
+    }
+  ],
+  "delete_ids": [
+    1784075681953,
+    1784075682230,
+    1784075686077,
+    1784075686737
+  ],
+  "after_audit": {
+    "MERGE_PROPOSED": 1,
+    "REVIEW_REQUIRED": 5,
+    "KEEP_SEPARATE_HOMOGRAPH": 43,
+    "candidate_groups": 49,
+    "regional_groups": 0,
+    "regional_merge_proposed": 0,
+    "regional_review_required": 0,
+    "field_anomalies": 0,
+    "card_anomalies": 0,
+    "template_anomalies": 0
+  }
+}

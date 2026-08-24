@@ -153,6 +153,10 @@ def test_reviewed_measure_merges_delete_exact_b1_notes_and_route_collision():
         1784075690077: 1584887177259,
         1784075690172: 1584887177260,
         1784075664324: 1497484861847,
+        1784075681953: 1784075681483,
+        1784075682230: 1784075681483,
+        1784075686077: 1784075685798,
+        1784075686737: 1784075686172,
     }
     assert {item["duplicate"]: item["survivor"] for item in groups} == expected
     merges = policy["merge_wortgruppen"]
