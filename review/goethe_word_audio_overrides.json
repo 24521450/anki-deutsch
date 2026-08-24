@@ -75,8 +75,8 @@
     "B1-MAIN-2900": "Zeug, zeug",
     "B1-WG-0033": "Chat, Chatroom",
     "B1-WG-0072": "o.k., O.K., okay",
-    "B1-WG-0123": "Österreich, die Allgemeinbildende Höhere Schule, A H S",
-    "B1-WG-0124": "Österreich, die Berufsbildende Höhere Schule, B H S",
+    "B1-WG-0123": "Allgemeinbildende Höhere Schule, A H S",
+    "B1-WG-0124": "Berufsbildende Höhere Schule, B H S",
     "B1-WG-0144": "Deutschland, eins: sehr gut",
     "B1-WG-0145": "Deutschland, zwei: gut",
     "B1-WG-0146": "Deutschland, drei: befriedigend",
@@ -236,6 +236,78 @@
       "spoken_text": "Milliarde",
       "url": "https://www.duden.de/rechtschreibung/Milliarde",
       "headword": "Milliarde"
+    },
+    "B1-WG-0117": {
+      "expected_lemma": "Grundschule",
+      "spoken_text": "Grundschule",
+      "url": "https://www.duden.de/rechtschreibung/Grundschule",
+      "headword": "Grundschule"
+    },
+    "B1-WG-0118": {
+      "expected_lemma": "Gymnasium",
+      "spoken_text": "Gymnasium",
+      "url": "https://www.duden.de/rechtschreibung/Gymnasium",
+      "headword": "Gymnasium"
+    },
+    "B1-WG-0122": {
+      "expected_lemma": "Volksschule",
+      "spoken_text": "Volksschule",
+      "url": "https://www.duden.de/rechtschreibung/Volksschule",
+      "headword": "Volksschule"
+    },
+    "B1-WG-0129": {
+      "expected_lemma": "Primarschule",
+      "spoken_text": "Primarschule",
+      "url": "https://www.duden.de/rechtschreibung/Primarschule",
+      "headword": "Primarschule"
+    },
+    "B1-WG-0199": {
+      "expected_lemma": "Bundesland",
+      "spoken_text": "Bundesland",
+      "url": "https://www.duden.de/rechtschreibung/Bundesland",
+      "headword": "Bundesland"
+    },
+    "B1-WG-0202": {
+      "expected_lemma": "Bundesland",
+      "spoken_text": "Bundesland",
+      "url": "https://www.duden.de/rechtschreibung/Bundesland",
+      "headword": "Bundesland"
+    },
+    "B1-WG-0201": {
+      "expected_lemma": "Bundestag",
+      "spoken_text": "Bundestag",
+      "url": "https://www.duden.de/rechtschreibung/Bundestag",
+      "headword": "Bundestag"
+    },
+    "B1-WG-0203": {
+      "expected_lemma": "Nationalrat",
+      "spoken_text": "Nationalrat",
+      "url": "https://www.duden.de/rechtschreibung/Nationalrat",
+      "headword": "Nationalrat"
+    },
+    "B1-WG-0209": {
+      "expected_lemma": "Nationalrat",
+      "spoken_text": "Nationalrat",
+      "url": "https://www.duden.de/rechtschreibung/Nationalrat",
+      "headword": "Nationalrat"
+    },
+    "B1-WG-0205": {
+      "expected_lemma": "Ammann",
+      "spoken_text": "Ammann",
+      "url": "https://www.duden.de/rechtschreibung/Ammann",
+      "headword": "Ammann"
+    },
+    "B1-WG-0206": {
+      "expected_lemma": "Bundesrat",
+      "spoken_text": "Bundesrat",
+      "url": "https://www.duden.de/rechtschreibung/Bundesrat",
+      "headword": "Bundesrat"
+    },
+    "B1-WG-0211": {
+      "expected_lemma": "Stadtpräsident",
+      "spoken_text": "Stadtpräsident",
+      "url": "https://www.duden.de/rechtschreibung/Stadtpraesident",
+      "headword": "Stadtpräsident"
     }
   },
   "protected_audio": {

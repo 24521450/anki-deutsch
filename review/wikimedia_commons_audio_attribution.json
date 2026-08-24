@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_utc": "2026-07-31T11:44:58.766938+00:00",
+  "generated_utc": "2026-08-24T14:45:20.129492+00:00",
   "notice": "This file must accompany any redistributed APKG containing the referenced Wikimedia Commons audio.",
   "items": [
     {
@@ -606,6 +606,20 @@
       "checked_utc": "2026-07-15T00:52:13.573482+00:00"
     },
     {
+      "sha256": "cddd56bc02f27e87c93a0ddde4c8a8f8bcca726b5ea6237650dfb1ba2f4796a2",
+      "spoken_text": "Bundesland",
+      "title": "File:De-Bundesland.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-Bundesland.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/4/43/De-Bundesland.ogg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "artist": "Jeuwre",
+      "credit": "Own work",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
+      "checked_utc": "2026-08-24T14:45:13.411024+00:00"
+    },
+    {
       "sha256": "03bee2bec86b24d14804355d2fdc838f9459eefca61d0f765c94ec86b1979d00",
       "spoken_text": "Bundespräsident",
       "title": "File:De-Bundespräsident.ogg",
@@ -618,6 +632,34 @@
       "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
       "usage_terms": "Creative Commons Attribution-Share Alike 3.0",
       "checked_utc": "2026-07-15T00:52:57.485648+00:00"
+    },
+    {
+      "sha256": "5dfa73fe544c8c4323f9b16dd0c429bafd14ca491898e737c461048a22b5bf14",
+      "spoken_text": "Bundesrat",
+      "title": "File:De-Bundesrat.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-Bundesrat.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/1/15/De-Bundesrat.ogg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "artist": "Jeuwre",
+      "credit": "Own work",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
+      "checked_utc": "2026-08-24T14:44:57.395937+00:00"
+    },
+    {
+      "sha256": "6f369724359c98017d480bc1f2ffa27de73a92d3901d4aa0052160d794636d4d",
+      "spoken_text": "Bundestag",
+      "title": "File:De-Bundestag.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-Bundestag.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/f/f9/De-Bundestag.ogg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "artist": "Fojhtirf",
+      "credit": "Own work",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 3.0",
+      "checked_utc": "2026-08-24T14:44:59.987416+00:00"
     },
     {
       "sha256": "48330f72a3d0f4629242639f710f26db31b0da17af6b310f431697302bd5a2fc",
@@ -2104,6 +2146,34 @@
       "checked_utc": "2026-07-31T10:58:35.628059+00:00"
     },
     {
+      "sha256": "f5c285378ee9e3dd5e52db5aa5ddf0477a4cda00375946fa8eead03cc4ee7e18",
+      "spoken_text": "Grundschule",
+      "title": "File:De-Grundschule.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-Grundschule.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/5/5e/De-Grundschule.ogg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "artist": "Jeuwre",
+      "credit": "Own work",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
+      "checked_utc": "2026-08-24T14:44:55.848571+00:00"
+    },
+    {
+      "sha256": "fb0c121d63284bd66575aad502b5fd829f2805c0becb304e139785a8d772e9c0",
+      "spoken_text": "Gymnasium",
+      "title": "File:De-Gymnasium.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-Gymnasium.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/5/56/De-Gymnasium.ogg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "artist": "Jeuwre",
+      "credit": "Own work",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
+      "checked_utc": "2026-08-24T14:45:14.692710+00:00"
+    },
+    {
       "sha256": "2e8347eb96db1c78a8c3450a6b25221ce4546fbfe3040a6b80ac2390db448b48",
       "spoken_text": "Hase",
       "title": "File:De-Hase.ogg",
@@ -2522,6 +2592,20 @@
       "license_url": "https://creativecommons.org/licenses/by-sa/2.5",
       "usage_terms": "Creative Commons Attribution-Share Alike 2.5",
       "checked_utc": "2026-07-13T01:00:03.304926+00:00"
+    },
+    {
+      "sha256": "2d1801f704400949cad8746c9f58305deb89272cd9decd1995e32a0ebc1f8b37",
+      "spoken_text": "Kanton",
+      "title": "File:De-Kanton.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-Kanton.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/5/5f/De-Kanton.ogg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "artist": "Jeuwre",
+      "credit": "Own work , recorded with Rode NT-USB, converted with Audacity",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
+      "checked_utc": "2026-08-24T14:44:52.605115+00:00"
     },
     {
       "sha256": "a389421ab9dd35b73d5dfc26585d25e032f147339afe7d5c9fb709dbc2eefbf3",
@@ -3420,6 +3504,20 @@
       "checked_utc": "2026-07-15T00:55:05.543408+00:00"
     },
     {
+      "sha256": "04c295ef3661c7e2d13c332c402ece1c0fc1552e4adc61564c24639cab13e71f",
+      "spoken_text": "Nationalrat",
+      "title": "File:De-Nationalrat.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-Nationalrat.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/5/5d/De-Nationalrat.ogg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "artist": "Jeuwre",
+      "credit": "Own work , recorded with Røde NT-USB and Audacity , converted with SoX (Sound eXchange audio editing software)",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
+      "checked_utc": "2026-08-24T14:45:02.825887+00:00"
+    },
+    {
       "sha256": "756003b7673f4dba46006ee3e42eec171d9407ae22e0087221410958e5f1f53e",
       "spoken_text": "natürlich",
       "title": "File:De-natürlich.ogg",
@@ -3812,6 +3910,20 @@
       "checked_utc": "2026-07-15T00:51:36.310647+00:00"
     },
     {
+      "sha256": "a1b9bd29119409f24d38e439eb5df470f335de7fc06964cbd149c0ed6ee25de4",
+      "spoken_text": "Primarschule",
+      "title": "File:De-Primarschule.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-Primarschule.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/e/e3/De-Primarschule.ogg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "artist": "Jeuwre",
+      "credit": "Own work",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
+      "checked_utc": "2026-08-24T14:44:54.546275+00:00"
+    },
+    {
       "sha256": "bd8c86b5f9f0d33a2d88044658968c9c3b279ed12dda7878b703c0e28a6ac348",
       "spoken_text": "pro",
       "title": "File:De-pro.ogg",
@@ -3896,6 +4008,20 @@
       "checked_utc": "2026-07-15T00:54:50.251514+00:00"
     },
     {
+      "sha256": "f0b09430b3305db89e1683ca31402db6b4597a072cee2cc0861547046c1fe0d9",
+      "spoken_text": "Pädagogische Hochschule",
+      "title": "File:De-Pädagogische Hochschule.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-P%C3%A4dagogische_Hochschule.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/b/b9/De-P%C3%A4dagogische_Hochschule.ogg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "artist": "Jeuwre",
+      "credit": "Own work , recorded with Røde NT-USB and Audacity , converted with SoX (Sound eXchange audio editing software)",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
+      "checked_utc": "2026-08-24T14:45:10.614190+00:00"
+    },
+    {
       "sha256": "7d6f4c0d3e45808afea2660fea2084ab64bd6fd1cb53de8cb3c990169620184b",
       "spoken_text": "Quadratmeter",
       "title": "File:De-Quadratmeter.ogg",
@@ -3964,6 +4090,34 @@
       "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
       "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
       "checked_utc": "2026-07-15T00:53:31.483041+00:00"
+    },
+    {
+      "sha256": "fcef1d862b9ec96ff9748debfc6abab6de509b7259dc6f76b7e8aff309a531dc",
+      "spoken_text": "Regierungsrat",
+      "title": "File:De-Regierungsrat.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-Regierungsrat.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/a/a1/De-Regierungsrat.ogg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "artist": "Jeuwre",
+      "credit": "Own work , recorded with Rode NT-USB and Audacity , converted with SoX (Sound eXchange audio editing software)",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
+      "checked_utc": "2026-08-24T14:45:16.011026+00:00"
+    },
+    {
+      "sha256": "99f11c7bea31e9e057268b3482c7cab13137afbd0cc6dcf575efd221c82cf335",
+      "spoken_text": "Republik Österreich",
+      "title": "File:De-Republik Österreich.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-Republik_%C3%96sterreich.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/f/f1/De-Republik_%C3%96sterreich.ogg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "artist": "Jeuwre",
+      "credit": "Own work , recorded with Røde NT-USB and Audacity , converted with SoX (Sound eXchange audio editing software)",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
+      "checked_utc": "2026-08-24T14:45:04.158901+00:00"
     },
     {
       "sha256": "21599e779462c1b2f7b7721696403e20f76fbfc036bb16ac6f1162ef1165473e",
@@ -4160,6 +4314,34 @@
       "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
       "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
       "checked_utc": "2026-07-15T00:55:26.725216+00:00"
+    },
+    {
+      "sha256": "f2f4ef7ae223df99fe96cef1a11b41c5af0614ff71d2a19e030c0d5b17c322a3",
+      "spoken_text": "Sekundarstufe I",
+      "title": "File:De-Sekundarstufe I.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-Sekundarstufe_I.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/8/85/De-Sekundarstufe_I.ogg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "artist": "Jeuwre",
+      "credit": "Own work",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
+      "checked_utc": "2026-08-24T14:45:01.311541+00:00"
+    },
+    {
+      "sha256": "835a27d56b0785fdd76b90f7c6b6604e12a56aab8feccd04384ca35bf68944bf",
+      "spoken_text": "Sekundarstufe II",
+      "title": "File:De-Sekundarstufe II.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-Sekundarstufe_II.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/8/87/De-Sekundarstufe_II.ogg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "artist": "Jeuwre",
+      "credit": "Own work",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
+      "checked_utc": "2026-08-24T14:44:58.674644+00:00"
     },
     {
       "sha256": "d554308cf8f3e33db5a8f51bfa91fa2ea023a427ab18fb454974b56992647bf1",
@@ -4426,6 +4608,20 @@
       "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
       "usage_terms": "Creative Commons Attribution-Share Alike 3.0",
       "checked_utc": "2026-07-15T00:52:40.436758+00:00"
+    },
+    {
+      "sha256": "ad7c7054477944c5bace8d18e69de16ce02eb6cc60ca1d5b08354c0dd037884d",
+      "spoken_text": "Stadtpräsident",
+      "title": "File:De-Stadtpräsident.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-Stadtpr%C3%A4sident.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/9/98/De-Stadtpr%C3%A4sident.ogg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "artist": "Jeuwre",
+      "credit": "Own work",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
+      "checked_utc": "2026-08-24T14:45:12.116178+00:00"
     },
     {
       "sha256": "217b04af7cdfa34c1533e3e5a37cf404ef60bbdca1f16c3537244734d11fd6b3",
@@ -5196,6 +5392,34 @@
       "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
       "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
       "checked_utc": "2026-07-15T00:52:01.572940+00:00"
+    },
+    {
+      "sha256": "7e0df44046c08f509fa7de5ba6127d0644cc3ff4eba8ee797b219503d17b82a4",
+      "spoken_text": "Volkshochschule",
+      "title": "File:De-Volkshochschule.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-Volkshochschule.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/8/8b/De-Volkshochschule.ogg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "artist": "Jeuwre",
+      "credit": "Own work , recorded with Røde NT-USB and Audacity , converted with SoX (Sound eXchange audio editing software)",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
+      "checked_utc": "2026-08-24T14:45:05.477346+00:00"
+    },
+    {
+      "sha256": "4387ec3e9a1ca3a7b5b90ff8be2a9c13f66bbaa4f35815bc0dd639ed4ec89b7d",
+      "spoken_text": "Volksschule",
+      "title": "File:De-Volksschule.ogg",
+      "description_url": "https://commons.wikimedia.org/wiki/File:De-Volksschule.ogg",
+      "original_url": "https://upload.wikimedia.org/wikipedia/commons/b/b1/De-Volksschule.ogg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "artist": "Jeuwre",
+      "credit": "Own work , recorded with Røde NT-USB and Audacity , converted with SoX (Sound eXchange audio editing software)",
+      "attribution": "",
+      "license_short_name": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+      "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
+      "checked_utc": "2026-08-24T14:45:09.319577+00:00"
     },
     {
       "sha256": "598f3a2e7b08f40934be7b2592b53e27967e903264f59386bc2c271955b0395a",

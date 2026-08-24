@@ -29,6 +29,18 @@
 - `SourceRefs`: `B1-WG-0120|B1-WG-0127|B1-WG-0134`
 - Two retained cards: `1784075681483`, `1784075681484`
 
+## Headword Audio Repair
+
+The regional canonicalization changed displayed headwords, so the old country-prefixed word audio was replaced instead of being retained.
+
+- Updated notes: `23`
+- Unique media assets imported: `22`
+- Sources: `9` Duden, `9` Wikimedia Commons, `5` Edge fallback recordings
+- `Volkshochschule` now plays audio for `Volkshochschule`, not `Deutschland: die Volkshochschule`.
+- Headword audio repair backup: `tools/.goethe_word_audio/Goethe_Institute_pre_headword_audio_20260824T145048920200Z.apkg`
+- Headword audio repair backup SHA-256: `478455a0c7f35836b251647d393e238a225a814b606da9b9c3dd5fba7b1cefd1`
+- Card scheduling and review history for all 46 retained cards were rechecked unchanged.
+
 ## Final Inventory
 
 - Before: `3425 notes / 6850 cards`

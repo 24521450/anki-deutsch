@@ -193,6 +193,7 @@ def test_regional_canonical_fields_strip_display_context_but_keep_provenance() -
     fields = audit.regional_canonical_fields(record["fields"])
 
     assert fields["Lemma"] == "Volkshochschule"
+    assert fields["WordAudio"] == ""
     assert fields["MeaningEN"] == "adult education center"
     assert fields["AcceptedAnswersDE"] == "Volkshochschule"
     assert fields["AcceptedFullAnswersDE"] == "die Volkshochschule"
@@ -254,9 +255,9 @@ def test_explicit_meist_group_cannot_absorb_distinct_meist_combining_form() -> N
 
 
 def test_merged_fields_keep_provenance_best_audio_and_unique_examples() -> None:
-    survivor = item(1584886455204, "weh tun", "to hurt", "v.", "A1", "[sound:_goethe_word_edge_a.mp3]")
+    survivor = item(1001, "wehtun", "to hurt", "v.", "A1", "[sound:_goethe_word_edge_a.mp3]")
     duplicate = item(1497484861859, "wehtun", "to hurt", "v.", "A2", "[sound:_goethe_word_duden_b.mp3]")
-    survivor["fields"].update({"SourceRefs": "A1-MAIN-1", "AcceptedAnswersDE": "weh tun"})
+    survivor["fields"].update({"SourceRefs": "A1-MAIN-1", "AcceptedAnswersDE": "wehtun|weh tun"})
     duplicate["fields"].update({"SourceRefs": "A2-MAIN-2|B1-MAIN-3", "AcceptedAnswersDE": "wehtun"})
     survivor["examples"] = [{"de": "Wo tut es weh?", "en": "Where does it hurt?", "audio": ""}]
     duplicate["examples"] = [
@@ -270,6 +271,20 @@ def test_merged_fields_keep_provenance_best_audio_and_unique_examples() -> None:
     assert fields["WordAudio"] == "[sound:_goethe_word_duden_b.mp3]"
     assert fields["Example1Audio"] == "audio-a"
     assert fields["Example2DE"] == "Mir tut der Rücken weh."
+
+
+def test_merged_fields_clear_word_audio_when_canonical_override_changes_lemma(monkeypatch) -> None:
+    note_id = 123
+    monkeypatch.setitem(audit.CANONICAL_OVERRIDES, note_id, {"Lemma": "Volkshochschule"})
+    survivor = item(
+        note_id, "Deutschland: die Volkshochschule", "adult education center", "n.", "B1",
+        "[sound:_goethe_word_old.mp3]",
+    )
+
+    fields = audit.merged_fields([survivor], survivor)
+
+    assert fields["Lemma"] == "Volkshochschule"
+    assert fields["WordAudio"] == ""
 
 
 def test_merged_bancomat_fields_enable_production_and_highlight_alias_inflection() -> None:

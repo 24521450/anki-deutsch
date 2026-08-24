@@ -1076,6 +1076,8 @@ def merged_fields(group: list[dict[str, Any]], survivor: dict[str, Any]) -> dict
                     current["en"] = example["en"]
     goethe_examples.render_fields(result, examples)
     result.update(CANONICAL_OVERRIDES.get(int(survivor["note_id"]), {}))
+    if result.get("Lemma", "") != survivor["fields"].get("Lemma", ""):
+        result["WordAudio"] = ""
     if result.get("SourceID"):
         try:
             production_policy.apply_policy([{"fields": result}], strict=False)
@@ -1098,6 +1100,7 @@ def regional_canonical_fields(fields: dict[str, str]) -> dict[str, str]:
     if core and core not in answers:
         answers.insert(0, core)
     result["Lemma"] = core
+    result["WordAudio"] = ""
     result["AcceptedAnswersDE"] = "|".join(answers)
     articles = split_answers(result.get("AcceptedArticlesDE", ""))
     if not articles:
