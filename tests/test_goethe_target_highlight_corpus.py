@@ -86,7 +86,7 @@ def test_python_and_card_javascript_match_all_reviewed_examples(tmp_path: Path) 
             "texts": highlights.example_texts(fields),
             "expected": json.loads(highlights.build_spans(fields)),
         })
-    assert len(payload) == 3425
+    assert len(payload) == 3420
     payload_path = tmp_path / "all_examples.json"
     payload_path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
     back = gw.templates()["German → English"]["Back"]

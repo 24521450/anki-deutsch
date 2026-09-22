@@ -3,11 +3,18 @@ from __future__ import annotations
 import json
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
 DESIGN = ROOT / "design" / "GoetheWerkstatt"
+TOOLS = ROOT / "tools"
+if str(TOOLS) not in sys.path:
+    sys.path.insert(0, str(TOOLS))
+
+import build_goethe_dictionary_links as dictionary_links  # noqa: E402
+import goethe_werkstatt_migrate as gw  # noqa: E402
 
 
 def read(name: str) -> str:
@@ -35,6 +42,84 @@ def test_direction_metadata_is_hidden_and_answer_hierarchy_is_minimal() -> None:
     assert back_en.index('class="gw-german-answer"') < back_en.index('class="gw-meaning-secondary"')
 
 
+def test_dictionary_badge_uses_direct_source_keyed_entries_on_all_card_faces() -> None:
+    link_map = json.loads((ROOT / "review" / "goethe_dictionary_links.json").read_text(encoding="utf-8"))
+    dose_index = link_map["source_to_url"]["B1-MAIN-0554"]
+    assert link_map["urls"][dose_index] == {
+        "provider": "Duden",
+        "url": "https://www.duden.de/rechtschreibung/Dose",
+    }
+    fruehling_index = link_map["source_to_url"]["A1-84887177245"]
+    assert link_map["urls"][fruehling_index] == {
+        "provider": "Duden",
+        "url": "https://www.duden.de/rechtschreibung/Fruehling",
+    }
+    assert link_map["counts"]["notes"] == 3420
+    assert link_map["counts"]["unresolved"] == 0
+    assert link_map["counts"]["ambiguous_duden_candidates"] == 0
+    for source_id, expected_url in dictionary_links.MANUAL_DUDEN_BY_SOURCE.items():
+        index = link_map["source_to_url"].get(source_id)
+        assert index is not None, source_id
+        assert link_map["urls"][index] == {"provider": "Duden", "url": expected_url}
+    for item in link_map["urls"]:
+        if item["provider"] == "Duden":
+            assert dictionary_links.direct_duden_url(item["url"])
+        else:
+            assert item["provider"] == "Wiktionary"
+            assert dictionary_links.direct_wiktionary_url(item["url"])
+
+    templates = gw.templates()
+    faces = {
+        "front_german.html": ("German \u2192 English", "Front"),
+        "back_german.html": ("German \u2192 English", "Back"),
+        "front_english.html": ("English \u2192 German", "Front"),
+        "back_english.html": ("English \u2192 German", "Back"),
+    }
+    for filename, (direction, side) in faces.items():
+        source = read(filename)
+        rendered = templates[direction][side]
+        assert '<a class="gw-brand gw-dictionary-link"' in source
+        assert 'data-source-id="{{SourceID}}"' in source
+        assert 'data-source-refs="{{SourceRefs}}"' in source
+        assert 'target="_blank" rel="noopener noreferrer" hidden' in source
+        assert "{{DictionaryLinkController}}" in source
+        assert "{{DictionaryLinkController}}" not in rendered
+        assert "globalThis.goetheWerkstattDictionaryLinks" in rendered
+        assert "https://www.duden.de/rechtschreibung/Dose" in rendered
+
+
+def test_dictionary_link_controller_resolves_duden_and_keeps_missing_links_hidden() -> None:
+    node = shutil.which("node")
+    if not node:
+        return
+    controller = gw.dictionary_link_controller()
+    harness = f"""
+const vm = require('vm');
+const code = {json.dumps(controller, ensure_ascii=False)};
+function run(sourceId, refs) {{
+  const link = {{
+    href: '', hidden: true, textContent: 'DUDEN', attributes: {{
+      'data-source-id': sourceId, 'data-source-refs': refs
+    }},
+    getAttribute(name) {{ return this.attributes[name] || ''; }},
+    setAttribute(name, value) {{ this.attributes[name] = value; }}
+  }};
+  const context = {{ document: {{ querySelector: () => link }} }};
+  vm.runInNewContext(code, context);
+  return link;
+}}
+let link = run('B1-MAIN-0554', '');
+if (link.hidden || link.textContent !== 'DUDEN') throw Error('Duden badge did not become visible');
+if (link.href !== 'https://www.duden.de/rechtschreibung/Dose') throw Error('Dose did not use its direct Duden entry');
+link = run('', 'B1-MAIN-0554');
+if (link.hidden || link.href !== 'https://www.duden.de/rechtschreibung/Dose') throw Error('SourceRefs fallback failed');
+link = run('unresolved-test-entry', '');
+if (!link.hidden || link.href) throw Error('unmapped badge must stay hidden');
+"""
+    result = subprocess.run([node], input=harness, capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
+
+
 def test_back_templates_keep_the_headword_in_a_stable_answer_stage() -> None:
     for name in ("back_german.html", "back_english.html"):
         template = read(name)
@@ -51,6 +136,10 @@ def test_back_templates_keep_the_headword_in_a_stable_answer_stage() -> None:
     assert ".gw-meaning, .gw-german-answer, .gw-production-meaning { margin: 0; color: var(--gw-strong); font-size: clamp(28px, 7vw, 40px);" in css
     assert ".gw-german-answer { font-size: clamp(36px, 9vw, 56px);" in css
     assert ".gw-meaning-secondary { margin: 10px 0 0; color: var(--gw-muted); font-size: clamp(20px, 4.5vw, 24px);" in css
+    assert ".gw-answer-title .gw-german-answer { width: 100%; min-width: 0; }" in css
+    assert ".gw-german-answer .gw-word-variants { display: flex; width: 100%; }" in css
+    assert "border: 0; border-radius: 8px; padding: 0 .14em" in css
+    assert ".gw-word-variant-separator { display: inline-flex; align-items: center; font: inherit; line-height: inherit; pointer-events: none; }" in css
     assert "@keyframes gw-anchor-reveal" in css
     assert "translateY(72px)" not in css
     assert "prefers-reduced-motion: reduce" in css
@@ -82,9 +171,17 @@ def test_production_prompt_has_accessible_enabled_and_disabled_branches() -> Non
     assert "{{^ProductionEnabled}}" in template
     assert "gw-production-disabled" in template
     assert 'class="gw-typebox-label"' not in template
-    assert 'input.setAttribute("aria-label", "German answer")' in template
-    assert 'input.setAttribute("lang", "de")' in template
+    assert '<div class="gw-typebox" lang="de">{{type:Lemma}}</div>' in template
 
+
+def test_production_prompt_uses_native_anki_typing_and_answer_side_bridge() -> None:
+    template = read("front_english.html")
+    back = read("back_english.html")
+    assert "{{type:Lemma}}" in template
+    assert '<input id="typeans"' not in template
+    assert "sessionStorage" not in template
+    assert 'id="gw-native-answer-source" hidden aria-hidden="true">{{FrontSide}}' in back
+    assert 'document.getElementById("gw-native-answer-source")' in back
 
 def test_result_state_hooks_and_hidden_contract_fields_exist() -> None:
     template = read("back_english.html")
@@ -97,6 +194,8 @@ def test_result_state_hooks_and_hidden_contract_fields_exist() -> None:
     assert 'gw-result-title' in script
     assert '"Expected answer: " + fullAnswers.join(" / ")' in script
     assert '"Canonical: " + fullAnswers.join(" / ")' not in script
+    assert 'child.classList.contains("typeBad")' in script
+    assert 'child.nodeName.toUpperCase() === "BR"' in script
     css = read("styling.css")
     for state in ("correct", "partial", "incorrect"):
         assert f"gw-result--{state}" in css
@@ -177,6 +276,63 @@ if (api.validateRanges("abc", [[0, 2], [1, 3]]) !== null) throw new Error("overl
 if (api.parsePrecomputed("not json") !== null) throw new Error("invalid JSON accepted");
 if (api.parsePrecomputed("[[[0,1]]]").length !== 1) throw new Error("precomputed JSON not parsed");
 '''
+    result = subprocess.run([node, "-e", harness], capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
+
+
+def test_native_answer_survives_a_fresh_mobile_back_context() -> None:
+    node = shutil.which("node")
+    if not node:
+        return
+    template = read("back_english.html")
+    script = template.rsplit("<script>", 1)[1].split("</script>", 1)[0]
+    harness = f"""
+const vm = require('vm');
+const grading = {json.dumps(script, ensure_ascii=False)};
+const fields = {{
+  'gw-production-enabled': '1', 'gw-source-id': 'test', 'gw-lemma': 'Fahrrad',
+  'gw-accepted-answers': 'Fahrrad', 'gw-accepted-full-answers': 'das Fahrrad',
+  'gw-accepted-articles': 'das', 'gw-article': 'das'
+}};
+function gradeNative(tokens) {{
+  const result = {{ dataset: {{}}, children: [], classList: {{
+    add: () => {{}}, remove: () => {{}}
+  }}, appendChild: (child) => result.children.push(child) }};
+  const typeans = {{ childNodes: tokens.map((token) => token.br
+    ? {{ nodeName: 'BR', textContent: '' }}
+    : {{ nodeName: 'SPAN', textContent: token.text, classList: {{ contains: (name) => name === token.className }} }}) }};
+  const source = {{ querySelector: (selector) => selector === '#typeans' ? typeans : null }};
+  const nodes = {{ 'gw-result': result, 'gw-native-answer-source': source }};
+  Object.keys(fields).forEach((key) => {{ nodes[key] = {{ textContent: fields[key] }}; }});
+  const context = {{
+    document: {{
+      getElementById: (id) => nodes[id] || null,
+      createElement: () => ({{ className: '', textContent: '' }})
+    }},
+    sessionStorage: {{ getItem: () => null }},
+    globalThis: {{}}
+  }};
+  vm.runInNewContext(grading, context);
+  return result;
+}}
+let result = gradeNative([
+  {{ className: 'typeBad', text: 'das ' }},
+  {{ className: 'typeGood', text: 'Fahrrad' }},
+  {{ br: true }}
+]);
+if (result.dataset.resultState !== 'correct') throw Error('native answer was lost without front-side storage');
+result = gradeNative([
+  {{ className: 'typeBad', text: 'die ' }},
+  {{ className: 'typeGood', text: 'Katze' }},
+  {{ className: 'typeMissed', text: '-' }},
+  {{ br: true }},
+  {{ className: 'typeGood', text: 'Fahrrad' }}
+]);
+if (result.dataset.resultState !== 'incorrect') throw Error('native wrong answer was not graded');
+if (result.children[1].textContent !== 'Your answer: die Katze') throw Error('native typed text was not recovered from the first comparison row');
+result = gradeNative([]);
+if (result.dataset.resultState !== 'incorrect' || result.children[1].textContent !== 'Your answer: (no answer)') throw Error('empty native input was not recognized');
+"""
     result = subprocess.run([node, "-e", harness], capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
 
@@ -305,7 +461,7 @@ if (value.state !== 'incorrect') throw Error('fixed phrase treated as article-be
 const disabled = Object.assign({{}}, base, {{ 'gw-production-enabled': '' }});
 value = run(disabled, '', false);
 if (value.state !== undefined) throw Error('disabled note rendered a grading result');
-const reflexive = Object.assign({{}}, base, {{ 'gw-lemma': '(sich) duschen', 'gw-accepted-answers': 'duschen|sich duschen', 'gw-accepted-full-answers': 'sich duschen|s duschen', 'gw-accepted-articles': '', 'gw-article': '' }});
+const reflexive = Object.assign({{}}, base, {{ 'gw-lemma': '(sich) duschen', 'gw-accepted-answers': 'duschen|sich duschen', 'gw-accepted-full-answers': 'duschen|sich duschen|s duschen', 'gw-accepted-articles': '', 'gw-article': '' }});
 for (const answer of ['duschen', 'sich duschen', 's duschen']) {{
   value = run(reflexive, answer);
   if (value.state !== 'correct') throw Error('reflexive answer not green: ' + answer);
@@ -319,6 +475,53 @@ value = run(requiredReflexive, 'anmelden');
 if (value.state !== 'incorrect') {{
   throw Error('required reflexive was treated as optional');
 }}
+const weakNoun = Object.assign({{}}, base, {{
+  'gw-lemma': 'Angestellter', 'gw-accepted-answers': 'Angestellter|Angestellte',
+  'gw-accepted-full-answers': 'der Angestellte|die Angestellte|Angestellter',
+  'gw-accepted-articles': 'der', 'gw-article': 'der'
+}});
+for (const answer of ['der Angestellte', 'die Angestellte', 'Angestellte', 'Angestellter']) {{
+  value = run(weakNoun, answer);
+  if (value.state !== 'correct') throw Error('reviewed weak-noun answer not green: ' + answer);
+}}
+const secondWeakNoun = Object.assign({{}}, base, {{
+  'gw-lemma': 'Auszubildender', 'gw-accepted-answers': 'Auszubildende',
+  'gw-accepted-full-answers': 'der Auszubildende|die Auszubildende|Auszubildender',
+  'gw-accepted-articles': 'der', 'gw-article': 'der'
+}});
+for (const answer of ['der Auszubildende', 'die Auszubildende', 'Auszubildende', 'Auszubildender']) {{
+  value = run(secondWeakNoun, answer);
+  if (value.state !== 'correct') throw Error('reviewed weak-noun answer not green: ' + answer);
+}}
+const half = Object.assign({{}}, base, {{
+  'gw-lemma': 'ein halb; halb', 'gw-accepted-answers': 'ein halb; halb|ein halb',
+  'gw-accepted-full-answers': 'ein halb|halb', 'gw-accepted-articles': '', 'gw-article': ''
+}});
+for (const answer of ['ein halb', 'halb']) {{
+  value = run(half, answer);
+  if (value.state !== 'correct') throw Error('half alternative was not green: ' + answer);
+}}
+value = run(half, 'ein halb; halb');
+if (value.state !== 'incorrect') throw Error('source composite was accepted as a full answer');
+const lexicalSlash = Object.assign({{}}, base, {{
+  'gw-lemma': 'Samstag/Sonnabend', 'gw-accepted-answers': 'Samstag/Sonnabend',
+  'gw-accepted-full-answers': 'der Samstag/Sonnabend', 'gw-accepted-articles': 'der', 'gw-article': 'der'
+}});
+for (const answer of ['der Samstag', 'der Sonnabend', 'Samstag', 'Sonnabend']) {{
+  value = run(lexicalSlash, answer);
+  if (value.state !== 'correct') throw Error('slash alternative was not green: ' + answer);
+}}
+const boundSlash = Object.assign({{}}, base, {{
+  'gw-lemma': 'Speise-/-speise', 'gw-accepted-answers': 'Speise-/-speise',
+  'gw-accepted-full-answers': 'die Speise-/-speise', 'gw-accepted-articles': 'die', 'gw-article': 'die'
+}});
+for (const answer of ['die Speise-', 'die -speise']) {{
+  value = run(boundSlash, answer);
+  if (value.state === 'correct') throw Error('bound-form slash was split into an answer: ' + answer);
+}}
+const missingFullAnswers = Object.assign({{}}, base, {{ 'gw-accepted-full-answers': '' }});
+value = run(missingFullAnswers, 'Fahrrad');
+if (value.state !== undefined) throw Error('missing full-answer contract did not fail closed');
 const ordinal = Object.assign({{}}, base, {{ 'gw-lemma': 'dritte', 'gw-accepted-answers': 'dritte', 'gw-accepted-full-answers': 'dritte', 'gw-accepted-articles': '', 'gw-article': '' }});
 for (const answer of ['dritte']) {{
   value = run(ordinal, answer);

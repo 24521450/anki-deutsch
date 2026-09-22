@@ -124,7 +124,7 @@ def test_media_name_is_content_hash_scoped():
         "_goethe_example_gemini_" + "a" * 64 + ".mp3"
     )
     assert audio.GEMINI_CONFIG["voices"] == ["Kore", "Charon"]
-    assert audio.EXPECTED_UNIQUE == 4978
+    assert audio.EXPECTED_UNIQUE == 4977
     assert all(
         audio.GEMINI_CONFIG[key] == value
         for key, value in audio.gemini_tts.CONFIG.items()

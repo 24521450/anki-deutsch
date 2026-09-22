@@ -57,3 +57,41 @@ def test_preview_card_documents_have_no_unresolved_template_tokens() -> None:
         assert "{{" not in document
         assert "[sound:" not in document
         assert re.search(r'<main class="gw-card"', document)
+
+
+def test_preview_includes_large_pronunciation_variant_fixture() -> None:
+    fields = preview.samples()["variants"]
+    assert fields["WordAudioVariantsHTML"].count('class="gw-word-variant"') == 2
+    assert fields["WordAudioVariantsHTML"].count('class="gw-word-variant-separator"') == 1
+    assert 'aria-hidden="true">/</span>' in fields["WordAudioVariantsHTML"]
+    assert "der Frühling" in fields["WordAudioVariantsHTML"]
+    assert "das Frühjahr" in fields["WordAudioVariantsHTML"]
+    css = (gw.DESIGN / "styling.css").read_text(encoding="utf-8")
+    assert ".gw-german-answer .gw-word-variant" in css
+    assert ".gw-german-answer .gw-word-variants { display: flex; width: 100%; }" in css
+    assert "font: inherit !important" in css
+    document = preview.card_document(
+        gw.templates()["German → English"]["Back"], css, fields, "night"
+    )
+    assert document.count('class="gw-word-variant"') == 2
+    assert document.count('class="gw-word-variant-separator"') == 1
+    assert "font: inherit !important" in document
+
+
+def test_production_preview_passes_the_typed_answer_through_frontside() -> None:
+    templates = gw.templates()
+    css = (gw.DESIGN / "styling.css").read_text(encoding="utf-8")
+    fields = preview.samples()["noun"]
+    frontside = preview._preview_frontside(
+        fields, templates["English \u2192 German"]["Front"]
+    )
+    document = preview.card_document(
+        templates["English \u2192 German"]["Back"],
+        css,
+        {**fields, "FrontSide": frontside},
+        "day",
+    )
+
+    assert 'id="gw-native-answer-source"' in document
+    assert '<code id="typeans"><span class="typeBad">der Anschluss</span></code>' in document
+    assert "sessionStorage.setItem" not in document

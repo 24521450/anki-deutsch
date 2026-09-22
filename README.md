@@ -199,7 +199,7 @@ reply). `goethe_example_boundaries.py check` validates the grammar and the
 reviewed PDF-coordinate evidence before a completion build can proceed.
 
 The checked-in v5 American-English audit has one row per canonical A1-B1
-note: 3,425 notes and 6,850 cards in total, including 1,941 B1 notes. Every
+note: 3,420 notes and 6,840 cards in total, including 1,936 B1 notes. Every
 note now has at least one example. Live audit, completion apply, and the final
 JSONL snapshot fail closed until every row is reviewed, all source examples
 are covered, and collision checks pass. Completion apply validates exact
@@ -209,6 +209,28 @@ A1-B1 and requires distinct, answer-safe `ProductionHint` values whenever
 different German answers share the same English cue; CEFR, POS, gender, and
 examples do not bypass that gate. The historical v4 workflow remains documented in
 `docs/GOETHE_ENGLISH_AUDIT_V4.md`.
+
+September issue and card-contract refresh:
+
+```powershell
+python tools/goethe_issue_refresh.py content
+python tools/goethe_issue_refresh.py merge
+python tools/goethe_issue_refresh.py cleanup
+python tools/goethe_issue_refresh.py variants
+python tools/goethe_issue_refresh.py variant-markup
+python tools/build_goethe_dictionary_links.py
+python tools/reconcile_goethe_build.py
+```
+
+The issue refresh preserves exact SourceID/SourceRefs provenance, creates an
+APKG backup before live changes, and keeps content, duplicate merges, and
+pronunciation variants as separate guarded operations. The dedicated
+`goethe_english_content_refresh.py`, `goethe_answer_contract_refresh.py`, and
+`goethe_template_refresh.py` commands use the same audit → backup → apply →
+verify → rollback protocol. `build_goethe_dictionary_links.py` is not a live Anki
+mutation: it writes the reviewed direct-entry map used by the card template.
+The checked-in JSONL can be regenerated only after the reviewed live-note
+batch has been reconciled.
 
 Target-highlight refresh:
 

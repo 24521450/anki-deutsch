@@ -328,11 +328,22 @@ def fetch_notes() -> list[dict[str, Any]]:
     return notes
 
 
-def fetch_cards(notes: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def fetch_cards(
+    notes: list[dict[str, Any]], *, include_rendered: bool = True,
+) -> list[dict[str, Any]]:
     card_ids = sorted({int(card_id) for note in notes for card_id in note.get("cards", [])})
     cards: list[dict[str, Any]] = []
     for batch in chunks(card_ids, 250):
-        cards.extend(anki("cardsInfo", cards=batch))
+        response = anki("cardsInfo", cards=batch)
+        if not include_rendered:
+            response = [
+                {
+                    key: value for key, value in card.items()
+                    if key not in {"question", "answer"}
+                }
+                for card in response
+            ]
+        cards.extend(response)
     cards.sort(key=lambda item: int(item["cardId"]))
     if {int(item["cardId"]) for item in cards} != set(card_ids):
         raise UpgradeError("cardsInfo returned a different card ID set")
@@ -433,7 +444,7 @@ def live_inventory() -> dict[str, Any]:
 
     fields = model_fields()
     notes = fetch_notes()
-    cards = fetch_cards(notes)
+    cards = fetch_cards(notes, include_rendered=False)
     suspensions = suspension_map(cards)
     reviews = reviews_map(cards)
     note_state: dict[str, Any] = {}

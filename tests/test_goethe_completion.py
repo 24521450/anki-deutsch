@@ -76,6 +76,24 @@ def test_completion_noun_policy_requires_learner_facing_article_answers():
     ))
 
 
+def test_reviewed_weak_nouns_allow_their_explicit_bare_full_variant():
+    gc.validate_noun_fields(noun_fields(
+        SourceID="A2-WG-0023", Lemma="Angestellter", Article="der", Gender="m.",
+        AcceptedArticlesDE="der",
+        AcceptedFullAnswersDE="der Angestellte|die Angestellte|Angestellter",
+    ))
+    gc.validate_noun_fields(noun_fields(
+        SourceID="A2-WG-0025", Lemma="Auszubildender", Article="der", Gender="m.",
+        AcceptedArticlesDE="der",
+        AcceptedFullAnswersDE="der Auszubildende|die Auszubildende|Auszubildender",
+    ))
+    with pytest.raises(gc.CompletionError, match="AcceptedFullAnswersDE missing article"):
+        gc.validate_noun_fields(noun_fields(
+            SourceID="A2-WG-0111", Lemma="Religion", Article="die", Gender="f.",
+            AcceptedArticlesDE="die", AcceptedFullAnswersDE="Religion|die Religion",
+        ))
+
+
 def test_lemma_identity_preserves_german_case_and_reflexive_variants():
     assert gc.lemma_key("der Arm") == "Arm"
     assert gc.lemma_key("arm") == "arm"
@@ -157,6 +175,7 @@ def test_reviewed_measure_merges_delete_exact_b1_notes_and_route_collision():
         1784075682230: 1784075681483,
         1784075686077: 1784075685798,
         1784075686737: 1784075686172,
+        1785175712341: 1584886455261,
     }
     assert {item["duplicate"]: item["survivor"] for item in groups} == expected
     merges = policy["merge_wortgruppen"]

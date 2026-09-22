@@ -30,6 +30,7 @@ SOURCE_A2 = ROOT / "sources" / "goethe" / "Goethe_A2.md"
 SOURCE_B1 = ROOT / "sources" / "goethe" / "Goethe_B1.md"
 A1_WORD_MANIFEST = ROOT / "audio" / "a1" / "words_manifest.jsonl"
 OVERRIDES = ROOT / "review" / "goethe_werkstatt_overrides.json"
+DICTIONARY_LINK_MAP = ROOT / "review" / "goethe_dictionary_links.json"
 DESIGN = ROOT / "design" / "GoetheWerkstatt"
 STATE_DIR = ROOT / "tools" / ".goethe_werkstatt"
 ANKI_URL = "http://127.0.0.1:8765"
@@ -48,6 +49,7 @@ FIELDS = [
     "Lemma", "MeaningEN", "CEFR", "POS", "Article", "Gender",
     "NounFormsRaw", "VerbFormsRaw", "FormOrVariantNote", "UsageNoteEN",
     "RegionalVariants", "AcceptedAnswersDE", "AcceptedArticlesDE", "WordAudio",
+    "WordAudioVariantsHTML",
     "Example1DE", "Example1EN", "Example1Audio",
     "Example2DE", "Example2EN", "Example2Audio",
     "Example3DE", "Example3EN", "Example3Audio",
@@ -55,7 +57,7 @@ FIELDS = [
     "MoreExamplesHTML", "SourceID", "SourceRefs", "OriginalOrder", "SourceNoteRaw", "LegacyGUID",
     "AcceptedFullAnswersDE", "ProductionEnabled", "ProductionHint", "ExampleTargetSpansJSON",
 ]
-ADDITIVE_FIELDS = ("AcceptedFullAnswersDE", "ProductionEnabled", "ProductionHint", "ExampleTargetSpansJSON")
+ADDITIVE_FIELDS = ("AcceptedFullAnswersDE", "ProductionEnabled", "ProductionHint", "ExampleTargetSpansJSON", "WordAudioVariantsHTML")
 
 PILOT_A1 = [
     1584886454452, 1584886454486, 1584886454531, 1584886455241,
@@ -523,6 +525,55 @@ def command_preflight(_: argparse.Namespace) -> None:
     print("preflight PASS")
 
 
+def dictionary_link_controller() -> str:
+    try:
+        data = json.loads(DICTIONARY_LINK_MAP.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise MigrationError(f"dictionary-link map is missing or invalid: {DICTIONARY_LINK_MAP}") from exc
+    if data.get("schema_version") != 1 or not isinstance(data.get("urls"), list) or not isinstance(data.get("source_to_url"), dict):
+        raise MigrationError("dictionary-link map has an unsupported structure")
+    for entry in data["urls"]:
+        provider, url = str(entry.get("provider", "")), str(entry.get("url", ""))
+        if provider == "Duden":
+            valid = url.startswith("https://www.duden.de/rechtschreibung/")
+        elif provider == "Wiktionary":
+            valid = url.startswith("https://de.wiktionary.org/wiki/")
+        else:
+            valid = False
+        if not valid or "?" in url or "#" in url:
+            raise MigrationError(f"dictionary-link map contains a non-direct URL: {url}")
+    for source_id, index in data["source_to_url"].items():
+        if not isinstance(source_id, str) or not isinstance(index, int) or not 0 <= index < len(data["urls"]):
+            raise MigrationError(f"dictionary-link map has an invalid SourceID entry: {source_id}")
+    payload = json.dumps(
+        {"urls": data["urls"], "lookup": data["source_to_url"]},
+        ensure_ascii=True,
+        separators=(",", ":"),
+    ).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
+    return (
+        "globalThis.goetheWerkstattDictionaryLinks = " + payload + ";\n"
+        + "(function () {\n"
+        + "  var link = document.querySelector('.gw-dictionary-link');\n"
+        + "  if (!link) return;\n"
+        + "  var data = globalThis.goetheWerkstattDictionaryLinks;\n"
+        + "  var identities = [link.getAttribute('data-source-id') || ''];\n"
+        + "  var refs = link.getAttribute('data-source-refs') || '';\n"
+        + "  refs.split('|').forEach(function (value) { if (value.trim()) identities.push(value.trim()); });\n"
+        + "  for (var i = 0; i < identities.length; i += 1) {\n"
+        + "    var id = identities[i];\n"
+        + "    if (!Object.prototype.hasOwnProperty.call(data.lookup, id)) continue;\n"
+        + "    var target = data.urls[data.lookup[id]];\n"
+        + "    if (!target) continue;\n"
+        + "    link.href = target.url;\n"
+        + "    link.textContent = target.provider === 'Duden' ? 'DUDEN' : 'WIKTIONARY';\n"
+        + "    link.setAttribute('aria-label', 'Open ' + target.provider + ' dictionary entry');\n"
+        + "    link.hidden = false;\n"
+        + "    return;\n"
+        + "  }\n"
+        + "})();"
+    )
+
+
 def templates() -> dict[str, Any]:
     verb_policy = json.loads((ROOT / "review" / "goethe_verb_target_policy.json").read_text(encoding="utf-8"))
     highlight_audit = json.loads((ROOT / "review" / "goethe_target_highlight_audit_v3.json").read_text(encoding="utf-8"))
@@ -553,7 +604,7 @@ def templates() -> dict[str, Any]:
     )
     example_audio = (DESIGN / "example_audio.js").read_text(encoding="utf-8")
     word_audio = (DESIGN / "word_audio.js").read_text(encoding="utf-8")
-    return {
+    result = {
         "German → English": {
             "Front": (DESIGN / "front_german.html").read_text(encoding="utf-8").replace("{{WordAudioController}}", word_audio),
             "Back": (DESIGN / "back_german.html").read_text(encoding="utf-8").replace("{{TargetHighlighter}}", highlighter).replace("{{ExampleAudioController}}", example_audio).replace("{{WordAudioController}}", word_audio),
@@ -563,6 +614,11 @@ def templates() -> dict[str, Any]:
             "Back": (DESIGN / "back_english.html").read_text(encoding="utf-8").replace("{{TargetHighlighter}}", highlighter).replace("{{ExampleAudioController}}", example_audio).replace("{{WordAudioController}}", word_audio),
         },
     }
+    dictionary_controller = dictionary_link_controller()
+    for template in result.values():
+        for side, source in template.items():
+            template[side] = source.replace("{{DictionaryLinkController}}", dictionary_controller)
+    return result
 
 
 def command_create_model(_: argparse.Namespace) -> None:
@@ -583,11 +639,13 @@ def command_create_model(_: argparse.Namespace) -> None:
             for field in ("MoreExamplesHTML", "SourceRefs"):
                 anki("modelFieldAdd", modelName=MODEL, fieldName=field, index=FIELDS.index(field))
             actual = anki("modelFieldNames", modelName=MODEL)
-        old_fields = [field for field in FIELDS if field not in ADDITIVE_FIELDS]
-        if actual == old_fields:
-            for field in ADDITIVE_FIELDS:
+        # Add any newly introduced additive fields at their canonical index.
+        # Older model migrations may have added only a prefix of these fields;
+        # checking each field independently keeps the upgrade idempotent.
+        for field in FIELDS:
+            if field not in actual:
                 anki("modelFieldAdd", modelName=MODEL, fieldName=field, index=FIELDS.index(field))
-            actual = anki("modelFieldNames", modelName=MODEL)
+                actual = anki("modelFieldNames", modelName=MODEL)
         if actual != FIELDS:
             raise MigrationError(f"existing {MODEL} field order differs")
         anki("updateModelTemplates", model={"name": MODEL, "templates": model_templates})

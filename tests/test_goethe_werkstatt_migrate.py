@@ -208,6 +208,7 @@ def test_pilot_is_fixed_and_balanced():
 def test_templates_do_not_leak_german_or_audio_on_production_front():
     front = (gw.DESIGN / "front_english.html").read_text(encoding="utf-8")
     assert "{{type:Lemma}}" in front
+    assert '<input id="typeans"' not in front
     assert "{{MeaningEN}}" in front
     assert "{{#Example1EN}}" in front
     assert "{{Article}}" not in front
@@ -239,14 +240,15 @@ def test_word_audio_controller_supports_click_enter_and_space_without_visible_bu
     assert 'container.querySelector(".replay-button, .soundLink, a, button")' in script
 
 
-def test_production_front_submits_once_on_enter_without_a_custom_button():
+def test_production_front_uses_native_anki_typed_answer():
     german = (gw.DESIGN / "front_german.html").read_text(encoding="utf-8")
     english = (gw.DESIGN / "front_english.html").read_text(encoding="utf-8")
+    back = (gw.DESIGN / "back_english.html").read_text(encoding="utf-8")
     assert "gw-show-answer" not in german
     assert "gw-show-answer" not in english
-    assert 'pycmd("ans")' in english
-    assert 'event.key !== "Enter"' in english
-    assert 'input.dataset.submitted === "true"' in english
+    assert "{{type:Lemma}}" in english
+    assert "pycmd(\"ans\")" not in english
+    assert "{{FrontSide}}" in back
 
 
 def test_templates_keep_example_three_and_four_collapsed():
@@ -583,10 +585,11 @@ check({"gw-lemma":"planen","gw-verb-forms":"plant, hat geplant","gw-pos":"v."},
 
 def test_field_contract_is_stable():
     assert gw.FIELDS[0] == "Lemma"
+    assert gw.FIELDS[gw.FIELDS.index("WordAudio") + 1] == "WordAudioVariantsHTML"
     assert gw.FIELDS[gw.FIELDS.index("LegacyGUID") + 1:] == [
         "AcceptedFullAnswersDE", "ProductionEnabled", "ProductionHint", "ExampleTargetSpansJSON",
     ]
-    assert len(gw.FIELDS) == 36
+    assert len(gw.FIELDS) == 37
     assert len(set(gw.FIELDS)) == len(gw.FIELDS)
     assert "MoreExamplesHTML" in gw.FIELDS
     assert "SourceRefs" in gw.FIELDS

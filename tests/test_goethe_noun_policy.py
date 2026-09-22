@@ -91,6 +91,18 @@ def test_exception_requires_exact_identity_gender_and_evidence() -> None:
         validate(source_id=source_id, lemma="Deutschland", article="", gender="n.", dictionary_sources=[])
 
 
+def test_articleless_full_answer_variants_are_allowlisted_by_exact_identity() -> None:
+    assert policy.articleless_full_answer_variants(
+        "A2-WG-0023", "Angestellter"
+    ) == {"Angestellter"}
+    assert policy.articleless_full_answer_variants(
+        "A2-WG-0025", "Auszubildender"
+    ) == {"Auszubildender"}
+    assert policy.articleless_full_answer_variants("A2-WG-0001", "Student") == set()
+    with pytest.raises(policy.NounPolicyError, match="identity mismatch"):
+        policy.articleless_full_answer_variants("A2-WG-0023", "Angestellte")
+
+
 def test_usage_note_cannot_bypass_source_validation(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ) -> None:

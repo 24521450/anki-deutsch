@@ -16,7 +16,7 @@ LEVEL_DECK = {
 }
 LEVEL_TAG = {level: f"goethe::level::{level.casefold()}" for level in LEVELS}
 
-EXPECTED_NOTES_BY_LEVEL = {"A1": 804, "A2": 680, "B1": 1941}
+EXPECTED_NOTES_BY_LEVEL = {"A1": 804, "A2": 680, "B1": 1936}
 EXPECTED_CARDS_BY_LEVEL = {
     level: count * 2 for level, count in EXPECTED_NOTES_BY_LEVEL.items()
 }
@@ -27,11 +27,11 @@ DUDEN_ROWS = {"A1": 685, "A2": 1147, "B1": 2969}
 
 # Canonical post-v5 example inventory, including one reviewed supplemental
 # sentence for every source-only Wortgruppen note and reviewed sense splits.
-EXPECTED_EXAMPLE_OCCURRENCES_BY_LEVEL = {"A1": 1571, "A2": 997, "B1": 2499}
+EXPECTED_EXAMPLE_OCCURRENCES_BY_LEVEL = {"A1": 1573, "A2": 997, "B1": 2495}
 EXPECTED_EXAMPLE_OCCURRENCES = sum(EXPECTED_EXAMPLE_OCCURRENCES_BY_LEVEL.values())
 EXPECTED_EMPTY_NOTES_BY_LEVEL = {"A1": 0, "A2": 0, "B1": 0}
 EXPECTED_EMPTY_NOTES = sum(EXPECTED_EMPTY_NOTES_BY_LEVEL.values())
-EXPECTED_UNIQUE_EXAMPLE_AUDIO = 4978
+EXPECTED_UNIQUE_EXAMPLE_AUDIO = 4977
 
 ENGLISH_AUDITED_TAG = "goethe::quality::english_audited::v5::american"
 ENGLISH_REVIEW_TAG = "goethe::quality::translation_review_needed"

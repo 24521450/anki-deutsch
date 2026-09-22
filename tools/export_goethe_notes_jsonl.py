@@ -130,6 +130,7 @@ def serialize_note(note: dict[str, Any], cards: list[dict[str, Any]]) -> dict[st
         "production_hint": fields["ProductionHint"],
         "example_target_spans": target_spans(fields["ExampleTargetSpansJSON"], fields),
         "word_audio": fields["WordAudio"],
+        "word_audio_variants_html": fields["WordAudioVariantsHTML"],
         "examples": examples,
         "more_examples_html": fields["MoreExamplesHTML"],
         "source_id": fields["SourceID"],

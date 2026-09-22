@@ -101,6 +101,10 @@
   text-transform: uppercase;
 }
 .gw-brand { color: var(--gw-strong); font-size: 11px; font-weight: 800; white-space: nowrap; }
+.gw-dictionary-link { cursor: pointer; text-decoration: none; }
+.gw-dictionary-link:hover { color: var(--level); text-decoration: underline; text-decoration-color: var(--level); }
+.gw-dictionary-link:focus-visible { outline: 2px solid var(--level); outline-offset: 3px; border-radius: 2px; }
+[hidden] { display: none !important; }
 .gw-pos { min-width: 0; overflow: hidden; color: var(--gw-dim); font-size: 11px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
 .gw-level { color: var(--level); font-size: 12px; font-weight: 800; }
 .gw-front, .gw-production-front { min-height: clamp(280px, 60vh, 390px); min-height: clamp(280px, 60dvh, 390px); display: grid; place-content: center; justify-items: center; padding: 36px 22px; text-align: center; }
@@ -116,7 +120,7 @@
 }
 .gw-answer-hero { padding: 4px 2px 6px; }
 .gw-answer-title { display: flex; align-items: center; justify-content: center; gap: 12px; }
-.gw-answer-title .gw-german-answer { min-width: 0; }
+.gw-answer-title .gw-german-answer { width: 100%; min-width: 0; }
 .gw-label, .gw-section h2 { display: block; margin: 0 0 8px; color: var(--gw-dim); font-size: 11px; font-weight: 750; }
 .gw-meaning, .gw-german-answer, .gw-production-meaning { margin: 0; color: var(--gw-strong); font-size: clamp(28px, 7vw, 40px); line-height: 1.12; letter-spacing: -.025em; overflow-wrap: anywhere; }
 .gw-german-answer { font-size: clamp(36px, 9vw, 56px); font-weight: 820; }
@@ -156,6 +160,17 @@
 details { margin-top: 13px; padding-top: 11px; border-top: 1px solid var(--gw-border); }
 summary { display: inline-flex; align-items: center; width: fit-content; min-height: 44px; padding: 10px 4px; color: var(--level); cursor: pointer; font-size: 11px; font-weight: 750; }
 .gw-word-audio { display: none !important; }
+.gw-word-variants { display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 7px; font: inherit; font-size: inherit; line-height: inherit; letter-spacing: inherit; }
+.gw-german-answer .gw-word-variants { display: flex; width: 100%; }
+/* Anki's reviewer WebView applies its own button font defaults. Reset them
+   explicitly so pronunciation variants stay at the headword size. */
+.gw-german-answer .gw-word-variant, .gw-headword .gw-word-variant { appearance: none; display: inline-flex; align-items: center; border: 0; border-radius: 8px; padding: 0 .14em; background: transparent; color: inherit; cursor: pointer; font: inherit !important; line-height: inherit; letter-spacing: inherit; text-decoration: none; }
+.gw-german-answer .gw-word-variant-label, .gw-headword .gw-word-variant-label { font: inherit !important; }
+.gw-word-variant-separator { display: inline-flex; align-items: center; font: inherit; line-height: inherit; pointer-events: none; }
+.gw-word-variant-audio { display: none !important; }
+.gw-word-variant-playable:hover, .gw-word-variant-playable:focus-visible { background: rgba(113, 216, 197, .08); color: var(--level); }
+.gw-word-variant-playable:focus-visible { outline: 2px solid var(--level); outline-offset: 3px; }
+.gw-word-variant.gw-word-playing { color: var(--level); }
 .gw-word-playable { padding: .08em .14em; border-radius: 8px; cursor: pointer; transition: background-color 150ms ease, color 150ms ease; }
 .gw-word-playable::after { content: "  🔊"; color: var(--level); font-size: .38em; opacity: 0; transition: opacity 150ms ease; vertical-align: middle; }
 .gw-word-playable:hover { background: rgba(113, 216, 197, .08); }

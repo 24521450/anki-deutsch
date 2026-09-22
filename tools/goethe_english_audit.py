@@ -1302,9 +1302,36 @@ def _review_entry_errors(entry: dict[str, Any]) -> list[str]:
         r"programme|programmes|motorway|motorways|postcode|postcodes|"
         r"pavement|pavements|lorry|lorries|petrol|rubbish|maths)\b"
     )
+    b1_british_patterns = (
+        r"\b(?:colour|colours|favourite|favourites|neighbour|neighbours|"
+        r"neighbourhood|neighbourhoods|centre|centres|theatre|theatres|"
+        r"metre|metres|kilometre|kilometres|centimetre|centimetres|"
+        r"litre|litres|travelling|travelled|traveller|travellers|"
+        r"cancelled|cancelling|labelled|labelling|organisation|organisations|"
+        r"organised|organising|recognise|recognises|recognised|recognising|"
+        r"realise|realises|realised|realising|analyse|analyses|analysed|analysing|"
+        r"apologise|apologises|apologised|apologising|specialise|specialises|"
+        r"specialised|specialising|emphasise|emphasises|emphasised|emphasising|"
+        r"behaviour|labour|humour|favour|favourable|dialogue|catalogue|cosy|"
+        r"fulfil|fulfils|fulfilled|fulfilling|judgement|jewellery|jeweller|"
+        r"cheque|cheques|licence|licences|practise|defence|offence|aluminium|"
+        r"grey|storey|storeys|kerb|kerbs|aeroplane|aeroplanes|learnt|burnt|"
+        r"programme|programmes|motorway|motorways|postcode|postcodes|"
+        r"pavement|pavements|lorry|lorries|petrol|rubbish|maths|mould|moulds|"
+        r"sulphur|manoeuvre|manoeuvres|parcel|parcels|queue|queues|cash machine|"
+        r"cash machines|postbox|letterbox|registered post|number plate|"
+        r"number plates|jumper|jumpers|trousers|cloakroom|wheelie bin|"
+        r"wheelie bins|minced meat|carriageway|locum|locums|directory enquiries)\b"
+    )
     british_phrases = (
         r"\b(?:car park|railway station|return ticket|single ticket|"
         r"mobile phone|driving licence|at the weekend)s?\b"
+    )
+    b1_british_phrases = (
+        r"\b(?:at weekends|"
+        r"the underground|by post|flatshare|shared flat|"
+        r"school holidays|summer holidays|holiday accommodation|holidaymaker|"
+        r"holidaymakers|postman|postmen|postwoman|postwomen|directory enquiry)s?\b"
     )
     tyre_as_noun = bool(re.search(
         r"\b(?:front|rear|flat|spare|car|bike|bicycle|vehicle|winter|summer) tyres?\b"
@@ -1313,7 +1340,20 @@ def _review_entry_errors(entry: dict[str, Any]) -> list[str]:
         r"(?:a |the |your |my |his |her |our |their )?tyres?\b",
         american_text,
     ))
-    if re.search(british_patterns, american_text) or re.search(british_phrases, american_text) or tyre_as_noun:
+    if (
+        re.search(british_patterns, american_text)
+        or re.search(british_phrases, american_text)
+        or tyre_as_noun
+        or (
+            entry.get("cefr") == "B1"
+            and (
+                re.search(b1_british_patterns, american_text)
+                or re.search(b1_british_phrases, american_text)
+                or re.search(r"\bdraught(?:s|y|proof|proofed)?\b", american_text)
+                or re.search(r"\b(?:ground floor|a lift|the lift|by return)\b", american_text)
+            )
+        )
+    ):
         errors.append("non_american_english")
     if entry.get("english_variant") != "American English":
         errors.append("invalid_english_variant")

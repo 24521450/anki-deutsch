@@ -14,8 +14,8 @@
     "A2-0572": "die Kunst|die Kunsterziehung",
     "A2-0816": "der Rentner|die Rentnerin",
     "A2-WG-0016": "der Prüfer|die Prüferin",
-    "A2-WG-0023": "der Angestellte|die Angestellte",
-    "A2-WG-0025": "der Auszubildende|die Auszubildende",
+    "A2-WG-0023": "der Angestellte|die Angestellte|Angestellter",
+    "A2-WG-0025": "der Auszubildende|die Auszubildende|Auszubildender",
     "A2-WG-0026": "der Autor|die Autorin",
     "A2-WG-0028": "der Bäcker|die Bäckerin",
     "A2-WG-0031": "der Friseur|die Friseurin",
@@ -56,7 +56,9 @@
     "B1-MAIN-0798": "die Fantasie|die Phantasie",
     "B1-MAIN-1049": "die Glace|das Glace|die Glacé|das Glacé",
     "B1-MAIN-1874": "das Portemonnaie|das Portmonee",
-    "B1-MAIN-2060": "die Sauce|die Soße"
+    "B1-MAIN-2060": "die Sauce|die Soße",
+    "A2-0812": "reiten",
+    "A1-84887177212": "ein halb|halb"
   },
   "production": {
     "A1-84886454881": {"enabled": true, "hint": "general baked cake"},
@@ -212,7 +214,6 @@
     "B1-MAIN-2724": {"enabled": true, "hint": "past/over; verb particle in vorbeifahren"},
     "B1-MAIN-2796": {"enabled": true, "hint": "further/on; verb particle in weiteressen"},
     "B1-MAIN-2826": {"enabled": true, "hint": "combined source headword: again and repetition prefix"},
-    "B1-MAIN-2947": {"enabled": true, "hint": "combined source headword: together and verb particle"},
     "B1-MAIN-0139": {"enabled": true, "hint": "D/CH"},
     "B1-MAIN-1572": {"enabled": true, "hint": "A"},
     "B1-MAIN-0443": {"enabled": true, "hint": "D/A"},

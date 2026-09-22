@@ -1,6 +1,6 @@
 <main class="gw-card" data-level="{{CEFR}}" data-direction="en-de">
   <header class="gw-meta">
-    <span class="gw-brand">GOETHE</span>
+    <a class="gw-brand gw-dictionary-link" data-source-id="{{SourceID}}" data-source-refs="{{SourceRefs}}" href="" target="_blank" rel="noopener noreferrer" hidden aria-label="Open dictionary entry">DUDEN</a>
     <span class="gw-pos">{{POS}}</span>
     <span class="gw-level">{{CEFR}}</span>
   </header>
@@ -8,7 +8,10 @@
     <div class="gw-answer-stage">
       <div class="gw-answer-hero">
         <div class="gw-answer-title">
-          <h1 class="gw-german-answer" lang="de">{{#Article}}<span class="gw-article gw-article-{{Article}}">{{Article}}</span> {{/Article}}{{Lemma}}</h1>
+          <h1 class="gw-german-answer" lang="de">
+            {{#WordAudioVariantsHTML}}<span class="gw-word-variants" role="group" aria-label="Pronunciation variants">{{WordAudioVariantsHTML}}</span>{{/WordAudioVariantsHTML}}
+            {{^WordAudioVariantsHTML}}{{#Article}}<span class="gw-article gw-article-{{Article}}">{{Article}}</span> {{/Article}}{{Lemma}}{{/WordAudioVariantsHTML}}
+          </h1>
           {{#WordAudio}}<span class="gw-word-audio" hidden>{{WordAudio}}</span>{{/WordAudio}}
         </div>
         <p class="gw-meaning-secondary" lang="en">{{MeaningEN}}</p>
@@ -53,14 +56,39 @@
 <script>
 {{ExampleAudioController}}
 </script>
+{{#ProductionEnabled}}<div id="gw-native-answer-source" hidden aria-hidden="true">{{FrontSide}}</div>{{/ProductionEnabled}}
 <script>
 {{WordAudioController}}
+</script>
+<script>
+{{DictionaryLinkController}}
 </script>
 <script>
 (function () {
   function text(id) {
     var node = document.getElementById(id);
     return node ? node.textContent.trim() : "";
+  }
+  function nativeTypedAnswer() {
+    var source = document.getElementById("gw-native-answer-source");
+    if (!source || typeof source.querySelector !== "function") return null;
+    var node = source.querySelector("#typeans");
+    if (!node) return "";
+    if (node.tagName && node.tagName.toLowerCase() === "input") return node.value || "";
+    var answer = "";
+    var hasTypedToken = false;
+    for (var index = 0; index < node.childNodes.length; index += 1) {
+      var child = node.childNodes[index];
+      if (child.nodeName && child.nodeName.toUpperCase() === "BR") break;
+      if (child.classList && (
+        child.classList.contains("typeGood") ||
+        child.classList.contains("typeBad")
+      )) {
+        hasTypedToken = true;
+        answer += child.textContent || "";
+      }
+    }
+    return hasTypedToken ? answer : "";
   }
   function normalize(value) {
     return String(value || "")
@@ -75,8 +103,38 @@
       .replace(/ü/g, "ue")
       .replace(/ß/g, "ss");
   }
+  function canSplitCompleteSlashAlternative(value) {
+    if (value.indexOf("/") === -1) return false;
+    if (/\bvor\s*\/\s*nach\b/i.test(value)) return false;
+    if (/\b\d+(?:[.,]\d+)?\s+\w+\s*\/\s*\w+\b/.test(value)) return false;
+    var pieces = value.split(/\s*\/\s*/);
+    if (pieces.length < 2 || pieces.some(function (piece) { return !piece.trim(); })) return false;
+    return !pieces.some(function (piece) {
+      var trimmed = piece.trim();
+      return trimmed.charAt(0) === "-" || trimmed.charAt(trimmed.length - 1) === "-";
+    });
+  }
+  function expandCompleteSlashAlternative(value) {
+    value = value.trim();
+    if (!canSplitCompleteSlashAlternative(value)) return [value];
+    var articleMatch = value.match(/^(der|die|das)\s+(.+)$/i);
+    if (articleMatch && articleMatch[2].charAt(0) === "/") return [value];
+    var article = articleMatch ? articleMatch[1] : "";
+    var lexical = articleMatch ? articleMatch[2] : value;
+    var pieces = lexical.split(/\s*\/\s*/).map(function (item) { return item.trim(); });
+    return pieces.map(function (piece) {
+      return article && !/^(?:der|die|das)\s+/i.test(piece)
+        ? article + " " + piece
+        : piece;
+    });
+  }
   function split(value) {
-    return value.split("|").map(function (item) { return item.trim(); }).filter(Boolean);
+    var result = [];
+    value.split("|").forEach(function (item) {
+      item = item.trim();
+      if (item) expandCompleteSlashAlternative(item).forEach(function (part) { result.push(part); });
+    });
+    return result;
   }
   function correctKey(value) {
     return String(value || "")
@@ -111,32 +169,25 @@
     var stem = raw.slice(0, -1);
     return [raw, stem, stem + "e", stem + "er", stem + "es", stem + "em", stem + "en", stem + "s"];
   }
-  function optionalReflexiveVariants(lemma) {
-    var match = String(lemma || "").trim().match(/^\(sich\)\s+(.+)$/i);
-    return match ? [match[1], "sich " + match[1]] : [];
-  }
-
   if (!/^(?:1|true|yes)$/i.test(text("gw-production-enabled"))) return;
   var source = text("gw-source-id");
   var key = "goethe-werkstatt:" + source + ":production";
-  var raw = "";
-  try { raw = sessionStorage.getItem(key); } catch (error) {}
-  if (raw === null || raw === "") {
-    var memory = globalThis.goetheWerkstattAnswers || {};
-    if (Object.prototype.hasOwnProperty.call(memory, key)) raw = memory[key];
+  var raw = nativeTypedAnswer();
+  if (raw === null) {
+    raw = "";
+    try { raw = sessionStorage.getItem(key); } catch (error) {}
+    if (raw === null || raw === "") {
+      var memory = globalThis.goetheWerkstattAnswers || {};
+      if (Object.prototype.hasOwnProperty.call(memory, key)) raw = memory[key];
+    }
   }
   raw = raw || "";
 
-  var answers = split(text("gw-accepted-answers"));
-  if (!answers.length) answers = [text("gw-lemma")];
   var articles = split(text("gw-accepted-articles"));
   var fullAnswers = split(text("gw-accepted-full-answers"));
-  var hasAuthoritativeFullAnswers = fullAnswers.length > 0;
-  if (!hasAuthoritativeFullAnswers) {
-    fullAnswers = answers.map(function (answer) {
-      return articles.length ? articles[0] + " " + answer : answer;
-    });
-  }
+  // Production grading is fail-closed: AcceptedFullAnswersDE is the reviewed
+  // answer contract, while Lemma/AcceptedAnswersDE are source/index fields.
+  if (!fullAnswers.length) return;
   var articleBearing = articles.length > 0 || /^(?:der|die|das)$/i.test(text("gw-article")) || fullAnswers.some(function (answer) {
     return /^(?:der|die|das)\s+/.test(answer);
   });
@@ -153,18 +204,6 @@
       acceptedLexical[normalize(variant)] = true;
     });
   });
-  var accepted = {};
-  if (!hasAuthoritativeFullAnswers) answers.forEach(function (answer) {
-    exactVariants(answer).forEach(function (variant) {
-      acceptedCorrect[correctKey(variant)] = true;
-      articles.forEach(function (article) { acceptedCorrect[correctKey(article + " " + variant)] = true; });
-    });
-    variants(answer).forEach(function (variant) {
-      acceptedLexical[normalize(lexicalPart(variant, articleBearing))] = true;
-      accepted[normalize(variant)] = true;
-      articles.forEach(function (article) { accepted[normalize(article + " " + variant)] = true; });
-    });
-  });
   trailingHyphenVariants(text("gw-lemma")).forEach(function (answer) {
     exactVariants(answer).forEach(function (variant) {
       acceptedCorrect[correctKey(variant)] = true;
@@ -174,15 +213,12 @@
       });
     });
   });
-  optionalReflexiveVariants(text("gw-lemma")).forEach(function (answer) {
-    acceptedCorrect[correctKey(answer)] = true;
-  });
   function classify(value) {
     var trimmed = value.trim();
     if (!trimmed) return "incorrect";
     if (acceptedCorrect[correctKey(trimmed)]) return "correct";
     var normalized = normalize(trimmed);
-    if (acceptedLenient[normalized] || accepted[normalized]) return "partial";
+    if (acceptedLenient[normalized]) return "partial";
     if (acceptedLexical[normalize(lexicalPart(trimmed, articleBearing))]) return "partial";
     return "incorrect";
   }

@@ -1,0 +1,2117 @@
+{
+  "schema_version": 1,
+  "batch": "american_english_and_abbreviation_review_2026_09",
+  "records": {
+    "A1-84886454922": {
+      "source_id": "A1-84886454922",
+      "source_refs": [
+        "A1-84886454922",
+        "A1-MAIN-0414",
+        "A2-WG-0004",
+        "B1-WG-0012"
+      ],
+      "lemma": "Lkw",
+      "cefr": "A1",
+      "expected": {
+        "MeaningEN": "truck; HGV"
+      },
+      "set": {
+        "MeaningEN": "truck"
+      },
+      "audit_source_ids": [
+        "A1-84886454922"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-0032": {
+      "source_id": "B1-MAIN-0032",
+      "source_refs": [
+        "B1-MAIN-0032"
+      ],
+      "lemma": "Abteilung",
+      "cefr": "B1",
+      "expected": {
+        "Example1EN": "My friend works in Ms Kaufmann's department."
+      },
+      "set": {
+        "Example1EN": "My friend works in Ms. Kaufmann's department."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-0032"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-0033": {
+      "source_id": "B1-MAIN-0033",
+      "source_refs": [
+        "B1-MAIN-0033"
+      ],
+      "lemma": "abwärts",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "downwards"
+      },
+      "set": {
+        "MeaningEN": "downward"
+      },
+      "audit_source_ids": [
+        "B1-MAIN-0033"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-0037": {
+      "source_id": "B1-MAIN-0037",
+      "source_refs": [
+        "B1-MAIN-0037"
+      ],
+      "lemma": "abwesend",
+      "cefr": "B1",
+      "expected": {
+        "Example1EN": "Mr Huber will be absent until 25 April."
+      },
+      "set": {
+        "Example1EN": "Mr. Huber will be absent until April 25."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-0037"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-0079": {
+      "source_id": "B1-MAIN-0079",
+      "source_refs": [
+        "B1-MAIN-0079"
+      ],
+      "lemma": "analysieren",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "to analyse",
+        "Example1EN": "The politicians are analysing the situation on the labor market."
+      },
+      "set": {
+        "MeaningEN": "to analyze",
+        "Example1EN": "The politicians are analyzing the situation on the labor market."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-0079"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-0085": {
+      "source_id": "B1-MAIN-0085",
+      "source_refs": [
+        "B1-MAIN-0085"
+      ],
+      "lemma": "anerkennen",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "to recognise officially; to accept as valid"
+      },
+      "set": {
+        "MeaningEN": "to recognize officially; to accept as valid"
+      },
+      "audit_source_ids": [
+        "B1-MAIN-0085"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-0119": {
+      "source_id": "B1-MAIN-0119",
+      "source_refs": [
+        "B1-MAIN-0119"
+      ],
+      "lemma": "anstellen",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "to turn on; to employ; to queue",
+        "Example3EN": "The checkout is at the front. You have to queue."
+      },
+      "set": {
+        "MeaningEN": "to turn on; to employ; to line up",
+        "Example3EN": "The checkout is at the front. You have to line up."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-0119"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-0167": {
+      "source_id": "B1-MAIN-0167",
+      "source_refs": [
+        "B1-MAIN-0167"
+      ],
+      "lemma": "aufgeben",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "to post; to give up",
+        "Example1EN": "I posted a parcel at the post office."
+      },
+      "set": {
+        "MeaningEN": "to mail; to give up",
+        "Example1EN": "I mailed a package at the post office."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-0167"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-0171": {
+      "source_id": "B1-MAIN-0171",
+      "source_refs": [
+        "B1-MAIN-0171"
+      ],
+      "lemma": "aufladen",
+      "cefr": "B1",
+      "expected": {
+        "Example1EN": "I need to charge my phone. The battery is flat."
+      },
+      "set": {
+        "Example1EN": "I need to charge my phone. The battery is dead."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-0171"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-0181": {
+      "source_id": "B1-MAIN-0181",
+      "source_refs": [
+        "B1-MAIN-0181"
+      ],
+      "lemma": "Auftrag",
+      "cefr": "B1",
+      "expected": {
+        "Example1EN": "I'm here on behalf of Ms Müller and I'm supposed to give you this letter."
+      },
+      "set": {
+        "Example1EN": "I'm here on behalf of Ms. Müller and I'm supposed to give you this letter."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-0181"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-0185": {
+      "source_id": "B1-MAIN-0185",
+      "source_refs": [
+        "B1-MAIN-0185"
+      ],
+      "lemma": "aufwärts",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "upwards; uphill"
+      },
+      "set": {
+        "MeaningEN": "upward; uphill"
+      },
+      "audit_source_ids": [
+        "B1-MAIN-0185"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-0211": {
+      "source_id": "B1-MAIN-0211",
+      "source_refs": [
+        "B1-MAIN-0211"
+      ],
+      "lemma": "Ausnahme",
+      "cefr": "B1",
+      "expected": {
+        "Example1EN": "I normally have to work at weekends, but today is an exception."
+      },
+      "set": {
+        "Example1EN": "I normally have to work on weekends, but today is an exception."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-0211"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-0252": {
+      "source_id": "B1-MAIN-0252",
+      "source_refs": [
+        "B1-MAIN-0252",
+        "B1-MAIN-0255"
+      ],
+      "lemma": "Bancomat",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "cash machine (Swiss German)",
+        "Example1EN": "I'll quickly get some money from the cash machine."
+      },
+      "set": {
+        "MeaningEN": "ATM (Swiss German)",
+        "Example1EN": "I'll quickly get some money from the ATM."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-0252"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-0264": {
+      "source_id": "B1-MAIN-0264",
+      "source_refs": [
+        "B1-MAIN-0264"
+      ],
+      "lemma": "Bau",
+      "cefr": "B1",
+      "expected": {
+        "Example1EN": "I live in a apartment in a new building."
+      },
+      "set": {
+        "Example1EN": "I live in an apartment in a new building."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-0264"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-0328": {
+      "source_id": "B1-MAIN-0328",
+      "source_refs": [
+        "B1-MAIN-0328"
+      ],
+      "lemma": "bereit",
+      "cefr": "B1",
+      "expected": {
+        "Example2EN": "The parcel is waiting for you at the post office."
+      },
+      "set": {
+        "Example2EN": "The package is waiting for you at the post office."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-0328"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-0329": {
+      "source_id": "B1-MAIN-0329",
+      "source_refs": [
+        "B1-MAIN-0329"
+      ],
+      "lemma": "bereits",
+      "cefr": "B1",
+      "expected": {
+        "Example1EN": "Please contact Ms Kaiser. She has already called three times."
+      },
+      "set": {
+        "Example1EN": "Please contact Ms. Kaiser. She has already called three times."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-0329"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-0349": {
+      "source_id": "B1-MAIN-0349",
+      "source_refs": [
+        "B1-MAIN-0349"
+      ],
+      "lemma": "besetzen",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "to occupy; to reserve; to be engaged",
+        "Example3EN": "I've called there three times now. The line is always engaged."
+      },
+      "set": {
+        "MeaningEN": "to occupy; to reserve; to be busy",
+        "Example3EN": "I've called there three times now. The line is always busy."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-0349"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-0356": {
+      "source_id": "B1-MAIN-0356",
+      "source_refs": [
+        "B1-MAIN-0356"
+      ],
+      "lemma": "Besprechung",
+      "cefr": "B1",
+      "expected": {
+        "Example1EN": "I'm sorry, Mr Schmidt is still in a meeting."
+      },
+      "set": {
+        "Example1EN": "I'm sorry, Mr. Schmidt is still in a meeting."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-0356"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-0440": {
+      "source_id": "B1-MAIN-0440",
+      "source_refs": [
+        "B1-MAIN-0440"
+      ],
+      "lemma": "Briefkasten",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "postbox; letterbox",
+        "Example1EN": "Is there a postbox near here?",
+        "Example2EN": "Please get the newspaper out of the letterbox."
+      },
+      "set": {
+        "MeaningEN": "mailbox",
+        "Example1EN": "Is there a mailbox near here?",
+        "Example2EN": "Please get the newspaper out of the mailbox."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-0440"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-0443": {
+      "source_id": "B1-MAIN-0443",
+      "source_refs": [
+        "B1-MAIN-0443"
+      ],
+      "lemma": "Briefträger",
+      "cefr": "B1",
+      "expected": {
+        "Example1EN": "Has the postwoman been yet?"
+      },
+      "set": {
+        "Example1EN": "Has the mail carrier been here yet?"
+      },
+      "audit_source_ids": [
+        "B1-MAIN-0443"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-0460": {
+      "source_id": "B1-MAIN-0460",
+      "source_refs": [
+        "B1-MAIN-0460"
+      ],
+      "lemma": "Büchse",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "tin (German/Swiss German)",
+        "Example1EN": "I still have a tin of beans."
+      },
+      "set": {
+        "MeaningEN": "can (Germany/Switzerland)",
+        "Example1EN": "I still have a can of beans."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-0460"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-0488": {
+      "source_id": "B1-MAIN-0488",
+      "source_refs": [
+        "B1-MAIN-0488"
+      ],
+      "lemma": "dafür",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "for it; in favour of it",
+        "Example2EN": "I'm in favour of leaving as early as possible."
+      },
+      "set": {
+        "MeaningEN": "for it; in favor of it",
+        "Example2EN": "I'm in favor of leaving as early as possible."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-0488"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-0494": {
+      "source_id": "B1-MAIN-0494",
+      "source_refs": [
+        "B1-MAIN-0494"
+      ],
+      "lemma": "damit",
+      "cefr": "B1",
+      "expected": {
+        "Example2EN": "What do you do with this thing? – You can open tins with it."
+      },
+      "set": {
+        "Example2EN": "What do you do with this thing? – You can open cans with it."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-0494"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-0495": {
+      "source_id": "B1-MAIN-0495",
+      "source_refs": [
+        "B1-MAIN-0495"
+      ],
+      "lemma": "danach",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "afterwards; then"
+      },
+      "set": {
+        "MeaningEN": "afterward; then"
+      },
+      "audit_source_ids": [
+        "B1-MAIN-0495"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-0524": {
+      "source_id": "B1-MAIN-0524",
+      "source_refs": [
+        "B1-MAIN-0524"
+      ],
+      "lemma": "Dialog",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "dialogue",
+        "Example1EN": "You will now hear a dialogue."
+      },
+      "set": {
+        "MeaningEN": "dialog",
+        "Example1EN": "You will now hear a dialog."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-0524"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-0525": {
+      "source_id": "B1-MAIN-0525",
+      "source_refs": [
+        "B1-MAIN-0525"
+      ],
+      "lemma": "dicht",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "draughtproof; tightly sealed",
+        "Example1EN": "Our windows aren't draughtproof. There is always a draught."
+      },
+      "set": {
+        "MeaningEN": "draftproof; tightly sealed",
+        "Example1EN": "Our windows aren't sealed well. There's always a draft."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-0525"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-0554": {
+      "source_id": "B1-MAIN-0554",
+      "source_refs": [
+        "B1-MAIN-0554"
+      ],
+      "lemma": "Dose",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "tin (Austrian German)",
+        "Example1EN": "I still have a tin of beans."
+      },
+      "set": {
+        "MeaningEN": "can",
+        "Example1EN": "I still have a can of beans."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-0554"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-0636": {
+      "source_id": "B1-MAIN-0636",
+      "source_refs": [
+        "B1-MAIN-0636"
+      ],
+      "lemma": "Einrichtung",
+      "cefr": "B1",
+      "expected": {
+        "Example1EN": "Your apartment is very cosy; I really like the furnishings."
+      },
+      "set": {
+        "Example1EN": "Your apartment is very cozy; I really like the furnishings."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-0636"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-0640": {
+      "source_id": "B1-MAIN-0640",
+      "source_refs": [
+        "B1-MAIN-0640"
+      ],
+      "lemma": "Einschreiben",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "registered post",
+        "Example1EN": "I sent the letter by registered post."
+      },
+      "set": {
+        "MeaningEN": "registered mail",
+        "Example1EN": "I sent the letter by registered mail."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-0640"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-0647": {
+      "source_id": "B1-MAIN-0647",
+      "source_refs": [
+        "B1-MAIN-0647"
+      ],
+      "lemma": "einverstanden",
+      "cefr": "B1",
+      "expected": {
+        "Example1EN": "I suggest 3 May as the date. – Good, agreed!"
+      },
+      "set": {
+        "Example1EN": "I suggest May 3 as the date. – Good, agreed!"
+      },
+      "audit_source_ids": [
+        "B1-MAIN-0647"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-0668": {
+      "source_id": "B1-MAIN-0668",
+      "source_refs": [
+        "B1-MAIN-0668"
+      ],
+      "lemma": "Empfehlung",
+      "cefr": "B1",
+      "expected": {
+        "Example1EN": "I'm calling on the recommendation of Mr Weber."
+      },
+      "set": {
+        "Example1EN": "I'm calling on the recommendation of Mr. Weber."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-0668"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-0680": {
+      "source_id": "B1-MAIN-0680",
+      "source_refs": [
+        "B1-MAIN-0680"
+      ],
+      "lemma": "entgegenkommen",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "to come towards someone; to meet someone halfway"
+      },
+      "set": {
+        "MeaningEN": "to come toward someone; to meet someone halfway"
+      },
+      "audit_source_ids": [
+        "B1-MAIN-0680"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-0712": {
+      "source_id": "B1-MAIN-0712",
+      "source_refs": [
+        "B1-MAIN-0712"
+      ],
+      "lemma": "erfüllen",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "to fulfil; to meet",
+        "Example1EN": "You must fulfil the contract in every respect.",
+        "Example2EN": "We fulfil your every wish."
+      },
+      "set": {
+        "MeaningEN": "to fulfill; to meet",
+        "Example1EN": "You must fulfill the contract in every respect.",
+        "Example2EN": "We fulfill your every wish."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-0712"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-0716": {
+      "source_id": "B1-MAIN-0716",
+      "source_refs": [
+        "B1-MAIN-0716"
+      ],
+      "lemma": "erhalten",
+      "cefr": "B1",
+      "expected": {
+        "Example1EN": "We have received your letter dated 3 January."
+      },
+      "set": {
+        "Example1EN": "We have received your letter dated January 3."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-0716"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-0726": {
+      "source_id": "B1-MAIN-0726",
+      "source_refs": [
+        "B1-MAIN-0726"
+      ],
+      "lemma": "erkennen",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "to recognise; to make out; to realise",
+        "Example3EN": "I realised that not completing the course had been a mistake."
+      },
+      "set": {
+        "MeaningEN": "to recognize; to make out; to realize",
+        "Example3EN": "I realized that not completing the course had been a mistake."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-0726"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-0734": {
+      "source_id": "B1-MAIN-0734",
+      "source_refs": [
+        "B1-MAIN-0734"
+      ],
+      "lemma": "erledigen",
+      "cefr": "B1",
+      "expected": {
+        "Example1EN": "These two parcels need to go to the post office. Could you take care of that for me?"
+      },
+      "set": {
+        "Example1EN": "These two packages need to go to the post office. Could you take care of that for me?"
+      },
+      "audit_source_ids": [
+        "B1-MAIN-0734"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-0743": {
+      "source_id": "B1-MAIN-0743",
+      "source_refs": [
+        "B1-MAIN-0743"
+      ],
+      "lemma": "Eröffnung",
+      "cefr": "B1",
+      "expected": {
+        "Example1EN": "The opening of the new opera is on 1 June."
+      },
+      "set": {
+        "Example1EN": "The opening of the new opera is on June 1."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-0743"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-0781": {
+      "source_id": "B1-MAIN-0781",
+      "source_refs": [
+        "B1-MAIN-0781"
+      ],
+      "lemma": "Fahrbahn",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "carriageway; road"
+      },
+      "set": {
+        "MeaningEN": "roadway; road"
+      },
+      "audit_source_ids": [
+        "B1-MAIN-0781"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-0802": {
+      "source_id": "B1-MAIN-0802",
+      "source_refs": [
+        "B1-MAIN-0802"
+      ],
+      "lemma": "Faschierte",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "minced meat (Austrian German)",
+        "Example1EN": "Please give me 500 g of minced meat."
+      },
+      "set": {
+        "MeaningEN": "ground meat (Austrian German)",
+        "Example1EN": "Please give me 500 g of ground meat."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-0802"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-0877": {
+      "source_id": "B1-MAIN-0877",
+      "source_refs": [
+        "B1-MAIN-0877"
+      ],
+      "lemma": "Form",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "shape; cake tin",
+        "Example2EN": "I want to bake a cake for my birthday. Can you lend me a cake tin?"
+      },
+      "set": {
+        "MeaningEN": "shape; cake pan",
+        "Example2EN": "I want to bake a cake for my birthday. Can you lend me a cake pan?"
+      },
+      "audit_source_ids": [
+        "B1-MAIN-0877"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-0922": {
+      "source_id": "B1-MAIN-0922",
+      "source_refs": [
+        "B1-MAIN-0922"
+      ],
+      "lemma": "führen",
+      "cefr": "B1",
+      "expected": {
+        "Example2EN": "Ms Meyer has been running the business for ten years."
+      },
+      "set": {
+        "Example2EN": "Ms. Meyer has been running the business for ten years."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-0922"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-0945": {
+      "source_id": "B1-MAIN-0945",
+      "source_refs": [
+        "B1-MAIN-0945"
+      ],
+      "lemma": "Garderobe",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "cloakroom; wardrobe",
+        "Example1EN": "Please leave your coats in the cloakroom."
+      },
+      "set": {
+        "MeaningEN": "coatroom; wardrobe",
+        "Example1EN": "Please leave your coats in the coatroom."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-0945"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-0975": {
+      "source_id": "B1-MAIN-0975",
+      "source_refs": [
+        "B1-MAIN-0975"
+      ],
+      "lemma": "Gegenstand",
+      "cefr": "B1",
+      "expected": {
+        "Example2EN": "Police announcement: There are objects on the carriageway on the A8."
+      },
+      "set": {
+        "Example2EN": "Police announcement: There are objects on the roadway on the A8."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-0975"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-0986": {
+      "source_id": "B1-MAIN-0986",
+      "source_refs": [
+        "B1-MAIN-0986"
+      ],
+      "lemma": "Geldautomat",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "cash machine",
+        "Example1EN": "I'll get some cash from the cash machine."
+      },
+      "set": {
+        "MeaningEN": "ATM",
+        "Example1EN": "I'll get some cash from the ATM."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-0986"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-0994": {
+      "source_id": "B1-MAIN-0994",
+      "source_refs": [
+        "B1-MAIN-0994"
+      ],
+      "lemma": "gemütlich",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "cosy; comfortable",
+        "Example1EN": "We have a very cosy apartment.",
+        "Example2EN": "Your place is very cosy."
+      },
+      "set": {
+        "MeaningEN": "cozy; comfortable",
+        "Example1EN": "We have a very cozy apartment.",
+        "Example2EN": "Your place is very cozy."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-0994"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-1041": {
+      "source_id": "B1-MAIN-1041",
+      "source_refs": [
+        "B1-MAIN-1041"
+      ],
+      "lemma": "Gewohnheit",
+      "cefr": "B1",
+      "expected": {
+        "Example1EN": "He has a habit of dealing with the post first thing in the morning."
+      },
+      "set": {
+        "Example1EN": "He has a habit of dealing with the mail first thing in the morning."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-1041"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-1079": {
+      "source_id": "B1-MAIN-1079",
+      "source_refs": [
+        "B1-MAIN-1079"
+      ],
+      "lemma": "gründen",
+      "cefr": "B1",
+      "expected": {
+        "Example1EN": "Ms Bauer founded her own company."
+      },
+      "set": {
+        "Example1EN": "Ms. Bauer founded her own company."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-1079"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-1093": {
+      "source_id": "B1-MAIN-1093",
+      "source_refs": [
+        "B1-MAIN-1093"
+      ],
+      "lemma": "Hackfleisch",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "mince; minced meat",
+        "Example1EN": "Please give me 500 g of mince."
+      },
+      "set": {
+        "MeaningEN": "ground meat",
+        "Example1EN": "Please give me 500 g of ground meat."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-1093"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-1118": {
+      "source_id": "B1-MAIN-1118",
+      "source_refs": [
+        "B1-MAIN-1118"
+      ],
+      "lemma": "handeln",
+      "cefr": "B1",
+      "expected": {
+        "Example1EN": "Mr Huber has a small business. He trades in fruit and vegetables."
+      },
+      "set": {
+        "Example1EN": "Mr. Huber has a small business. He trades in fruit and vegetables."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-1118"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-1135": {
+      "source_id": "B1-MAIN-1135",
+      "source_refs": [
+        "B1-MAIN-1135"
+      ],
+      "lemma": "heben",
+      "cefr": "B1",
+      "expected": {
+        "Example1EN": "Can you help me? I can't lift the parcel on my own.",
+        "Example2EN": "If you are in favour of this proposal, please raise your hand!"
+      },
+      "set": {
+        "Example1EN": "Can you help me? I can't lift the package on my own.",
+        "Example2EN": "If you are in favor of this proposal, please raise your hand!"
+      },
+      "audit_source_ids": [
+        "B1-MAIN-1135"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-1157": {
+      "source_id": "B1-MAIN-1157",
+      "source_refs": [
+        "B1-MAIN-1157"
+      ],
+      "lemma": "herein-",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "in (towards the speaker)"
+      },
+      "set": {
+        "MeaningEN": "in (toward the speaker)"
+      },
+      "audit_source_ids": [
+        "B1-MAIN-1157"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-1174": {
+      "source_id": "B1-MAIN-1174",
+      "source_refs": [
+        "B1-MAIN-1174"
+      ],
+      "lemma": "hinterher",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "afterwards",
+        "Example1EN": "I studied so much before the exam. Afterwards, I forgot a lot of it."
+      },
+      "set": {
+        "MeaningEN": "afterward",
+        "Example1EN": "I studied so much before the exam. Afterward, I forgot a lot of it."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-1174"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-1203": {
+      "source_id": "B1-MAIN-1203",
+      "source_refs": [
+        "B1-MAIN-1203"
+      ],
+      "lemma": "Humor",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "humour",
+        "Example1EN": "We like Paul because he has such a good sense of humour.",
+        "Example2EN": "I don't understand the comedian's humour."
+      },
+      "set": {
+        "MeaningEN": "humor",
+        "Example1EN": "We like Paul because he has such a good sense of humor.",
+        "Example2EN": "I don't understand the comedian's humor."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-1203"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-1210": {
+      "source_id": "B1-MAIN-1210",
+      "source_refs": [
+        "B1-MAIN-1210"
+      ],
+      "lemma": "ideal",
+      "cefr": "B1",
+      "expected": {
+        "Example1EN": "A apartment with a garden would be ideal for us."
+      },
+      "set": {
+        "Example1EN": "An apartment with a garden would be ideal for us."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-1210"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-1251": {
+      "source_id": "B1-MAIN-1251",
+      "source_refs": [
+        "B1-MAIN-1251"
+      ],
+      "lemma": "inzwischen",
+      "cefr": "B1",
+      "expected": {
+        "Example1EN": "Mr M?ller will be back shortly. Meanwhile, you can wait in his office."
+      },
+      "set": {
+        "Example1EN": "Mr. Müller will be back shortly. Meanwhile, you can wait in his office."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-1251"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-1258": {
+      "source_id": "B1-MAIN-1258",
+      "source_refs": [
+        "B1-MAIN-1258"
+      ],
+      "lemma": "je",
+      "cefr": "B1",
+      "expected": {
+        "Example1EN": "Depending on the quality, the jumpers cost between 40 and 60 euros.",
+        "Example2EN": "Are you traveling in June or July? – It depends on when my husband can take leave."
+      },
+      "set": {
+        "Example1EN": "Depending on the quality, the sweaters cost between 40 and 60 euros.",
+        "Example2EN": "Are you traveling in June or July? – It depends on when my husband can take time off."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-1258"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-1306": {
+      "source_id": "B1-MAIN-1306",
+      "source_refs": [
+        "B1-MAIN-1306"
+      ],
+      "lemma": "Katalog",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "catalogue",
+        "Example1EN": "I ordered a dress from the catalogue."
+      },
+      "set": {
+        "MeaningEN": "catalog",
+        "Example1EN": "I ordered a dress from the catalog."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-1306"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-1318": {
+      "source_id": "B1-MAIN-1318",
+      "source_refs": [
+        "B1-MAIN-1318"
+      ],
+      "lemma": "Kennzeichen",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "number plate",
+        "Example1EN": "The car has a Swiss number plate."
+      },
+      "set": {
+        "MeaningEN": "license plate",
+        "Example1EN": "The car has a Swiss license plate."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-1318"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-1404": {
+      "source_id": "B1-MAIN-1404",
+      "source_refs": [
+        "B1-MAIN-1404"
+      ],
+      "lemma": "Kranke",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "sick person; sick people"
+      },
+      "set": {
+        "MeaningEN": "sick person"
+      },
+      "audit_source_ids": [
+        "B1-MAIN-1404"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-1459": {
+      "source_id": "B1-MAIN-1459",
+      "source_refs": [
+        "B1-MAIN-1459"
+      ],
+      "lemma": "Lage",
+      "cefr": "B1",
+      "expected": {
+        "Example1EN": "We are looking for a apartment in a central location."
+      },
+      "set": {
+        "Example1EN": "We are looking for an apartment in a central location."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-1459"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-1505": {
+      "source_id": "B1-MAIN-1505",
+      "source_refs": [
+        "B1-MAIN-1505"
+      ],
+      "lemma": "Leitung",
+      "cefr": "B1",
+      "expected": {
+        "Example1EN": "Mr Meier will take over management of the department on 1 July.",
+        "Example2EN": "Sorry, all the lines are engaged."
+      },
+      "set": {
+        "Example1EN": "Mr. Meier will take over management of the department on July 1.",
+        "Example2EN": "Sorry, all the lines are busy."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-1505"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-1524": {
+      "source_id": "B1-MAIN-1524",
+      "source_refs": [
+        "B1-MAIN-1524"
+      ],
+      "lemma": "Lift",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "lift (Austrian German/Swiss German)",
+        "Example1EN": "Unfortunately, the lift in the office is broken."
+      },
+      "set": {
+        "MeaningEN": "elevator (Austrian German/Swiss German)",
+        "Example1EN": "Unfortunately, the elevator in the office is broken."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-1524"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-1533": {
+      "source_id": "B1-MAIN-1533",
+      "source_refs": [
+        "B1-MAIN-1533"
+      ],
+      "lemma": "Loch",
+      "cefr": "B1",
+      "expected": {
+        "Example2EN": "Your trousers have a hole in them. – I know; they are old."
+      },
+      "set": {
+        "Example2EN": "Your pants have a hole in them. – I know; they are old."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-1533"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-1638": {
+      "source_id": "B1-MAIN-1638",
+      "source_refs": [
+        "B1-MAIN-1638"
+      ],
+      "lemma": "mitten",
+      "cefr": "B1",
+      "expected": {
+        "Example1EN": "We have a apartment right in the city center.",
+        "Example2EN": "The aircraft was delayed. We did not arrive until the middle of the night."
+      },
+      "set": {
+        "Example1EN": "We have an apartment right in the city center.",
+        "Example2EN": "The plane was delayed. We did not arrive until the middle of the night."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-1638"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-1641": {
+      "source_id": "B1-MAIN-1641",
+      "source_refs": [
+        "B1-MAIN-1641"
+      ],
+      "lemma": "mobil/mobil-",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "mobile",
+        "Example1EN": "I am very mobile in the city by bike."
+      },
+      "set": {
+        "MeaningEN": "mobile; able to get around easily",
+        "Example1EN": "I can get around the city easily by bike."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-1641"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-1654": {
+      "source_id": "B1-MAIN-1654",
+      "source_refs": [
+        "B1-MAIN-1654"
+      ],
+      "lemma": "möglichst",
+      "cefr": "B1",
+      "expected": {
+        "Example2EN": "We are looking for a apartment, preferably on the first floor."
+      },
+      "set": {
+        "Example2EN": "We are looking for an apartment, preferably on the first floor."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-1654"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-1666": {
+      "source_id": "B1-MAIN-1666",
+      "source_refs": [
+        "B1-MAIN-1666"
+      ],
+      "lemma": "Mülltonne",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "wheelie bin",
+        "Example1EN": "The wheelie bin is full."
+      },
+      "set": {
+        "MeaningEN": "trash can",
+        "Example1EN": "The trash can is full."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-1666"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-1792": {
+      "source_id": "B1-MAIN-1792",
+      "source_refs": [
+        "B1-MAIN-1792"
+      ],
+      "lemma": "Ordination",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "doctor's surgery; consulting hours (Austrian German)",
+        "Example1EN": "The surgery will be closed until 7 January.",
+        "Example2EN": "Dr Berger's consulting hours are from 8 a.m. to noon."
+      },
+      "set": {
+        "MeaningEN": "doctor's office; office hours (Austrian German)",
+        "Example1EN": "The doctor's office will be closed until January 7.",
+        "Example2EN": "Dr. Berger's office hours are from 8 a.m. to noon."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-1792"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-1793": {
+      "source_id": "B1-MAIN-1793",
+      "source_refs": [
+        "B1-MAIN-1793"
+      ],
+      "lemma": "ordnen",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "to sort; to organise"
+      },
+      "set": {
+        "MeaningEN": "to sort; to organize"
+      },
+      "audit_source_ids": [
+        "B1-MAIN-1793"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-1823": {
+      "source_id": "B1-MAIN-1823",
+      "source_refs": [
+        "B1-MAIN-1823"
+      ],
+      "lemma": "Patient",
+      "cefr": "B1",
+      "expected": {
+        "Example1EN": "I am a patient of Dr Hausner. I would like to make an appointment, please."
+      },
+      "set": {
+        "Example1EN": "I am a patient of Dr. Hausner. I would like to make an appointment, please."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-1823"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-1824": {
+      "source_id": "B1-MAIN-1824",
+      "source_refs": [
+        "B1-MAIN-1824"
+      ],
+      "lemma": "Patientin",
+      "cefr": "B1",
+      "expected": {
+        "Example1EN": "I am a patient of Dr Hausner. I would like to make an appointment, please."
+      },
+      "set": {
+        "Example1EN": "I am a patient of Dr. Hausner. I would like to make an appointment, please."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-1824"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-1836": {
+      "source_id": "B1-MAIN-1836",
+      "source_refs": [
+        "B1-MAIN-1836"
+      ],
+      "lemma": "persönlich",
+      "cefr": "B1",
+      "expected": {
+        "Example2EN": "I have to speak to Mr Meier personally."
+      },
+      "set": {
+        "Example2EN": "I have to speak to Mr. Meier personally."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-1836"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-1942": {
+      "source_id": "B1-MAIN-1942",
+      "source_refs": [
+        "B1-MAIN-1942"
+      ],
+      "lemma": "rauf/rauf-",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "up; upwards (colloquial)"
+      },
+      "set": {
+        "MeaningEN": "up; upward (colloquial)"
+      },
+      "audit_source_ids": [
+        "B1-MAIN-1942"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-1947": {
+      "source_id": "B1-MAIN-1947",
+      "source_refs": [
+        "B1-MAIN-1947"
+      ],
+      "lemma": "realisieren",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "to implement; to realise",
+        "Example2EN": "I did not realise that the time was already up."
+      },
+      "set": {
+        "MeaningEN": "to implement; to realize",
+        "Example2EN": "I did not realize that the time was already up."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-1947"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-1963": {
+      "source_id": "B1-MAIN-1963",
+      "source_refs": [
+        "B1-MAIN-1963"
+      ],
+      "lemma": "reduzieren",
+      "cefr": "B1",
+      "expected": {
+        "Example2EN": "Is this jumper discounted as well?"
+      },
+      "set": {
+        "Example2EN": "Is this sweater discounted as well?"
+      },
+      "audit_source_ids": [
+        "B1-MAIN-1963"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-1980": {
+      "source_id": "B1-MAIN-1980",
+      "source_refs": [
+        "B1-MAIN-1980"
+      ],
+      "lemma": "rein",
+      "cefr": "B1",
+      "expected": {
+        "Example1EN": "The jumper is made of pure wool."
+      },
+      "set": {
+        "Example1EN": "The sweater is made of pure wool."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-1980"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-1988": {
+      "source_id": "B1-MAIN-1988",
+      "source_refs": [
+        "B1-MAIN-1988"
+      ],
+      "lemma": "Reklame",
+      "cefr": "B1",
+      "expected": {
+        "Example1EN": "I don't want any advertising leaflets in the letterbox."
+      },
+      "set": {
+        "Example1EN": "I don't want any advertising flyers in the mailbox."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-1988"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-2012": {
+      "source_id": "B1-MAIN-2012",
+      "source_refs": [
+        "B1-MAIN-2012"
+      ],
+      "lemma": "Richtung",
+      "cefr": "B1",
+      "expected": {
+        "Example1EN": "The train heading towards Cologne is delayed."
+      },
+      "set": {
+        "Example1EN": "The train heading toward Cologne is delayed."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-2012"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-2029": {
+      "source_id": "B1-MAIN-2029",
+      "source_refs": [
+        "B1-MAIN-2029"
+      ],
+      "lemma": "rückwärts",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "backwards; in reverse"
+      },
+      "set": {
+        "MeaningEN": "backward; in reverse"
+      },
+      "audit_source_ids": [
+        "B1-MAIN-2029"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-2049": {
+      "source_id": "B1-MAIN-2049",
+      "source_refs": [
+        "B1-MAIN-2049"
+      ],
+      "lemma": "Saison",
+      "cefr": "B1",
+      "expected": {
+        "Example1EN": "Taking a vacation during the school vacations is always more expensive. That is the season when prices are highest."
+      },
+      "set": {
+        "Example1EN": "Traveling during school breaks is always more expensive. That's peak season."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-2049"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-2097": {
+      "source_id": "B1-MAIN-2097",
+      "source_refs": [
+        "B1-MAIN-2097",
+        "B1-WG-0234"
+      ],
+      "lemma": "Schlange",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "queue; snake",
+        "Example1EN": "There is always a long queue at the post office."
+      },
+      "set": {
+        "MeaningEN": "line; snake",
+        "Example1EN": "There is always a long line at the post office."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-2097"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-2126": {
+      "source_id": "B1-MAIN-2126",
+      "source_refs": [
+        "B1-MAIN-2126"
+      ],
+      "lemma": "Schreiben",
+      "cefr": "B1",
+      "expected": {
+        "Example1EN": "Did you receive my letter dated 3 March?"
+      },
+      "set": {
+        "Example1EN": "Did you receive my letter dated March 3?"
+      },
+      "audit_source_ids": [
+        "B1-MAIN-2126"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-2180": {
+      "source_id": "B1-MAIN-2180",
+      "source_refs": [
+        "B1-MAIN-2180"
+      ],
+      "lemma": "senden",
+      "cefr": "B1",
+      "expected": {
+        "Example2EN": "Could you please forward our post?"
+      },
+      "set": {
+        "Example2EN": "Could you please forward our mail?"
+      },
+      "audit_source_ids": [
+        "B1-MAIN-2180"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-2277": {
+      "source_id": "B1-MAIN-2277",
+      "source_refs": [
+        "B1-MAIN-2277"
+      ],
+      "lemma": "ständig",
+      "cefr": "B1",
+      "expected": {
+        "Example1EN": "I've tried calling my girlfriend a few times. The line is constantly engaged."
+      },
+      "set": {
+        "Example1EN": "I've tried calling my girlfriend a few times. The line is constantly busy."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-2277"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-2284": {
+      "source_id": "B1-MAIN-2284",
+      "source_refs": [
+        "B1-MAIN-2284"
+      ],
+      "lemma": "Station",
+      "cefr": "B1",
+      "expected": {
+        "Example2EN": "My neighbor is on Ward 3."
+      },
+      "set": {
+        "Example2EN": "My neighbor is in Ward 3."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-2284"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-2294": {
+      "source_id": "B1-MAIN-2294",
+      "source_refs": [
+        "B1-MAIN-2294"
+      ],
+      "lemma": "stecken",
+      "cefr": "B1",
+      "expected": {
+        "Example3EN": "The newspaper is in the letterbox."
+      },
+      "set": {
+        "Example3EN": "The newspaper is in the mailbox."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-2294"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-2299": {
+      "source_id": "B1-MAIN-2299",
+      "source_refs": [
+        "B1-MAIN-2299"
+      ],
+      "lemma": "steigen",
+      "cefr": "B1",
+      "expected": {
+        "Example2EN": "The fever rose again towards evening."
+      },
+      "set": {
+        "Example2EN": "The fever rose again toward evening."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-2299"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-2304": {
+      "source_id": "B1-MAIN-2304",
+      "source_refs": [
+        "B1-MAIN-2304"
+      ],
+      "lemma": "Stempel",
+      "cefr": "B1",
+      "expected": {
+        "Example1EN": "The postmark is dated last week. The parcel took a long time to arrive."
+      },
+      "set": {
+        "Example1EN": "The postmark is dated last week. The package took a long time to arrive."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-2304"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-2311": {
+      "source_id": "B1-MAIN-2311",
+      "source_refs": [
+        "B1-MAIN-2311"
+      ],
+      "lemma": "Stiege",
+      "cefr": "B1",
+      "expected": {
+        "Example1EN": "Where is the toilet? – Up the stairs and then left."
+      },
+      "set": {
+        "Example1EN": "Where is the restroom? – Up the stairs and then left."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-2311"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-2394": {
+      "source_id": "B1-MAIN-2394",
+      "source_refs": [
+        "B1-MAIN-2394"
+      ],
+      "lemma": "tatsächlich",
+      "cefr": "B1",
+      "expected": {
+        "Example1EN": "The trousers are actually too small, even though they look so big."
+      },
+      "set": {
+        "Example1EN": "The pants are actually too small, even though they look so big."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-2394"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-2476": {
+      "source_id": "B1-MAIN-2476",
+      "source_refs": [
+        "B1-MAIN-2476"
+      ],
+      "lemma": "treu",
+      "cefr": "B1",
+      "expected": {
+        "Example1EN": "Mr Maier is a loyal customer of ours."
+      },
+      "set": {
+        "Example1EN": "Mr. Maier is a loyal customer of ours."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-2476"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-2492": {
+      "source_id": "B1-MAIN-2492",
+      "source_refs": [
+        "B1-MAIN-2492"
+      ],
+      "lemma": "U-Bahn",
+      "cefr": "B1",
+      "expected": {
+        "Example1EN": "The last underground train leaves at 11.15 p.m.",
+        "Example2EN": "I'm taking the underground."
+      },
+      "set": {
+        "Example1EN": "The last subway train leaves at 11:15 p.m.",
+        "Example2EN": "I'm taking the subway."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-2492"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-2504": {
+      "source_id": "B1-MAIN-2504",
+      "source_refs": [
+        "B1-MAIN-2504"
+      ],
+      "lemma": "überprüfen",
+      "cefr": "B1",
+      "expected": {
+        "Example1EN": "Please check whether your name is spelt correctly."
+      },
+      "set": {
+        "Example1EN": "Please check whether your name is spelled correctly."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-2504"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-2564": {
+      "source_id": "B1-MAIN-2564",
+      "source_refs": [
+        "B1-MAIN-2564"
+      ],
+      "lemma": "Unterlagen",
+      "cefr": "B1",
+      "expected": {
+        "Example1EN": "I will send all the documents to you by post."
+      },
+      "set": {
+        "Example1EN": "I will send all the documents to you by mail."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-2564"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-2587": {
+      "source_id": "B1-MAIN-2587",
+      "source_refs": [
+        "B1-MAIN-2587"
+      ],
+      "lemma": "Urteil",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "judgement; verdict",
+        "Example1EN": "Your judgement is very important to me."
+      },
+      "set": {
+        "MeaningEN": "judgment; verdict",
+        "Example1EN": "Your judgment is very important to me."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-2587"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-2609": {
+      "source_id": "B1-MAIN-2609",
+      "source_refs": [
+        "B1-MAIN-2609"
+      ],
+      "lemma": "(sich) verbrennen",
+      "cefr": "B1",
+      "expected": {
+        "Example2EN": "The hob was still hot. I burnt myself."
+      },
+      "set": {
+        "Example2EN": "The hob was still hot. I burned myself."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-2609"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-2628": {
+      "source_id": "B1-MAIN-2628",
+      "source_refs": [
+        "B1-MAIN-2628"
+      ],
+      "lemma": "sich verhalten",
+      "cefr": "B1",
+      "expected": {
+        "Example1EN": "The man behaved strangely towards us."
+      },
+      "set": {
+        "Example1EN": "The man behaved strangely toward us."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-2628"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-2639": {
+      "source_id": "B1-MAIN-2639",
+      "source_refs": [
+        "B1-MAIN-2639"
+      ],
+      "lemma": "verlangen",
+      "cefr": "B1",
+      "expected": {
+        "Example3EN": "Ms Müller, someone wants you on the phone."
+      },
+      "set": {
+        "Example3EN": "Ms. Müller, someone wants you on the phone."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-2639"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-2656": {
+      "source_id": "B1-MAIN-2656",
+      "source_refs": [
+        "B1-MAIN-2656"
+      ],
+      "lemma": "Vermittlung",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "accommodation agency; directory enquiries",
+        "Example2EN": "Call directory enquiries and ask for Mr Fischer's telephone number."
+      },
+      "set": {
+        "MeaningEN": "accommodation agency; directory assistance",
+        "Example2EN": "Call directory assistance and ask for Mr. Fischer's telephone number."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-2656"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-2661": {
+      "source_id": "B1-MAIN-2661",
+      "source_refs": [
+        "B1-MAIN-2661"
+      ],
+      "lemma": "verpacken",
+      "cefr": "B1",
+      "expected": {
+        "Example1EN": "Did you pack the parcels securely?"
+      },
+      "set": {
+        "Example1EN": "Did you pack the packages securely?"
+      },
+      "audit_source_ids": [
+        "B1-MAIN-2661"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-2691": {
+      "source_id": "B1-MAIN-2691",
+      "source_refs": [
+        "B1-MAIN-2691"
+      ],
+      "lemma": "Vertreter",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "(male) representative; locum",
+        "Example1EN": "When Dr Müller was on vacation, I went to his locum."
+      },
+      "set": {
+        "MeaningEN": "(male) representative; substitute doctor",
+        "Example1EN": "When Dr. Müller was away, I saw the doctor covering for him."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-2691"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-2692": {
+      "source_id": "B1-MAIN-2692",
+      "source_refs": [
+        "B1-MAIN-2692"
+      ],
+      "lemma": "Vertreterin",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "(female) representative; locum",
+        "Example1EN": "When Dr Müller was on vacation, I went to his locum."
+      },
+      "set": {
+        "MeaningEN": "(female) representative; substitute doctor",
+        "Example1EN": "When Dr. Müller was away, I saw the doctor covering for him."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-2692"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-2693": {
+      "source_id": "B1-MAIN-2693",
+      "source_refs": [
+        "B1-MAIN-2693"
+      ],
+      "lemma": "Vertretung",
+      "cefr": "B1",
+      "expected": {
+        "Example1EN": "Dr Meyer is covering for me."
+      },
+      "set": {
+        "Example1EN": "Dr. Meyer is covering for me."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-2693"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-2720": {
+      "source_id": "B1-MAIN-2720",
+      "source_refs": [
+        "B1-MAIN-2720"
+      ],
+      "lemma": "vor allem",
+      "cefr": "B1",
+      "expected": {
+        "Example1EN": "Give my regards to everyone, especially Ms Meier."
+      },
+      "set": {
+        "Example1EN": "Give my regards to everyone, especially Ms. Meier."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-2720"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-2722": {
+      "source_id": "B1-MAIN-2722",
+      "source_refs": [
+        "B1-MAIN-2722"
+      ],
+      "lemma": "Voraussetzung",
+      "cefr": "B1",
+      "expected": {
+        "Example2EN": "He will accept the job only on condition that the company provides him with a apartment."
+      },
+      "set": {
+        "Example2EN": "He will accept the job only on condition that the company provides him with an apartment."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-2722"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-2734": {
+      "source_id": "B1-MAIN-2734",
+      "source_refs": [
+        "B1-MAIN-2734"
+      ],
+      "lemma": "vorläufig",
+      "cefr": "B1",
+      "expected": {
+        "Example1EN": "I don't have a apartment yet. I'm staying with a friend for the time being."
+      },
+      "set": {
+        "Example1EN": "I don't have an apartment yet. I'm staying with a friend for the time being."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-2734"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-2806": {
+      "source_id": "B1-MAIN-2806",
+      "source_refs": [
+        "B1-MAIN-2806"
+      ],
+      "lemma": "Werbung",
+      "cefr": "B1",
+      "expected": {
+        "Example2EN": "I don't want any advertising through my letterbox."
+      },
+      "set": {
+        "Example2EN": "I don't want any advertising in my mailbox."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-2806"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-2861": {
+      "source_id": "B1-MAIN-2861",
+      "source_refs": [
+        "B1-MAIN-2861"
+      ],
+      "lemma": "Wolle",
+      "cefr": "B1",
+      "expected": {
+        "Example1EN": "This jumper is made of pure wool."
+      },
+      "set": {
+        "Example1EN": "This sweater is made of pure wool."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-2861"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-2869": {
+      "source_id": "B1-MAIN-2869",
+      "source_refs": [
+        "B1-MAIN-2869"
+      ],
+      "lemma": "Wunder",
+      "cefr": "B1",
+      "expected": {
+        "Example2EN": "You eat too much chocolate. No wonder your trousers no longer fit."
+      },
+      "set": {
+        "Example2EN": "You eat too much chocolate. No wonder your pants no longer fit."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-2869"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-MAIN-2904": {
+      "source_id": "B1-MAIN-2904",
+      "source_refs": [
+        "B1-MAIN-2904"
+      ],
+      "lemma": "ziehen",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "to pull; to move; to be draughty",
+        "Example3EN": "Please close the door; there is a draught."
+      },
+      "set": {
+        "MeaningEN": "to pull; to move; to be drafty",
+        "Example3EN": "Please close the door; there is a draft."
+      },
+      "audit_source_ids": [
+        "B1-MAIN-2904"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-WG-0008": {
+      "source_id": "B1-WG-0008",
+      "source_refs": [
+        "B1-WG-0008"
+      ],
+      "lemma": "EG",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "ground floor; upper floor; basement (EG, OG and UG abbreviations)"
+      },
+      "set": {
+        "MeaningEN": "first floor"
+      },
+      "audit_source_ids": [
+        "B1-WG-0008"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    },
+    "B1-WG-0020": {
+      "source_id": "B1-WG-0020",
+      "source_refs": [
+        "B1-WG-0020"
+      ],
+      "lemma": "WG",
+      "cefr": "B1",
+      "expected": {
+        "MeaningEN": "shared flat; flatshare (abbreviation)"
+      },
+      "set": {
+        "MeaningEN": "shared apartment"
+      },
+      "audit_source_ids": [
+        "B1-WG-0020"
+      ],
+      "reason": "American English normalization; exact prior values are retained as guards."
+    }
+  }
+}

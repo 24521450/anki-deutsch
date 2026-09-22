@@ -13,6 +13,7 @@ if str(TOOLS) not in sys.path:
     sys.path.insert(0, str(TOOLS))
 
 import goethe_template_policy as policy  # noqa: E402
+import goethe_review_policy as review_policy  # noqa: E402
 
 
 def fields(**values: str) -> dict[str, str]:
@@ -33,11 +34,12 @@ def fields(**values: str) -> dict[str, str]:
 
 def test_review_policy_has_expected_reviewed_sets() -> None:
     loaded = policy.load_policy()
-    assert len(loaded["answers"]) == 56
-    assert len(loaded["production"]) == 182
+    assert len(loaded["answers"]) == 58
+    assert len(loaded["production"]) == 181
     assert sum(rule["enabled"] == policy.DISABLED for rule in loaded["production"].values()) == 10
     assert loaded["answers"]["A1-84886454468"] == "der Arzt|die Ärztin"
-    assert loaded["answers"]["A2-WG-0023"] == "der Angestellte|die Angestellte"
+    assert loaded["answers"]["A1-84887177212"] == "ein halb|halb"
+    assert loaded["answers"]["A2-WG-0023"] == "der Angestellte|die Angestellte|Angestellter"
     assert loaded["answers"]["A2-0572"] == "die Kunst|die Kunsterziehung"
     assert loaded["production"]["B1-MAIN-0139"] == {"enabled": "1", "hint": "D/CH"}
     # Brieftasche stays active by default; its feminine Gender cue already
@@ -49,7 +51,7 @@ def test_review_policy_has_expected_reviewed_sets() -> None:
     assert loaded["answers"]["B1-MAIN-0252"] == "der Bancomat|der Bankomat"
 
 
-def test_derivation_is_conservative_and_does_not_split_lexical_slashes() -> None:
+def test_derivation_splits_complete_alternatives_and_preserves_bound_forms() -> None:
     assert policy.split_full_answers("") == []
     assert policy.split_full_answers("der Arzt|die Ärztin") == ["der Arzt", "die Ärztin"]
     assert policy.derive_full_answers(fields()) == ["arbeiten"]
@@ -58,7 +60,13 @@ def test_derivation_is_conservative_and_does_not_split_lexical_slashes() -> None
     )) == ["die Bahn"]
     assert policy.derive_full_answers(fields(
         Lemma="Samstag/Sonnabend", AcceptedAnswersDE="Samstag/Sonnabend", Article="der"
-    )) == ["der Samstag/Sonnabend"]
+    )) == ["der Samstag", "der Sonnabend"]
+    assert policy.split_full_answers("Samstag/Sonnabend") == ["Samstag", "Sonnabend"]
+    assert policy.split_full_answers("getrennt / geschieden") == ["getrennt", "geschieden"]
+    assert policy.split_full_answers("Speise-/-speise") == ["Speise-/-speise"]
+    assert policy.split_full_answers("fünf Minuten vor/nach eins") == [
+        "fünf Minuten vor/nach eins"
+    ]
     assert policy.derive_full_answers(fields(
         Lemma="Eltern", AcceptedAnswersDE="Eltern (Pl.)", AcceptedArticlesDE="die"
     )) == ["die Eltern"]
@@ -73,17 +81,98 @@ def test_derivation_is_conservative_and_does_not_split_lexical_slashes() -> None
         ))
 
 
+def test_half_card_accepts_both_source_alternatives() -> None:
+    record = fields(
+        SourceID="A1-84887177212",
+        Lemma="ein halb; halb",
+        AcceptedAnswersDE="ein halb; halb|ein halb",
+        MeaningEN="half",
+    )
+
+    policy.apply_policy([{"fields": record}], strict=False)
+
+    assert record["AcceptedFullAnswersDE"] == "ein halb|halb"
+
+
 def test_explicit_overrides_keep_full_forms_and_weak_nouns() -> None:
     assert policy.derive_full_answers(
         fields(Lemma="Arzt"), override="der Arzt|die Ärztin"
     ) == ["der Arzt", "die Ärztin"]
     assert policy.derive_full_answers(
         fields(Lemma="Angestellter"),
-        override="der Angestellte|die Angestellte",
-    ) == ["der Angestellte", "die Angestellte"]
+        override="der Angestellte|die Angestellte|Angestellter",
+    ) == ["der Angestellte", "die Angestellte", "Angestellter"]
     assert policy.derive_full_answers(
         fields(Lemma="Kunst"), override="die Kunst|die Kunsterziehung"
     ) == ["die Kunst", "die Kunsterziehung"]
+
+
+def test_reviewed_reflexive_resolver_is_the_canonical_full_answer_source() -> None:
+    source = fields(
+        SourceID="A1-84886454459",
+        SourceRefs="A1-84886454459|A1-MAIN-0038",
+        Lemma="anziehen",
+        AcceptedAnswersDE="sich anziehen",
+        AcceptedFullAnswersDE="sich anziehen|s anziehen",
+    )
+    resolved = review_policy.resolve_reviewed_fields(source)
+
+    assert resolved["Lemma"] == "(sich) anziehen"
+    assert resolved["AcceptedAnswersDE"] == "anziehen|sich anziehen"
+    assert resolved["AcceptedFullAnswersDE"] == "anziehen|sich anziehen|s anziehen"
+    assert source["Lemma"] == "anziehen"
+
+
+def test_reviewed_legacy_answer_cleanup_has_no_annotations_or_composites() -> None:
+    expected = {
+        "A1-84886454650": ("Eltern|Eltern (Pl.)", "Eltern"),
+        "A1-84886454749": ("Geschwister|Geschwister (Pl.)", "Geschwister"),
+        "A1-84886454773": ("Großeltern|Großeltern (Pl.)", "Großeltern"),
+        "A1-84887177245": ("Frühling/das Frühjahr|Frühling|Frühjahr", "Frühling|Frühjahr"),
+        "A2-0572": ("Kunst|Kunst(erziehung)", "Kunst|Kunsterziehung"),
+        "A2-WG-0023": ("Angestellter|Angestellte", "Angestellte"),
+        "A2-WG-0025": ("Auszubildender|Auszubildende", "Auszubildende"),
+        "A2-WG-0173": ("Arbeitstag/Werktag|Arbeitstag|Werktag", "Arbeitstag|Werktag"),
+        "B1-WG-0061": ("Ketchup|Ketschup|Ketchup/Ketschup", "Ketchup|Ketschup"),
+    }
+    loaded = review_policy.load_policy()
+    for source_id, (before, after) in expected.items():
+        record = fields(SourceID=source_id, AcceptedAnswersDE=before)
+        assert review_policy.apply_fields(record, loaded) is True
+        assert record["AcceptedAnswersDE"] == after
+
+
+def test_lexical_cleanup_does_not_treat_existing_full_answer_as_review_override() -> None:
+    source = fields(
+        SourceID="A2-WG-0023",
+        Lemma="Angestellter",
+        AcceptedAnswersDE="Angestellter|Angestellte",
+        AcceptedFullAnswersDE="stale reviewed value",
+    )
+
+    assert review_policy.reviewed_full_answer_override(source) is None
+
+
+def test_apply_policy_uses_reflexive_full_answers_without_mutating_legacy_fields() -> None:
+    active = fields(
+        SourceID="A1-84886454459",
+        SourceRefs="A1-84886454459|A1-MAIN-0038",
+        Lemma="anziehen",
+        AcceptedAnswersDE="sich anziehen",
+        AcceptedFullAnswersDE="sich anziehen|s anziehen",
+        MeaningEN="to put on",
+        Example1EN="I put on my coat.",
+    )
+    legacy = {
+        key: value for key, value in active.items()
+        if key not in {"AcceptedFullAnswersDE", "ProductionEnabled", "ProductionHint", "ExampleTargetSpansJSON"}
+    }
+
+    policy.apply_policy([{"fields": active}], strict=False)
+
+    assert active["AcceptedFullAnswersDE"] == "anziehen|sich anziehen|s anziehen"
+    for key, value in legacy.items():
+        assert active[key] == value
 
 
 def test_apply_policy_mutates_only_new_schema_fields_and_clears_disabled_answer() -> None:

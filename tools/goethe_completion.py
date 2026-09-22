@@ -69,7 +69,7 @@ CONFIRMATION = "COMPLETE_GOETHE_A1_A2_B1"
 REVIEWED_SPLIT_FIELDS = frozenset({
     "Lemma", "POS", "Article", "Gender", "NounFormsRaw",
     "AcceptedAnswersDE", "AcceptedArticlesDE", "AcceptedFullAnswersDE",
-    "WordAudio", "FormOrVariantNote",
+    "WordAudio", "WordAudioVariantsHTML", "FormOrVariantNote",
 })
 REVIEWED_SPLIT_CHILD_FIELDS = REVIEWED_SPLIT_FIELDS | {
     "OriginalOrder", "SourceNoteRaw", "LegacyGUID",
@@ -836,6 +836,11 @@ def merge_exact_duplicates(records: dict[str, dict[str, Any]], preserve_note_ids
                     survivor["source_refs"].append(ref)
             if not survivor["fields"].get("WordAudio") and duplicate["fields"].get("WordAudio"):
                 survivor["fields"]["WordAudio"] = duplicate["fields"]["WordAudio"]
+            if (
+                not survivor["fields"].get("WordAudioVariantsHTML")
+                and duplicate["fields"].get("WordAudioVariantsHTML")
+            ):
+                survivor["fields"]["WordAudioVariantsHTML"] = duplicate["fields"]["WordAudioVariantsHTML"]
             survivor["tags"] = sorted(set(survivor["tags"]) | set(duplicate["tags"]))
             survivor["fields"]["CEFR"] = lower_level(survivor["fields"]["CEFR"], duplicate["fields"]["CEFR"])
             survivor["deck"] = LEVEL_DECK[survivor["fields"]["CEFR"]]
@@ -898,6 +903,21 @@ def apply_reviewed_note_merges(
                 "tags": duplicate["tags"],
             })
             scheduled[duplicate_id] = survivor_id
+        # Keep the duplicate's reviewed examples/audio available to the
+        # canonical survivor.  Source routing below rebuilds the regular
+        # example list, so these are carried explicitly until that phase.
+        for example in duplicate.get("examples", []):
+            survivor.setdefault("review_merge_examples", []).append(copy.deepcopy(example))
+        if (
+            not survivor["fields"].get("WordAudio")
+            and duplicate["fields"].get("WordAudio")
+        ):
+            survivor["fields"]["WordAudio"] = duplicate["fields"]["WordAudio"]
+        if (
+            not survivor["fields"].get("WordAudioVariantsHTML")
+            and duplicate["fields"].get("WordAudioVariantsHTML")
+        ):
+            survivor["fields"]["WordAudioVariantsHTML"] = duplicate["fields"]["WordAudioVariantsHTML"]
         del records[duplicate_key]
     return deletions
 
@@ -1330,6 +1350,13 @@ def build_manifest(*, finalize_production: bool = True) -> dict[str, Any]:
         )
         for key, record in records.items()
     }
+    record_word_audio_variants = {
+        key: (
+            record["fields"].get("Lemma", ""),
+            record["fields"].get("WordAudioVariantsHTML", ""),
+        )
+        for key, record in records.items()
+    }
     audio_candidates: dict[str, set[str]] = defaultdict(set)
     record_example_audio: dict[str, dict[str, str]] = {}
     for key, record in records.items():
@@ -1598,6 +1625,22 @@ def build_manifest(*, finalize_production: bool = True) -> dict[str, Any]:
     if sum(source_counts.values()):
         deletions = apply_source_claims(records, deletions, claimed_refs)
     deletions.extend(merge_exact_duplicates(records, preserve_note_ids))
+    # Re-attach useful examples from an explicitly reviewed duplicate merge
+    # before the source/audit allow-list is applied.  This is intentionally
+    # scoped to the reviewed merge policy and never guesses across lexemes.
+    for record in records.values():
+        for example in record.pop("review_merge_examples", []):
+            add_example(record, example.get("de", ""))
+            current = next(
+                (item for item in record["examples"]
+                 if sentence_key(item.get("de", "")) == sentence_key(example.get("de", ""))),
+                None,
+            )
+            if current is not None:
+                if not current.get("en") and example.get("en"):
+                    current["en"] = example["en"]
+                if not current.get("audio") and example.get("audio"):
+                    current["audio"] = example["audio"]
     for record in records.values():
         excluded = {
             sentence_key(sentence)
@@ -1678,6 +1721,14 @@ def build_manifest(*, finalize_production: bool = True) -> dict[str, Any]:
             and lemma_key(record["fields"].get("Lemma", "")) == lemma_key(initial_lemma)
         ):
             record["fields"]["WordAudio"] = initial_audio
+        initial_variants = record_word_audio_variants.get(key, ("", ""))[1]
+        initial_variant_lemma = record_word_audio_variants.get(key, ("", ""))[0]
+        if (
+            not record["fields"].get("WordAudioVariantsHTML")
+            and initial_variants
+            and lemma_key(record["fields"].get("Lemma", "")) == lemma_key(initial_variant_lemma)
+        ):
+            record["fields"]["WordAudioVariantsHTML"] = initial_variants
     if finalize_production:
         finalize_template_fields(records)
     else:
@@ -2284,10 +2335,26 @@ def validate_noun_fields(fields: dict[str, str]) -> None:
         return
     if not accepted_articles:
         raise CompletionError(f"noun AcceptedArticlesDE missing: {fields.get('Lemma')}")
-    if fields.get("ProductionEnabled") == "1" and (not full_answers or any(
-        not re.match(r"^(?:der|die|das)\s+\S", value, flags=re.I) for value in full_answers
-    )):
-        raise CompletionError(f"noun AcceptedFullAnswersDE missing article: {fields.get('Lemma')}")
+    if fields.get("ProductionEnabled") == "1":
+        try:
+            allowed_articleless = noun_policy.articleless_full_answer_variants(
+                fields.get("SourceID", ""), fields.get("Lemma", ""),
+            )
+        except noun_policy.NounPolicyError as exc:
+            raise CompletionError(
+                f"noun article policy failed for {fields.get('Lemma')!r}: {exc}"
+            ) from exc
+        article_bearing = [
+            value for value in full_answers
+            if re.match(r"^(?:der|die|das)\s+\S", value, flags=re.I)
+        ]
+        invalid_articleless = [
+            value for value in full_answers
+            if not re.match(r"^(?:der|die|das)\s+\S", value, flags=re.I)
+            and value not in allowed_articleless
+        ]
+        if not full_answers or not article_bearing or invalid_articleless:
+            raise CompletionError(f"noun AcceptedFullAnswersDE missing article: {fields.get('Lemma')}")
 
 
 def command_dry_run(_: argparse.Namespace) -> None:

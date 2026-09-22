@@ -69,8 +69,46 @@ def _normalise_semantic(value: Any) -> str:
     return re.sub(r"\s+", " ", value).strip().casefold()
 
 
+def _can_split_complete_slash_alternative(value: str) -> bool:
+    """Return whether ``value`` contains standalone lexical alternatives.
+
+    Goethe source notation also uses slashes for bound morphemes (``Nord-``),
+    units (``km/h``), and shared context (``vor/nach zwei``).  Those forms
+    must remain one source expression; only complete alternatives are expanded.
+    """
+    if "/" not in value:
+        return False
+    if re.search(r"\bvor\s*/\s*nach\b", value, flags=re.I):
+        return False
+    if re.search(r"\b\d+(?:[.,]\d+)?\s+\w+\s*/\s*\w+\b", value):
+        return False
+    pieces = re.split(r"\s*/\s*", value)
+    if len(pieces) < 2 or any(not piece.strip() for piece in pieces):
+        return False
+    return not any(
+        piece.strip().startswith("-") or piece.strip().endswith("-")
+        for piece in pieces
+    )
+
+
+def _expand_complete_slash_alternative(value: str) -> list[str]:
+    value = value.strip()
+    if not _can_split_complete_slash_alternative(value):
+        return [value]
+
+    article, lexical = _article_prefix(value, explicit_metadata=True)
+    pieces = [piece.strip() for piece in re.split(r"\s*/\s*", lexical if article else value)]
+    if article:
+        return [
+            piece if _article_prefix(piece, explicit_metadata=True)[0]
+            else f"{article} {piece}"
+            for piece in pieces
+        ]
+    return pieces
+
+
 def split_full_answers(value: Any) -> list[str]:
-    """Split a pipe-delimited full-answer field, rejecting empty members."""
+    """Split pipe members and complete lexical slash alternatives."""
     if isinstance(value, (list, tuple)):
         values = [_text(item, field="answer") for item in value]
     else:
@@ -78,8 +116,13 @@ def split_full_answers(value: Any) -> list[str]:
         if not raw.strip():
             return []
         values = raw.split("|")
-    result = [item.strip() for item in values if item.strip()]
-    if len(result) != len(values):
+    result: list[str] = []
+    for item in values:
+        item = item.strip()
+        if not item:
+            continue
+        result.extend(_expand_complete_slash_alternative(item))
+    if len(result) < len(values):
         raise PolicyError("full answers contain an empty member")
     if any("|" in item or "\r" in item or "\n" in item for item in result):
         raise PolicyError("full answers contain a pipe or line break")
@@ -179,7 +222,8 @@ def derive_full_answers(fields: Mapping[str, Any], override: Any = None) -> list
     A single lexical answer may safely receive one or more reviewed articles.
     Multiple lexical answers combined with article metadata are ambiguous and
     fail closed; callers must provide an explicit reviewed override instead.
-    Slash-separated lexical text is deliberately *not* split.
+    Complete slash-separated lexical alternatives are expanded, while
+    bound-form and shared-context notation remains intact.
     """
     if override is not None:
         return _canonical_forms(override)
@@ -217,9 +261,16 @@ def derive_full_answers(fields: Mapping[str, Any], override: Any = None) -> list
     if not articles:
         return [_validate_answer_form(answer) for answer in lexical]
     if len(lexical) != 1:
-        raise PolicyError(
-            "multiple lexical answers plus article metadata require an explicit override"
-        )
+        raw_parts = [part.strip() for part in raw_answers.split("|") if part.strip()]
+        if len(raw_parts) != 1 or not _can_split_complete_slash_alternative(raw_parts[0]):
+            raise PolicyError(
+                "multiple lexical answers plus article metadata require an explicit override"
+            )
+        return _canonical_forms([
+            f"{article} {lexical_form}"
+            for article in articles
+            for lexical_form in lexical
+        ])
     return _canonical_forms([f"{article} {lexical[0]}" for article in articles])
 
 
@@ -641,12 +692,16 @@ def apply_policy(
     enabled_count = 0
     disabled_count = 0
     planned: list[tuple[MutableMapping[str, Any], dict[str, str]]] = []
-    review_overrides: dict[str, dict[str, Any]] = {}
+    review_policy_module: Any = None
+    review_policy_data: dict[str, Any] = {}
+    reflexive_review_policy: dict[str, Any] = {}
     try:
         import goethe_review_policy
-        review_overrides = goethe_review_policy.load_policy().get("records", {})
+        review_policy_module = goethe_review_policy
+        review_policy_data = goethe_review_policy.load_policy()
+        reflexive_review_policy = goethe_review_policy.load_reflexive_policy()
     except ImportError:
-        review_overrides = {}
+        review_policy_module = None
     for index, fields in enumerate(fields_list):
         source_id = _text(fields.get("SourceID", ""), field="SourceID").strip()
         if not source_id:
@@ -663,12 +718,20 @@ def apply_policy(
         hint = rule["hint"]
         if enabled == ENABLED:
             override = normalised["answers"].get(source_id)
-            reviewed = review_overrides.get(source_id, {}).get("set", {})
-            if reviewed.get("AcceptedFullAnswersDE"):
-                override = reviewed["AcceptedFullAnswersDE"]
-            elif fields.get("Lemma", "").strip().startswith("sich "):
-                stem = fields["Lemma"].strip()[5:]
-                override = f"sich {stem}|s {stem}"
+            if review_policy_module is not None:
+                source_refs = [
+                    item.strip()
+                    for item in str(fields.get("SourceRefs", "")).split("|")
+                    if item.strip()
+                ]
+                reviewed = review_policy_module.reviewed_full_answer_override(
+                    fields,
+                    source_refs=source_refs,
+                    policy=review_policy_data,
+                    reflexive_policy=reflexive_review_policy,
+                )
+                if reviewed:
+                    override = reviewed
             full_answers = derive_full_answers(fields, override=override)
             enabled_count += 1
         else:

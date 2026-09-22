@@ -1,14 +1,20 @@
 <main class="gw-card" data-level="{{CEFR}}" data-direction="de-en">
   <header class="gw-meta">
-    <span class="gw-brand">GOETHE</span>
+    <a class="gw-brand gw-dictionary-link" data-source-id="{{SourceID}}" data-source-refs="{{SourceRefs}}" href="" target="_blank" rel="noopener noreferrer" hidden aria-label="Open dictionary entry">DUDEN</a>
     <span class="gw-pos">{{POS}}</span>
     <span class="gw-level">{{CEFR}}</span>
   </header>
   <section class="gw-front">
-    <h1 class="gw-headword" lang="de">{{Lemma}}</h1>
+    <h1 class="gw-headword" lang="de">
+      {{#WordAudioVariantsHTML}}<span class="gw-word-variants" role="group" aria-label="Pronunciation variants">{{WordAudioVariantsHTML}}</span>{{/WordAudioVariantsHTML}}
+      {{^WordAudioVariantsHTML}}{{Lemma}}{{/WordAudioVariantsHTML}}
+    </h1>
     {{#WordAudio}}<span class="gw-word-audio" hidden>{{WordAudio}}</span>{{/WordAudio}}
   </section>
 </main>
+<script>
+{{DictionaryLinkController}}
+</script>
 <script>
 {{WordAudioController}}
 </script>

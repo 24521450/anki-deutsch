@@ -36,6 +36,10 @@ class _Candidate(str):
 ROOT = Path(__file__).resolve().parents[1]
 VERB_POLICY_PATH = ROOT / "review" / "goethe_verb_target_policy.json"
 HIGHLIGHT_POLICY_PATH = ROOT / "review" / "goethe_target_highlight_audit_v3.json"
+REGIONAL_PREFIX_RE = re.compile(
+    r"^(?:Deutschland|Österreich|Schweiz)\s*:\s*",
+    re.IGNORECASE,
+)
 
 
 @lru_cache(maxsize=1)
@@ -142,6 +146,15 @@ def split_pipe(value: str) -> list[str]:
 
 def _strip_gender_qualifier(value: str) -> str:
     return re.sub(r"\s*\((?:männlich|weiblich)\)\s*$", "", value, flags=re.I).strip()
+
+
+def _regional_core(value: str) -> str:
+    """Return the lexical headword from a regional display-qualified form."""
+    original = str(value or "").strip()
+    text = REGIONAL_PREFIX_RE.sub("", original, count=1).strip()
+    if text == original:
+        return ""
+    return re.sub(r"^(?:der|die|das|ein|eine)\s+", "", text, flags=re.I).strip()
 
 
 def _notation_candidates(value: str) -> list[_Candidate]:
@@ -364,12 +377,26 @@ def candidate_terms(fields: dict[str, str]) -> list[str]:
     lemma = str(fields.get("Lemma") or "").strip()
     lexical_lemma = _strip_gender_qualifier(lemma)
     accepted = [_strip_gender_qualifier(value) for value in split_pipe(fields.get("AcceptedAnswersDE", ""))]
-    values = [lemma, lexical_lemma, *accepted]
-    for value in [lemma, lexical_lemma, *accepted]:
+    regional = [
+        core
+        for value in [lemma, *accepted]
+        for core in [_regional_core(value)]
+        if core
+    ]
+    if regional:
+        # Country labels and their article are display context, not part of
+        # the lexical target.  Keep the core so merged regional examples all
+        # highlight the same word even when the canonical audit lemma retains
+        # its original country prefix.
+        base_values = regional + [value for value in accepted if not _regional_core(value)]
+    else:
+        base_values = [lemma, lexical_lemma, *accepted]
+    values = list(base_values)
+    for value in base_values:
         values.extend(_notation_candidates(value))
     lexical_bases: list[str] = []
     seen_bases: set[str] = set()
-    for value in [lexical_lemma, *accepted]:
+    for value in base_values:
         key = value.casefold()
         if value and key not in seen_bases:
             seen_bases.add(key)

@@ -107,6 +107,94 @@ def apply_fields(fields: MutableMapping[str, Any], policy: Mapping[str, Any] | N
     return True
 
 
+def _resolve_reviewed_fields(
+    fields: Mapping[str, Any],
+    source_refs: list[str] | None = None,
+    policy: Mapping[str, Any] | None = None,
+    reflexive_policy: Mapping[str, Any] | None = None,
+) -> tuple[dict[str, Any], bool, str | None, bool]:
+    """Resolve generic and reflexive review fields without mutating input."""
+
+    if not isinstance(fields, Mapping):
+        raise ReviewPolicyError("record fields must be a mapping")
+    resolved = dict(fields)
+    policy = policy or load_policy()
+    reflexive_policy = reflexive_policy or load_reflexive_policy()
+    source_id = str(resolved.get("SourceID", "")).strip()
+    generic_entry = policy.get("records", {}).get(source_id, {})
+    generic_full_explicit = "AcceptedFullAnswersDE" in generic_entry.get("set", {})
+    explicit = apply_fields(resolved, policy)
+    if source_refs is None:
+        source_refs = [
+            item.strip()
+            for item in str(resolved.get("SourceRefs", "")).split("|")
+            if item.strip()
+        ]
+    else:
+        source_refs = [str(item).strip() for item in source_refs if str(item).strip()]
+    reflexive_key = apply_reflexive_fields(
+        resolved, source_refs, reflexive_policy,
+    )
+    reflexive_full_explicit = bool(
+        reflexive_key
+        and "AcceptedFullAnswersDE"
+        in reflexive_policy["records"][reflexive_key].get("set", {})
+    )
+    if reflexive_key:
+        explicit = True
+    full_explicit = generic_full_explicit or reflexive_full_explicit
+    lemma = str(resolved.get("Lemma", "")).strip()
+    # Preserve the historical fallback for a reviewed production lemma that
+    # is already explicitly written as ``sich ...``.  Marked optional forms
+    # must come from reflexive_policy rather than this heuristic.
+    if not explicit and lemma.startswith("sich "):
+        stem = lemma[5:].strip()
+        resolved["AcceptedAnswersDE"] = lemma
+        resolved["AcceptedFullAnswersDE"] = f"{lemma}|s {stem}"
+        explicit = True
+        full_explicit = True
+    return resolved, explicit, reflexive_key, full_explicit
+
+
+def resolve_reviewed_fields(
+    fields: Mapping[str, Any],
+    source_refs: list[str] | None = None,
+    policy: Mapping[str, Any] | None = None,
+    reflexive_policy: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Return a detached record with all reviewed field overrides applied."""
+
+    resolved, _, _, _ = _resolve_reviewed_fields(
+        fields,
+        source_refs=source_refs,
+        policy=policy,
+        reflexive_policy=reflexive_policy,
+    )
+    return resolved
+
+
+def reviewed_full_answer_override(
+    fields: Mapping[str, Any],
+    source_refs: list[str] | None = None,
+    policy: Mapping[str, Any] | None = None,
+    reflexive_policy: Mapping[str, Any] | None = None,
+) -> str | None:
+    """Return only an explicitly reviewed full-answer override, if present."""
+
+    resolved, _, _, full_explicit = _resolve_reviewed_fields(
+        fields,
+        source_refs=source_refs,
+        policy=policy,
+        reflexive_policy=reflexive_policy,
+    )
+    if not full_explicit or "AcceptedFullAnswersDE" not in resolved:
+        return None
+    value = resolved["AcceptedFullAnswersDE"]
+    if not isinstance(value, str):
+        raise ReviewPolicyError("AcceptedFullAnswersDE must be text")
+    return value
+
+
 def apply_all(
     records: Any,
     policy: Mapping[str, Any] | None = None,
@@ -122,26 +210,22 @@ def apply_all(
     for record in values:
         fields = record.get("fields", record) if isinstance(record, Mapping) else record
         if isinstance(fields, MutableMapping):
-            explicit = apply_fields(fields, policy)
             source_refs = (
                 list(record.get("source_refs", []))
                 if isinstance(record, Mapping)
                 else str(fields.get("SourceRefs", "")).split("|")
             )
-            reflexive_key = apply_reflexive_fields(
-                fields, source_refs, reflexive_policy,
+            resolved, explicit, reflexive_key, _ = _resolve_reviewed_fields(
+                fields,
+                source_refs=source_refs,
+                policy=policy,
+                reflexive_policy=reflexive_policy,
             )
             if reflexive_key:
                 matched_reflexive.add(reflexive_key)
-                explicit = True
-            lemma = str(fields.get("Lemma", "")).strip()
-            # Every reviewed reflexive entry requires the marker in production,
-            # including the twenty records that already use ``sich``.
-            if not explicit and lemma.startswith("sich "):
-                stem = lemma[5:].strip()
-                fields["AcceptedAnswersDE"] = lemma
-                fields["AcceptedFullAnswersDE"] = f"{lemma}|s {stem}"
-                explicit = True
+            if explicit:
+                for name, value in resolved.items():
+                    fields[name] = value
             changed += int(explicit)
     if strict_reflexive:
         expected = set(reflexive_policy.get("records", {}))

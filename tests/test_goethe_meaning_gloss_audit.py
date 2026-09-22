@@ -21,8 +21,8 @@ def test_snapshot_build_covers_the_canonical_catalog_without_drift():
     )
 
     audit.validate_report(report, manifest)
-    assert len(report) == 3425
-    assert sum(row["card_count"] for row in report) == 6850
+    assert len(report) == 3420
+    assert sum(row["card_count"] for row in report) == 6840
     assert all(row["meaning_matches_manifest"] for row in report)
 
 

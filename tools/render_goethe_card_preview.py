@@ -39,6 +39,9 @@ def _sample(
     hint: str = "Include the article when you produce the German answer.",
     production_enabled: bool = True,
     target_terms: list[str] | None = None,
+    usage_note_en: str = "",
+    regional_variants: str = "",
+    word_audio_variants_html: str = "",
 ) -> dict[str, str]:
     fields = {name: "" for name in gw.FIELDS}
     fields.update({
@@ -52,13 +55,15 @@ def _sample(
         "NounFormsRaw": noun_forms,
         "VerbFormsRaw": verb_forms,
         "FormOrVariantNote": "",
-        "RegionalVariants": "",
+        "UsageNoteEN": usage_note_en,
+        "RegionalVariants": regional_variants,
         "AcceptedAnswersDE": lemma,
         "AcceptedFullAnswersDE": f"{article} {lemma}" if article else lemma,
         "AcceptedArticlesDE": article,
         "ProductionEnabled": "1" if production_enabled else "",
         "ProductionHint": hint,
         "WordAudio": "",
+        "WordAudioVariantsHTML": word_audio_variants_html,
         "MoreExamplesHTML": "",
     })
     spans: list[list[list[int]]] = []
@@ -75,7 +80,7 @@ def _sample(
 def samples() -> dict[str, dict[str, str]]:
     return {
         "noun": _sample(
-            "preview-noun",
+            "A1-84886454453",
             "Anschluss",
             "connection",
             [(
@@ -85,7 +90,7 @@ def samples() -> dict[str, dict[str, str]]:
             )],
         ),
         "verb": _sample(
-            "preview-verb",
+            "A1-MAIN-0016",
             "anbieten",
             "to offer",
             [
@@ -101,17 +106,42 @@ def samples() -> dict[str, dict[str, str]]:
             hint="Watch the separable particle in the present tense.",
         ),
         "disabled": _sample(
-            "preview-disabled",
-            "Brötchen",
-            "bread roll",
-            [("Ich hole schnell ein paar Brötchen zum Frühstück.", "I will quickly get a few bread rolls for breakfast.", "Brötchen")],
+            "B1-MAIN-0554",
+            "Dose",
+            "can",
+            [("Ich habe noch eine Dose Bohnen.", "I still have a can of beans.", "Dose")],
             cefr="B1",
             pos="n.",
-            article="das",
-            gender="n.",
-            noun_forms="-",
+            article="die",
+            gender="f.",
+            noun_forms="-n",
             hint="Production is waiting for a reviewed cue.",
             production_enabled=False,
+            usage_note_en="Dose is a standard German word. Büchse is also used for a can in Germany and Switzerland.",
+            regional_variants="D, CH: Büchse",
+        ),
+        "variants": _sample(
+            "A1-84887177245",
+            "Frühling/das Frühjahr",
+            "spring",
+            [
+                ("Im Frühling sind wir oft draußen.", "We are often outdoors in spring.", "Frühling"),
+            ],
+            cefr="A1",
+            pos="n.",
+            article="der",
+            gender="m.",
+            noun_forms="",
+            hint="",
+            word_audio_variants_html=(
+                '<button type="button" class="gw-word-variant" data-variant-label="der Frühling">'
+                '<span class="gw-word-variant-label">der Frühling</span>'
+                '<audio class="gw-word-variant-audio" preload="none" src=""></audio></button> '
+                '<span class="gw-word-variant-separator" aria-hidden="true">/</span> '
+                '<button type="button" class="gw-word-variant" data-variant-label="das Frühjahr">'
+                '<span class="gw-word-variant-label">das Frühjahr</span>'
+                '<audio class="gw-word-variant-audio" preload="none" src=""></audio></button>'
+            ),
         ),
     }
 
@@ -184,22 +214,29 @@ def _js_json(value: Any) -> str:
     )
 
 
-def card_document(template: str, css: str, fields: dict[str, str], theme: str) -> str:
-    source = fields.get("SourceID", "preview")
-    answer = fields.get("AcceptedFullAnswersDE") or fields.get("Lemma", "")
-    storage_key = f"goethe-werkstatt:{source}:production"
-    shim = "<script>globalThis.pycmd=function(){};try{HTMLElement.prototype.focus=function(){};}catch(error){}globalThis.goetheWerkstattAnswers={};globalThis.goetheWerkstattAnswers[%s]=%s;try{sessionStorage.setItem(%s,%s);}catch(error){}</script>" % (
-        _js_json(storage_key),
-        _js_json(answer),
-        _js_json(storage_key),
-        _js_json(answer),
+def _preview_frontside(fields: dict[str, str], front_template: str) -> str:
+    rendered = render_nodes(parse_template(front_template), fields)
+    typed_answer = fields.get("AcceptedFullAnswersDE") or fields.get("Lemma", "")
+    if not typed_answer:
+        return rendered
+    lemma = fields.get("Lemma", "")
+    token_class = "typeGood" if typed_answer == lemma else "typeBad"
+    answer_html = (
+        '<code id="typeans"><span class="%s">%s</span></code>'
+        % (token_class, html.escape(typed_answer, quote=False))
     )
+    return rendered.replace(
+        '<input id="typeans" type="text" autocomplete="off">', answer_html
+    )
+
+
+def card_document(template: str, css: str, fields: dict[str, str], theme: str) -> str:
     body_class = "card nightMode" if theme == "night" else "card"
     return (
         "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\">"
         "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">"
         f"<style>{css}\nhtml,body{{min-height:100%;}}</style></head><body class=\"{body_class}\">"
-        f"{shim}{render_nodes(parse_template(template), fields)}</body></html>"
+        f"{render_nodes(parse_template(template), fields)}</body></html>"
     )
 
 
@@ -250,8 +287,14 @@ def build_preview() -> str:
         variants[sample_name] = {"day": {}, "night": {}}
         for card_id, (direction, side) in cards.items():
             template = model_templates[direction][side]
+            card_fields = fields
+            if direction == "English \u2192 German" and side == "Back":
+                card_fields = dict(fields)
+                card_fields["FrontSide"] = _preview_frontside(
+                    fields, model_templates[direction]["Front"]
+                )
             for theme in ("day", "night"):
-                variants[sample_name][theme][card_id] = card_document(template, css, fields, theme)
+                variants[sample_name][theme][card_id] = card_document(template, css, card_fields, theme)
     field_values = {
         name: {sample_name: fields.get(name, "") for sample_name, fields in model_samples.items()}
         for name in gw.FIELDS

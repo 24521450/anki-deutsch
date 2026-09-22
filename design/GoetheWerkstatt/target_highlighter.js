@@ -32,6 +32,12 @@
   function stripGenderQualifier(value) {
     return value.replace(/\s*\((?:m\u00e4nnlich|weiblich)\)\s*$/i, "").trim();
   }
+  function regionalCore(value) {
+    var original = String(value || "").trim();
+    var textValue = original.replace(/^(?:Deutschland|Österreich|Schweiz)\s*:\s*/i, "").trim();
+    if (textValue === original) return "";
+    return textValue.replace(/^(?:der|die|das|ein|eine)\s+/i, "").trim();
+  }
   function notationEntries(value) {
     value = String(value || "").trim();
     if (!value) return [];
@@ -217,14 +223,17 @@
   function terms() {
     var lemma = text("gw-lemma");
     var lexicalLemma = stripGenderQualifier(lemma);
-    var values = [lemma, lexicalLemma];
     var verbEntries = [];
     var dictionaryEntries = [];
     var caseSensitive = {};
     var accepted = text("gw-accepted-answers").split("|").map(stripGenderQualifier);
-    var lexicalBases = unique([lexicalLemma].concat(accepted));
-    values = values.concat(accepted);
-    [lemma, lexicalLemma].concat(accepted).forEach(function (value) {
+    var regional = [lemma].concat(accepted).map(regionalCore).filter(Boolean);
+    var baseValues = regional.length
+      ? regional.concat(accepted.filter(function (value) { return !regionalCore(value); }))
+      : [lemma, lexicalLemma].concat(accepted);
+    var values = baseValues.slice();
+    var lexicalBases = unique(baseValues);
+    baseValues.forEach(function (value) {
       dictionaryEntries = dictionaryEntries.concat(notationEntries(value));
     });
 

@@ -18,6 +18,13 @@ class ArticlelessNounException:
     duden_url: str
 
 
+@dataclass(frozen=True)
+class ArticlelessFullAnswerException:
+    source_id: str
+    lemma: str
+    variants: tuple[str, ...]
+
+
 ARTICLELESS_NOUN_EXCEPTIONS = {
     item.source_id: item
     for item in (
@@ -48,6 +55,18 @@ ARTICLELESS_NOUN_EXCEPTIONS = {
     )
 }
 
+ARTICLELESS_FULL_ANSWER_EXCEPTIONS = {
+    item.source_id: item
+    for item in (
+        ArticlelessFullAnswerException(
+            "A2-WG-0023", "Angestellter", ("Angestellter",),
+        ),
+        ArticlelessFullAnswerException(
+            "A2-WG-0025", "Auszubildender", ("Auszubildender",),
+        ),
+    )
+}
+
 ARTICLE_GENDER = {"der": "m.", "die": "f.", "das": "n."}
 
 
@@ -57,6 +76,23 @@ def exception_ids_for_level(level: str) -> frozenset[str]:
         source_id for source_id in ARTICLELESS_NOUN_EXCEPTIONS
         if source_id.startswith(prefix)
     )
+
+
+def articleless_full_answer_variants(
+    source_id: str, lemma: str,
+) -> frozenset[str]:
+    """Return explicitly reviewed bare full-answer variants for one noun."""
+
+    source_id = source_id.strip()
+    lemma = lemma.strip()
+    exception = ARTICLELESS_FULL_ANSWER_EXCEPTIONS.get(source_id)
+    if exception is None:
+        return frozenset()
+    if lemma != exception.lemma:
+        raise NounPolicyError(
+            f"articleless full-answer identity mismatch for {source_id}: {lemma!r}"
+        )
+    return frozenset(exception.variants)
 
 
 def validate_noun_article(

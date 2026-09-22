@@ -2,7 +2,9 @@
   "schema_version": 1,
   "records": {
     "A1-84886454651": {
-      "expected": {"Lemma": "E-Mail"},
+      "expected": {
+        "Lemma": "E-Mail"
+      },
       "set": {
         "AcceptedAnswersDE": "E-Mail|Email",
         "AcceptedArticlesDE": "die|das",
@@ -12,7 +14,9 @@
       }
     },
     "A1-MAIN-0018": {
-      "expected": {"Lemma": "anderen"},
+      "expected": {
+        "Lemma": "anderen"
+      },
       "set": {
         "Lemma": "ander-",
         "AcceptedAnswersDE": "ander|anderen",
@@ -20,16 +24,76 @@
         "FormOrVariantNote": "inflected form: anderen"
       }
     },
-    "A1-84886454459": {"set": {"Lemma": "anziehen", "AcceptedAnswersDE": "sich anziehen", "AcceptedFullAnswersDE": "sich anziehen|s anziehen"}},
-    "A1-84886454629": {"set": {"Lemma": "duschen", "AcceptedAnswersDE": "sich duschen", "AcceptedFullAnswersDE": "sich duschen|s duschen"}},
-    "A1-84886454711": {"set": {"Lemma": "freuen", "AcceptedAnswersDE": "sich freuen", "AcceptedFullAnswersDE": "sich freuen|s freuen"}},
-    "A1-84886455145": {"set": {"Lemma": "treffen", "AcceptedAnswersDE": "sich treffen", "AcceptedFullAnswersDE": "sich treffen|s treffen"}},
-    "A1-84886455189": {"set": {"Lemma": "vorstellen", "AcceptedAnswersDE": "sich vorstellen", "AcceptedFullAnswersDE": "sich vorstellen|s vorstellen"}},
-    "A1-84886455201": {"set": {"Lemma": "waschen", "AcceptedAnswersDE": "sich waschen", "AcceptedFullAnswersDE": "sich waschen|s waschen"}},
-    "A2-0246": {
+    "A1-84886454650": {
+      "expected": {
+        "AcceptedAnswersDE": "Eltern|Eltern (Pl.)"
+      },
       "set": {
-        "AcceptedAnswersDE": "eintragen|sich eintragen",
-        "AcceptedFullAnswersDE": "eintragen|sich eintragen|s eintragen"
+        "AcceptedAnswersDE": "Eltern"
+      }
+    },
+    "A1-84886454749": {
+      "expected": {
+        "AcceptedAnswersDE": "Geschwister|Geschwister (Pl.)"
+      },
+      "set": {
+        "AcceptedAnswersDE": "Geschwister"
+      }
+    },
+    "A1-84886454773": {
+      "expected": {
+        "AcceptedAnswersDE": "Großeltern|Großeltern (Pl.)"
+      },
+      "set": {
+        "AcceptedAnswersDE": "Großeltern"
+      }
+    },
+    "A1-84887177245": {
+      "expected": {
+        "AcceptedAnswersDE": "Frühling/das Frühjahr|Frühling|Frühjahr"
+      },
+      "set": {
+        "AcceptedAnswersDE": "Frühling|Frühjahr"
+      }
+    },
+    "A2-0572": {
+      "expected": {
+        "AcceptedAnswersDE": "Kunst|Kunst(erziehung)"
+      },
+      "set": {
+        "AcceptedAnswersDE": "Kunst|Kunsterziehung"
+      }
+    },
+    "A2-WG-0023": {
+      "expected": {
+        "AcceptedAnswersDE": "Angestellter|Angestellte"
+      },
+      "set": {
+        "AcceptedAnswersDE": "Angestellte"
+      }
+    },
+    "A2-WG-0025": {
+      "expected": {
+        "AcceptedAnswersDE": "Auszubildender|Auszubildende"
+      },
+      "set": {
+        "AcceptedAnswersDE": "Auszubildende"
+      }
+    },
+    "A2-WG-0173": {
+      "expected": {
+        "AcceptedAnswersDE": "Arbeitstag/Werktag|Arbeitstag|Werktag"
+      },
+      "set": {
+        "AcceptedAnswersDE": "Arbeitstag|Werktag"
+      }
+    },
+    "B1-WG-0061": {
+      "expected": {
+        "AcceptedAnswersDE": "Ketchup|Ketschup|Ketchup/Ketschup"
+      },
+      "set": {
+        "AcceptedAnswersDE": "Ketchup|Ketschup"
       }
     },
     "A2-1059": {
@@ -45,7 +109,13 @@
         "AcceptedFullAnswersDE": "vorn|vorne"
       }
     },
-    "A1-84887177194": {"set": {"FormOrVariantNote": "ordinal number", "AcceptedAnswersDE": "erste", "AcceptedFullAnswersDE": "erste"}},
+    "A1-84887177194": {
+      "set": {
+        "FormOrVariantNote": "ordinal number",
+        "AcceptedAnswersDE": "erste",
+        "AcceptedFullAnswersDE": "erste"
+      }
+    },
     "A1-84887177192": {
       "set": {
         "AcceptedAnswersDE": "Million",
@@ -60,11 +130,31 @@
         "AcceptedFullAnswersDE": "die Milliarde"
       }
     },
-    "A1-84887177195": {"set": {"FormOrVariantNote": "ordinal number", "AcceptedAnswersDE": "zweite", "AcceptedFullAnswersDE": "zweite"}},
-    "A1-84887177196": {"set": {"FormOrVariantNote": "ordinal number", "AcceptedAnswersDE": "dritte", "AcceptedFullAnswersDE": "dritte"}},
-    "A1-84887177197": {"set": {"FormOrVariantNote": "ordinal number", "AcceptedAnswersDE": "vierte", "AcceptedFullAnswersDE": "vierte"}},
+    "A1-84887177195": {
+      "set": {
+        "FormOrVariantNote": "ordinal number",
+        "AcceptedAnswersDE": "zweite",
+        "AcceptedFullAnswersDE": "zweite"
+      }
+    },
+    "A1-84887177196": {
+      "set": {
+        "FormOrVariantNote": "ordinal number",
+        "AcceptedAnswersDE": "dritte",
+        "AcceptedFullAnswersDE": "dritte"
+      }
+    },
+    "A1-84887177197": {
+      "set": {
+        "FormOrVariantNote": "ordinal number",
+        "AcceptedAnswersDE": "vierte",
+        "AcceptedFullAnswersDE": "vierte"
+      }
+    },
     "A1-84887177259": {
-      "expected": {"MeaningEN": "one pound"},
+      "expected": {
+        "MeaningEN": "one pound"
+      },
       "set": {
         "MeaningEN": "pound",
         "UsageNoteEN": "In German weight usage, one Pfund equals 500 grams."
@@ -88,6 +178,491 @@
         "AcceptedFullAnswersDE": "hell-, dunkel-",
         "FormOrVariantNote": "contrasting colour prefixes: hellblau/dunkelblau"
       }
+    },
+    "A1-84886454584": {
+      "expected": {
+        "FormOrVariantNote": ""
+      },
+      "set": {
+        "FormOrVariantNote": "Abbreviation: CD = Compact Disc."
+      },
+      "refresh_batch": "american_english_and_abbreviation_review_2026_09",
+      "refresh_fields": [
+        "FormOrVariantNote"
+      ],
+      "reason": "Reviewed abbreviation notes and standard German regional labeling; exact prior values retained as guards."
+    },
+    "A1-84886454586": {
+      "expected": {
+        "FormOrVariantNote": "ca."
+      },
+      "set": {
+        "FormOrVariantNote": "ca. | Abbreviation: ca. = circa (about; approximately)."
+      },
+      "refresh_batch": "american_english_and_abbreviation_review_2026_09",
+      "refresh_fields": [
+        "FormOrVariantNote"
+      ],
+      "reason": "Reviewed abbreviation notes and standard German regional labeling; exact prior values retained as guards."
+    },
+    "A1-84886454922": {
+      "expected": {
+        "FormOrVariantNote": "Lkw, -s"
+      },
+      "set": {
+        "FormOrVariantNote": "Lkw, -s | Abbreviation: Lkw = Lastkraftwagen."
+      },
+      "refresh_batch": "american_english_and_abbreviation_review_2026_09",
+      "refresh_fields": [
+        "FormOrVariantNote"
+      ],
+      "reason": "Reviewed abbreviation notes and standard German regional labeling; exact prior values retained as guards."
+    },
+    "A1-84886455046": {
+      "expected": {
+        "FormOrVariantNote": ""
+      },
+      "set": {
+        "FormOrVariantNote": "Short form: S-Bahn = Stadtschnellbahn."
+      },
+      "refresh_batch": "american_english_and_abbreviation_review_2026_09",
+      "refresh_fields": [
+        "FormOrVariantNote"
+      ],
+      "reason": "Reviewed abbreviation notes and standard German regional labeling; exact prior values retained as guards."
+    },
+    "A1-WG-0039": {
+      "expected": {
+        "FormOrVariantNote": "usw.; continuation marker"
+      },
+      "set": {
+        "FormOrVariantNote": "usw.; continuation marker | Abbreviation: usw. = und so weiter (and so on)."
+      },
+      "refresh_batch": "american_english_and_abbreviation_review_2026_09",
+      "refresh_fields": [
+        "FormOrVariantNote"
+      ],
+      "reason": "Reviewed abbreviation notes and standard German regional labeling; exact prior values retained as guards."
+    },
+    "A2-WG-0002": {
+      "expected": {
+        "FormOrVariantNote": "d. h."
+      },
+      "set": {
+        "FormOrVariantNote": "d. h. | Abbreviation: d. h. = das heißt (that is; i.e.)."
+      },
+      "refresh_batch": "american_english_and_abbreviation_review_2026_09",
+      "refresh_fields": [
+        "FormOrVariantNote"
+      ],
+      "reason": "Reviewed abbreviation notes and standard German regional labeling; exact prior values retained as guards."
+    },
+    "A2-WG-0003": {
+      "expected": {
+        "FormOrVariantNote": "ICE"
+      },
+      "set": {
+        "FormOrVariantNote": "ICE | Abbreviation: ICE = Intercity-Express."
+      },
+      "refresh_batch": "american_english_and_abbreviation_review_2026_09",
+      "refresh_fields": [
+        "FormOrVariantNote"
+      ],
+      "reason": "Reviewed abbreviation notes and standard German regional labeling; exact prior values retained as guards."
+    },
+    "A2-WG-0005": {
+      "expected": {
+        "FormOrVariantNote": "PC, -s"
+      },
+      "set": {
+        "FormOrVariantNote": "PC, -s | Abbreviation: PC = Personal Computer."
+      },
+      "refresh_batch": "american_english_and_abbreviation_review_2026_09",
+      "refresh_fields": [
+        "FormOrVariantNote"
+      ],
+      "reason": "Reviewed abbreviation notes and standard German regional labeling; exact prior values retained as guards."
+    },
+    "A2-WG-0006": {
+      "expected": {
+        "FormOrVariantNote": "SMS | Primary German usage: die SMS; especially Austrian and Swiss usage also das SMS."
+      },
+      "set": {
+        "FormOrVariantNote": "Abbreviation: SMS = Short Message Service. Article: die SMS in Germany/Austria; das SMS in Switzerland."
+      },
+      "refresh_batch": "american_english_and_abbreviation_review_2026_09",
+      "refresh_fields": [
+        "FormOrVariantNote"
+      ],
+      "reason": "Reviewed abbreviation notes and standard German regional labeling; exact prior values retained as guards."
+    },
+    "A2-WG-0008": {
+      "expected": {
+        "FormOrVariantNote": "WC, -s"
+      },
+      "set": {
+        "FormOrVariantNote": "WC, -s | Abbreviation: WC = water closet (German: Water-Closet)."
+      },
+      "refresh_batch": "american_english_and_abbreviation_review_2026_09",
+      "refresh_fields": [
+        "FormOrVariantNote"
+      ],
+      "reason": "Reviewed abbreviation notes and standard German regional labeling; exact prior values retained as guards."
+    },
+    "B1-MAIN-0585": {
+      "expected": {
+        "FormOrVariantNote": ""
+      },
+      "set": {
+        "FormOrVariantNote": "Abbreviation: EC = Eurocheque. EC-Karte is a shortened form of Eurocheque-Karte and an older German term for a debit card."
+      },
+      "refresh_batch": "american_english_and_abbreviation_review_2026_09",
+      "refresh_fields": [
+        "FormOrVariantNote"
+      ],
+      "reason": "Reviewed abbreviation notes and standard German regional labeling; exact prior values retained as guards."
+    },
+    "B1-MAIN-2492": {
+      "expected": {
+        "FormOrVariantNote": ""
+      },
+      "set": {
+        "FormOrVariantNote": "Short form: U-Bahn = Untergrundbahn."
+      },
+      "refresh_batch": "american_english_and_abbreviation_review_2026_09",
+      "refresh_fields": [
+        "FormOrVariantNote"
+      ],
+      "reason": "Reviewed abbreviation notes and standard German regional labeling; exact prior values retained as guards."
+    },
+    "B1-WG-0004": {
+      "expected": {
+        "FormOrVariantNote": "| bzw.; beziehungsweise | Expansion/context: beziehungsweise"
+      },
+      "set": {
+        "FormOrVariantNote": "bzw.; beziehungsweise | Expansion/context: beziehungsweise | Abbreviation: bzw. = beziehungsweise (or rather; respectively)."
+      },
+      "refresh_batch": "american_english_and_abbreviation_review_2026_09",
+      "refresh_fields": [
+        "FormOrVariantNote"
+      ],
+      "reason": "Reviewed abbreviation notes and standard German regional labeling; exact prior values retained as guards."
+    },
+    "B1-WG-0007": {
+      "expected": {
+        "FormOrVariantNote": "| die DVD, -s; Datenträger (Digital Video Disc) | Expansion/context: Datenträger (Digital Video Disc)"
+      },
+      "set": {
+        "FormOrVariantNote": "Abbreviation: DVD = Digital Video Disc (also known as Digital Versatile Disc)."
+      },
+      "refresh_batch": "american_english_and_abbreviation_review_2026_09",
+      "refresh_fields": [
+        "FormOrVariantNote"
+      ],
+      "reason": "Reviewed abbreviation notes and standard German regional labeling; exact prior values retained as guards."
+    },
+    "B1-WG-0008": {
+      "expected": {
+        "FormOrVariantNote": "| das EG, OG, UG; das Erdgeschoss, das Obergeschoss, das Untergeschoss (D, CH); das Erdgeschoß, das Untergeschoß (A) | Expansion/context: das Erdgeschoss, das Obergeschoss, das Untergeschoss (D, CH); das Erdgeschoß, das Untergeschoß (A)"
+      },
+      "set": {
+        "FormOrVariantNote": "das EG, OG, UG; das Erdgeschoss, das Obergeschoss, das Untergeschoss (D, CH); das Erdgeschoß, das Untergeschoß (A) | Expansion/context: das Erdgeschoss, das Obergeschoss, das Untergeschoss (D, CH); das Erdgeschoß, das Untergeschoß (A) | Abbreviations: EG = Erdgeschoss; OG = Obergeschoss; UG = Untergeschoss."
+      },
+      "refresh_batch": "american_english_and_abbreviation_review_2026_09",
+      "refresh_fields": [
+        "FormOrVariantNote"
+      ],
+      "reason": "Reviewed abbreviation notes and standard German regional labeling; exact prior values retained as guards."
+    },
+    "B1-WG-0009": {
+      "expected": {
+        "FormOrVariantNote": "| etc.; et cetera | Expansion/context: et cetera"
+      },
+      "set": {
+        "FormOrVariantNote": "Abbreviation: etc. = et cetera (and other things)."
+      },
+      "refresh_batch": "american_english_and_abbreviation_review_2026_09",
+      "refresh_fields": [
+        "FormOrVariantNote"
+      ],
+      "reason": "Reviewed abbreviation notes and standard German regional labeling; exact prior values retained as guards."
+    },
+    "B1-WG-0011": {
+      "expected": {
+        "FormOrVariantNote": "| das Kfz, -s; das Kraftfahrzeug, -e | Expansion/context: das Kraftfahrzeug, -e"
+      },
+      "set": {
+        "FormOrVariantNote": "Abbreviation: Kfz = Kraftfahrzeug (motor vehicle)."
+      },
+      "refresh_batch": "american_english_and_abbreviation_review_2026_09",
+      "refresh_fields": [
+        "FormOrVariantNote"
+      ],
+      "reason": "Reviewed abbreviation notes and standard German regional labeling; exact prior values retained as guards."
+    },
+    "B1-WG-0014": {
+      "expected": {
+        "FormOrVariantNote": "| der Pkw, -s; der Personenkraftwagen, - | Expansion/context: der Personenkraftwagen, -"
+      },
+      "set": {
+        "FormOrVariantNote": "Abbreviation: Pkw = Personenkraftwagen (passenger car)."
+      },
+      "refresh_batch": "american_english_and_abbreviation_review_2026_09",
+      "refresh_fields": [
+        "FormOrVariantNote"
+      ],
+      "reason": "Reviewed abbreviation notes and standard German regional labeling; exact prior values retained as guards."
+    },
+    "B1-WG-0015": {
+      "expected": {
+        "FormOrVariantNote": "SMS | die (D, A), das (CH). | die (D, A)/das (CH) SMS, -; Textnachricht | Article variants printed by Goethe: die/das.; Expansion/context: Textnachricht"
+      },
+      "set": {
+        "FormOrVariantNote": "Abbreviation: SMS = Short Message Service. Article: die SMS in Germany/Austria; das SMS in Switzerland."
+      },
+      "refresh_batch": "american_english_and_abbreviation_review_2026_09",
+      "refresh_fields": [
+        "FormOrVariantNote"
+      ],
+      "reason": "Reviewed abbreviation notes and standard German regional labeling; exact prior values retained as guards."
+    },
+    "B1-WG-0016": {
+      "expected": {
+        "FormOrVariantNote": "| das TV, -; Television | Expansion/context: Television"
+      },
+      "set": {
+        "FormOrVariantNote": "Abbreviation: TV = television."
+      },
+      "refresh_batch": "american_english_and_abbreviation_review_2026_09",
+      "refresh_fields": [
+        "FormOrVariantNote"
+      ],
+      "reason": "Reviewed abbreviation notes and standard German regional labeling; exact prior values retained as guards."
+    },
+    "B1-WG-0018": {
+      "expected": {
+        "FormOrVariantNote": "| vgl.; vergleiche | Expansion/context: vergleiche"
+      },
+      "set": {
+        "FormOrVariantNote": "Abbreviation: vgl. = vergleiche (compare)."
+      },
+      "refresh_batch": "american_english_and_abbreviation_review_2026_09",
+      "refresh_fields": [
+        "FormOrVariantNote"
+      ],
+      "reason": "Reviewed abbreviation notes and standard German regional labeling; exact prior values retained as guards."
+    },
+    "B1-WG-0020": {
+      "expected": {
+        "FormOrVariantNote": "| die WG, -s; die Wohngemeinschaft, -en | Expansion/context: die Wohngemeinschaft, -en"
+      },
+      "set": {
+        "FormOrVariantNote": "Abbreviation: WG = Wohngemeinschaft (shared apartment)."
+      },
+      "refresh_batch": "american_english_and_abbreviation_review_2026_09",
+      "refresh_fields": [
+        "FormOrVariantNote"
+      ],
+      "reason": "Reviewed abbreviation notes and standard German regional labeling; exact prior values retained as guards."
+    },
+    "B1-WG-0032": {
+      "expected": {
+        "FormOrVariantNote": "| der CD-Player, -"
+      },
+      "set": {
+        "FormOrVariantNote": "Abbreviation: CD = Compact Disc."
+      },
+      "refresh_batch": "american_english_and_abbreviation_review_2026_09",
+      "refresh_fields": [
+        "FormOrVariantNote"
+      ],
+      "reason": "Reviewed abbreviation notes and standard German regional labeling; exact prior values retained as guards."
+    },
+    "B1-WG-0072": {
+      "expected": {
+        "FormOrVariantNote": "| o.k./O.K./okay"
+      },
+      "set": {
+        "FormOrVariantNote": "Written variants: o.k., O.K., OK, and okay."
+      },
+      "refresh_batch": "american_english_and_abbreviation_review_2026_09",
+      "refresh_fields": [
+        "FormOrVariantNote"
+      ],
+      "reason": "Reviewed abbreviation notes and standard German regional labeling; exact prior values retained as guards."
+    },
+    "B1-WG-0123": {
+      "expected": {
+        "FormOrVariantNote": "| Österreich: die Allgemeinbildende Höhere Schule (AHS); das Gymnasium | Expansion/context: das Gymnasium"
+      },
+      "set": {
+        "FormOrVariantNote": "Abbreviation: AHS = Allgemeinbildende Höhere Schule (Austrian academic secondary school)."
+      },
+      "refresh_batch": "american_english_and_abbreviation_review_2026_09",
+      "refresh_fields": [
+        "FormOrVariantNote"
+      ],
+      "reason": "Reviewed abbreviation notes and standard German regional labeling; exact prior values retained as guards."
+    },
+    "B1-WG-0124": {
+      "expected": {
+        "FormOrVariantNote": "| Österreich: die Berufsbildende Höhere Schule (BHS)"
+      },
+      "set": {
+        "FormOrVariantNote": "Abbreviation: BHS = Berufsbildende Höhere Schule (Austrian vocational upper-secondary school)."
+      },
+      "refresh_batch": "american_english_and_abbreviation_review_2026_09",
+      "refresh_fields": [
+        "FormOrVariantNote"
+      ],
+      "reason": "Reviewed abbreviation notes and standard German regional labeling; exact prior values retained as guards."
+    },
+    "B1-WG-0239": {
+      "expected": {
+        "FormOrVariantNote": "| 1 sFr.; 1 Franken, - | Expansion/context: 1 Franken, -"
+      },
+      "set": {
+        "FormOrVariantNote": "Abbreviation: sFr. = Schweizer Franken (Swiss franc)."
+      },
+      "refresh_batch": "american_english_and_abbreviation_review_2026_09",
+      "refresh_fields": [
+        "FormOrVariantNote"
+      ],
+      "reason": "Reviewed abbreviation notes and standard German regional labeling; exact prior values retained as guards."
+    },
+    "B1-WG-0240": {
+      "expected": {
+        "FormOrVariantNote": "| 1 Rp.; 1 Rappen, - | Expansion/context: 1 Rappen, -"
+      },
+      "set": {
+        "FormOrVariantNote": "Abbreviation: Rp. = Rappen; 100 Rappen = 1 Swiss franc."
+      },
+      "refresh_batch": "american_english_and_abbreviation_review_2026_09",
+      "refresh_fields": [
+        "FormOrVariantNote"
+      ],
+      "reason": "Reviewed abbreviation notes and standard German regional labeling; exact prior values retained as guards."
+    },
+    "B1-WG-0253": {
+      "expected": {
+        "FormOrVariantNote": "| 1 dkg oder dag (= 10 g); ein Deka(gramm) (A) | Expansion/context: ein Deka(gramm) (A)"
+      },
+      "set": {
+        "FormOrVariantNote": "1 dkg oder dag (= 10 g); ein Deka(gramm) (A) | Expansion/context: ein Deka(gramm) (A) | Abbreviations: dkg = Dekagramm (also written dag); g = Gramm."
+      },
+      "refresh_batch": "american_english_and_abbreviation_review_2026_09",
+      "refresh_fields": [
+        "FormOrVariantNote"
+      ],
+      "reason": "Reviewed abbreviation expansions for Austrian weight notation; exact prior value retained as a guard."
+    },
+    "B1-WG-0254": {
+      "expected": {
+        "FormOrVariantNote": "| 1 km/h; ein Kilometer pro Stunde | Expansion/context: ein Kilometer pro Stunde"
+      },
+      "set": {
+        "FormOrVariantNote": "Abbreviation: km/h = Kilometer pro Stunde (kilometers per hour)."
+      },
+      "refresh_batch": "american_english_and_abbreviation_review_2026_09",
+      "refresh_fields": [
+        "FormOrVariantNote"
+      ],
+      "reason": "Reviewed abbreviation notes and standard German regional labeling; exact prior values retained as guards."
+    },
+    "B1-WG-0279": {
+      "expected": {
+        "FormOrVariantNote": "| vierte usw.; ordinal"
+      },
+      "set": {
+        "FormOrVariantNote": "Abbreviation: usw. = und so weiter (and so on)."
+      },
+      "refresh_batch": "american_english_and_abbreviation_review_2026_09",
+      "refresh_fields": [
+        "FormOrVariantNote"
+      ],
+      "reason": "Reviewed abbreviation notes and standard German regional labeling; exact prior values retained as guards."
+    },
+    "B1-WG-0283": {
+      "expected": {
+        "FormOrVariantNote": "| viertens usw.; enumerating"
+      },
+      "set": {
+        "FormOrVariantNote": "Abbreviation: usw. = und so weiter (and so on)."
+      },
+      "refresh_batch": "american_english_and_abbreviation_review_2026_09",
+      "refresh_fields": [
+        "FormOrVariantNote"
+      ],
+      "reason": "Reviewed abbreviation notes and standard German regional labeling; exact prior values retained as guards."
+    },
+    "B1-WG-0287": {
+      "expected": {
+        "FormOrVariantNote": "| viermal usw.; frequency"
+      },
+      "set": {
+        "FormOrVariantNote": "Abbreviation: usw. = und so weiter (and so on)."
+      },
+      "refresh_batch": "american_english_and_abbreviation_review_2026_09",
+      "refresh_fields": [
+        "FormOrVariantNote"
+      ],
+      "reason": "Reviewed abbreviation notes and standard German regional labeling; exact prior values retained as guards."
+    },
+    "B1-MAIN-0554": {
+      "expected": {
+        "RegionalVariants": "die Dose, -n; → D, CH: Büchse",
+        "UsageNoteEN": ""
+      },
+      "set": {
+        "RegionalVariants": "D, CH: Büchse",
+        "UsageNoteEN": "Dose is a standard German word. Büchse is also used for a can in Germany and Switzerland."
+      },
+      "refresh_batch": "american_english_and_abbreviation_review_2026_09",
+      "refresh_fields": [
+        "RegionalVariants",
+        "UsageNoteEN"
+      ],
+      "reason": "Reviewed abbreviation notes and standard German regional labeling; exact prior values retained as guards."
+    },
+    "A1-84886454894": {
+      "expected": {"MeaningEN": "for a long time"},
+      "set": {"MeaningEN": "long; for a long time"},
+      "refresh_batch": "american_english_and_abbreviation_review_2026_09",
+      "refresh_fields": ["MeaningEN"],
+      "reason": "Clarify the interrogative and duration senses of the adverb lange."
+    },
+    "A2-0048": {
+      "expected": {"Example1EN": "I would like to become a nurse."},
+      "set": {"Example1EN": "I would like to train as a nurse."},
+      "refresh_batch": "american_english_and_abbreviation_review_2026_09",
+      "refresh_fields": ["Example1EN"],
+      "reason": "Translate Ausbildung zum ... machen as training for a profession."
+    },
+    "A2-0387": {
+      "expected": {"MeaningEN": "across; across from"},
+      "set": {"MeaningEN": "opposite; across from"},
+      "refresh_batch": "american_english_and_abbreviation_review_2026_09",
+      "refresh_fields": ["MeaningEN"],
+      "reason": "Use the natural location gloss opposite; across from."
+    },
+    "A2-0812": {
+      "expected": {
+        "Lemma": "reiten (animal)",
+        "AcceptedAnswersDE": "reiten (animal)",
+        "AcceptedFullAnswersDE": "reiten (animal)",
+        "MeaningEN": "to ride a horse",
+        "Example1EN": "Would you like to ride a horse?"
+      },
+      "set": {
+        "Lemma": "reiten",
+        "AcceptedAnswersDE": "reiten",
+        "AcceptedFullAnswersDE": "reiten",
+        "MeaningEN": "to ride (an animal)",
+        "Example1EN": "Would you like to learn to ride?"
+      },
+      "refresh_batch": "american_english_and_abbreviation_review_2026_09",
+      "refresh_fields": ["Lemma", "AcceptedAnswersDE", "AcceptedFullAnswersDE", "MeaningEN", "Example1EN"],
+      "reason": "Remove the editorial animal annotation from the German headword and clarify the animal-riding sense."
     }
   }
 }

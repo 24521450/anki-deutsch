@@ -1,6 +1,6 @@
 <main class="gw-card" data-level="{{CEFR}}" data-direction="en-de">
   <header class="gw-meta">
-    <span class="gw-brand">GOETHE</span>
+    <a class="gw-brand gw-dictionary-link" data-source-id="{{SourceID}}" data-source-refs="{{SourceRefs}}" href="" target="_blank" rel="noopener noreferrer" hidden aria-label="Open dictionary entry">DUDEN</a>
     <span class="gw-pos">{{POS}}</span>
     <span class="gw-level">{{CEFR}}</span>
   </header>
@@ -12,9 +12,7 @@
       {{#Example1EN}}<p class="gw-context" lang="en">{{Example1EN}}</p>{{/Example1EN}}
     </div>
     {{#ProductionEnabled}}
-    <div class="gw-typebox">
-      {{type:Lemma}}
-    </div>
+    <div class="gw-typebox" lang="de">{{type:Lemma}}</div>
     {{/ProductionEnabled}}
     {{^ProductionEnabled}}
     <div class="gw-production-disabled" role="status" lang="en">
@@ -23,44 +21,7 @@
     </div>
     {{/ProductionEnabled}}
   </section>
-  <span id="gw-source-id" hidden>{{SourceID}}</span>
-  <span id="gw-production-enabled" hidden>{{ProductionEnabled}}</span>
 </main>
 <script>
-(function () {
-  var enabled = document.getElementById("gw-production-enabled");
-  if (!enabled || !/^(?:1|true|yes)$/i.test(enabled.textContent.trim())) return;
-  var source = document.getElementById("gw-source-id");
-  if (!source) return;
-  var key = "goethe-werkstatt:" + source.textContent.trim() + ":production";
-  globalThis.goetheWerkstattAnswers = globalThis.goetheWerkstattAnswers || {};
-  function save(value) {
-    globalThis.goetheWerkstattAnswers[key] = value;
-    try { sessionStorage.setItem(key, value); } catch (error) {}
-  }
-  save("");
-  function attach(attempt) {
-    var input = document.getElementById("typeans");
-    if (!input) {
-      if (attempt < 20) setTimeout(function () { attach(attempt + 1); }, 25);
-      return;
-    }
-    input.setAttribute("autocomplete", "off");
-    input.setAttribute("autocapitalize", "off");
-    input.setAttribute("lang", "de");
-    input.setAttribute("aria-label", "German answer");
-    input.setAttribute("spellcheck", "false");
-    input.addEventListener("input", function () { save(input.value); });
-    input.addEventListener("change", function () { save(input.value); });
-    input.addEventListener("keydown", function (event) {
-      if (event.key !== "Enter" || input.dataset.submitted === "true") return;
-      event.preventDefault();
-      input.dataset.submitted = "true";
-      save(input.value);
-      pycmd("ans");
-    });
-    input.focus();
-  }
-  attach(0);
-})();
+{{DictionaryLinkController}}
 </script>
