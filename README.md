@@ -8,6 +8,10 @@ This repository is a German Anki resource project split out from the IELTS deck 
 - `sources/goethe/Goethe_A1_Wortgruppen.md`, `Goethe_A2_Wortgruppen.md`, and
   `Goethe_B1_Wortgruppen.md` contain the thematic inventories omitted from the
   alphabetical word-list files.
+- `data/build/anki_notes.jsonl` is the checked-in, reconciled A1-B1 note
+  snapshot consumed by review audits and tests.
+- `design/GoetheWerkstatt/` contains the Anki card templates, styling, and
+  browser-side audio and answer helpers.
 - `tools/` contains German audio generation and Duden lookup tools.
 - `audio/` is generated output. MP3s, logs, checkpoints, staging directories, and generated manifests are ignored by default.
 - `review/duden_overrides.json` and level-specific override files are the hand-reviewed Duden policy files.
@@ -15,6 +19,9 @@ This repository is a German Anki resource project split out from the IELTS deck 
 - `review/goethe_word_audio_approved.json` pins every audit-approved human
   recording to its source revision, content hash, and semantic transcript.
 - `docs/PLAN_A1_WORD_AUDIO.md` documents the current A1 word-audio plan.
+- `docs/updates/` contains dated project update notes. New notes use the
+  `DD-MM-YYYY` date prefix; the latest recorded Goethe refresh is
+  [22-09-2026 — content, answer contract, and card refresh](docs/updates/22-09-2026-goethe.md).
 - `tests/` contains German-resource tests. They are outside the default pytest suite because `pyproject.toml` limits default collection to root `tests/`.
 
 ## Current Workflows
