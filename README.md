@@ -1,132 +1,123 @@
 # Deutsch Resources
 
-This repository is a German Anki resource project split out from the IELTS deck repo.
+This repository contains the German Goethe A1–B1 Anki resources and their
+maintenance tools: source word lists, reviewed corrections, card templates,
+audio workflows, and validation scripts. The repository root is the German
+project root; the separate English IELTS pipeline is out of scope.
 
-## Scope
+## Contents
 
-- `sources/goethe/` contains source Goethe word lists and reference PDFs.
-- `sources/goethe/Goethe_A1_Wortgruppen.md`, `Goethe_A2_Wortgruppen.md`, and
-  `Goethe_B1_Wortgruppen.md` contain the thematic inventories omitted from the
-  alphabetical word-list files.
-- `data/build/anki_notes.jsonl` is the checked-in, reconciled A1-B1 note
-  snapshot consumed by review audits and tests.
-- `design/GoetheWerkstatt/` contains the Anki card templates, styling, and
-  browser-side audio and answer helpers.
-- `tools/` contains German audio generation and Duden lookup tools.
-- `audio/` is generated output. MP3s, logs, checkpoints, staging directories, and generated manifests are ignored by default.
-- `review/duden_overrides.json` and level-specific override files are the hand-reviewed Duden policy files.
-- `review/goethe_word_audio_overrides.json` records protected, user-reviewed word audio.
-- `review/goethe_word_audio_approved.json` pins every audit-approved human
-  recording to its source revision, content hash, and semantic transcript.
-- `docs/PLAN_A1_WORD_AUDIO.md` documents the current A1 word-audio plan.
-- `docs/updates/` contains dated project update notes. New notes use the
-  `DD-MM-YYYY` date prefix; the latest recorded Goethe refresh is
-  [22-09-2026 — content, answer contract, and card refresh](docs/updates/22-09-2026-goethe.md).
-- `tests/` contains German-resource tests. They are outside the default pytest suite because `pyproject.toml` limits default collection to root `tests/`.
+- [Project layout](#project-layout)
+- [Quick start](#quick-start)
+- [Working with live Anki data](#working-with-live-anki-data)
+- [Source lists and inventories](#source-lists-and-inventories)
+- [Word audio](#word-audio)
+- [Example sentence audio](#example-sentence-audio)
+- [Content, answers, and card templates](#content-answers-and-card-templates)
+- [Other tools](#other-tools)
+- [Policies and detailed guides](#policies-and-detailed-guides)
 
-## Current Workflows
+## Project layout
 
-Word audio:
+| Path | Purpose |
+| --- | --- |
+| `sources/goethe/` | Goethe word lists, reference PDFs, and thematic inventories. |
+| `review/` | Reviewed overrides, audit decisions, provenance, and policy registries. |
+| `data/build/anki_notes.jsonl` | Checked-in, reconciled A1–B1 note snapshot used by audits and tests. |
+| `design/GoetheWerkstatt/` | Anki note templates, styling, and browser-side audio and answer helpers. |
+| `tools/` | Source validation, Anki maintenance, audio generation, and export tools. |
+| `tests/` | German-resource tests. Run them explicitly with `python -m pytest`. |
+| `docs/` | Workflow guides, decisions, and dated update notes. |
+| `audio/` | Generated audio, staging files, checkpoints, and local manifests; ignored by default. |
 
-The Goethe word-audio fallback order is validated Duden audio (A1 before A2
-before B1), newly resolved exact Duden audio, exact Wikimedia Commons
-pronunciation, Wiktionary German pronunciation audio, then Gemini TTS.
-The canonical workflow covers A1, A2, and B1 together. Only the `WordAudio`
-field is updated; scheduling and review history are snapshotted and verified
-before and after an apply.
+The thematic inventory files are `Goethe_A1_Wortgruppen.md`,
+`Goethe_A2_Wortgruppen.md`, and `Goethe_B1_Wortgruppen.md` under
+`sources/goethe/`. Temporary reports and manifests may also live in ignored
+hidden `tools/.*` paths.
 
-Reviewed direct Duden pages (for example `August_Monat`, `Hundert_Zahl`, and
-`Tausend_Zahl`) take precedence over sitemap fallback when their headword and
-spoken form are explicitly pinned. Protected user-reviewed audio remains
-authoritative. Run `python tools/goethe_word_audio.py audit` after changing
-spoken-text policy so semantic repairs are recorded before preparation.
+The latest recorded corpus refresh reports **3,420 notes and 6,840 cards**:
+804 A1 notes, 680 A2 notes, and 1,936 B1 notes. See the
+[22-09-2026 update](docs/updates/22-09-2026-goethe.md) for the reviewed
+content and card changes behind that snapshot.
 
-To audit every live A1-B1 Gemini fallback, classify it, and apply only exact
-human replacements:
+## Quick start
+
+Run the project checks from the repository root:
 
 ```powershell
-python tools/goethe_word_audio.py prepare --scope gemini-audit --confirm-duden-usage --confirm-commons-license
-python tools/goethe_word_audio.py snapshot
-python tools/goethe_word_audio.py apply --scope gemini-audit --dry-run
-python tools/goethe_word_audio.py apply --scope gemini-audit --confirmation APPLY_GOETHE_WORD_AUDIO
-python tools/goethe_word_audio.py verify --scope gemini-audit
+python -m pytest
+python tools/validate_goethe_wortgruppen.py
+python tools/a1_preflight.py
 ```
 
-The report is written under `tools/.goethe_word_audio/` with categories
-`wrong_certain`, `needs_review`, and `valid_fallback`. Only `wrong_certain` is
-eligible for apply. Timeouts, source conflicts, and transcript mismatches are
-always review items. An interrupted scan may resume with `prepare --offline
---scope gemini-audit`; the full live Gemini baseline is retained. See
-`docs/adr/0002-bounded-gemini-word-audio-audit.md` for the fail-closed rules.
+The Duden download tools are source-audio preparation tools. Inspect their
+options before use:
 
-Gemini fallback audio uses `gemini-3.1-flash-live-preview` with reusable
-`Kore` and `Charon` Live sessions. The voice is selected deterministically
-from the SHA-256 parity of the canonical spoken text, so a spoken identity
-keeps the same voice across runs. Every turn enables Live output-audio
-transcription; an empty or non-matching transcript fails closed. Accepted
-output normally passes that exact check directly. If the Live output
-transcription is truncated while the PCM is complete, `gemini-3.6-flash`
-independently transcribes the generated WAV and must match exactly before the
-audio is accepted. Output is mono 24 kHz, 128 kbps MP3 named
-`_goethe_word_gemini_<sha256>.mp3`.
+```powershell
+python tools/download_duden_a1_audio.py --help
+python tools/download_duden_a2_audio.py --help
+python tools/download_duden_b1_audio.py --help
+```
 
-Install the pinned dependencies and provide the API key only through the
-process environment:
+Gemini audio workflows use the pinned dependencies in
+`requirements-word-audio.txt`. In PowerShell, install them and provide the key
+for the current process:
 
 ```powershell
 python -m pip install -r requirements-word-audio.txt
 $env:GEMINI_API_KEY = "your-key"
 ```
 
-Multiple distinct keys may be supplied only through the process environment as
-comma-separated `GEMINI_API_KEYS`; the single manifest writer keeps their Live
-session pools isolated and round-robins requests.
+For multiple distinct keys, set `GEMINI_API_KEYS` to a comma-separated list in
+the process environment. Never commit API keys or write them into manifests,
+logs, or review files.
 
-Do not commit the key or write it into manifests, logs, or review files.
-The full example migration contains 4,978 resumable Live turns. The generator
-serializes turns within each voice session, reconnects expired sessions, and
-checkpoints completed batches so an interrupted run can resume safely.
+## Working with live Anki data
 
-Protected audio takes precedence over every automatic provider. It is matched
-through `SourceID` and `SourceRefs`, locked to the reviewed media checksum, and
-survives note merges. An unregistered live-audio difference fails closed rather
-than being overwritten. To register an MP3 already selected in Anki:
+Before each live Anki session, confirm that AnkiConnect is available with its
+read-only `version` action. Live changes must use the repository tools; never
+edit `collection.anki2` directly.
 
-```powershell
-python tools/goethe_word_audio.py protect-current --note-id NOTE_ID --reason "why this recording was selected"
-```
+For a mutating workflow, follow its guarded sequence: audit the exact scope,
+create the scheduled APKG backup and local snapshot, inspect a dry run, apply
+with the workflow's explicit confirmation token, and verify the result. Use the
+provided rollback command if verification fails. Check the tool's help or its
+guide before running a command against the live collection.
 
-Bound headwords use the physical lemma as their spoken identity: boundary
-hyphens are removed and repeated alternatives are pronounced once
-(`eigen-` → `eigen`, `weg/weg-` → `weg`). Audio reuse requires both the same
-lemma identity and spoken text; `SourceRefs` alone cannot restore audio after a
-lemma change. `audit` reports semantic mismatches separately from harmless
-provider drift. Reviewed homophones, spelling variants, and dictionary-form
-audio are registered in `spoken_equivalences`; each entry is locked to its
-expected lemma so it cannot silently migrate to another note.
+Audio workflows update their designated audio fields and verify that note IDs,
+card IDs, scheduling, and review history remain intact. Old media that is no
+longer referenced is not deleted automatically because another deck may use
+the same filenames.
 
-For a reviewed repair, repeat `--note-id` on `prepare`, `apply`, and `verify`.
-The targeted manifest refuses to apply without the same explicit note-ID
-subset:
+## Source lists and inventories
 
-```powershell
-python tools/goethe_word_audio.py prepare --confirm-duden-usage --confirm-commons-license --note-id NOTE_ID
-python tools/goethe_word_audio.py snapshot
-python tools/goethe_word_audio.py apply --scope full --dry-run --note-id NOTE_ID
-python tools/goethe_word_audio.py apply --scope full --confirmation APPLY_GOETHE_WORD_AUDIO --note-id NOTE_ID
-python tools/goethe_word_audio.py verify --scope full --note-id NOTE_ID
-```
+Source Markdown lives in `sources/goethe/`. Preserve row order, existing
+columns, and Unicode text. When extracting sentences from PDFs, use
+coordinate-aware evidence, fail closed rather than guessing, and validate row
+counts before handoff.
 
-To prepare and apply only registered protected audio:
+Validate the structured thematic inventories and their source provenance with:
 
 ```powershell
-python tools/goethe_word_audio.py audit
-python tools/goethe_word_audio.py prepare --scope protected --confirm-duden-usage --confirm-commons-license --offline
-python tools/goethe_word_audio.py snapshot
-python tools/goethe_word_audio.py apply --scope protected --dry-run
-python tools/goethe_word_audio.py apply --scope protected --confirmation APPLY_GOETHE_WORD_AUDIO
-python tools/goethe_word_audio.py verify --scope protected
+python tools/validate_goethe_wortgruppen.py
 ```
+
+The checked-in `data/build/anki_notes.jsonl` is a reconciled snapshot, not the
+source of truth for edits. Regenerate it only after the reviewed live-note
+batch has been reconciled.
+
+## Word audio
+
+The A1–B1 deck workflow chooses audio in this order: protected, user-reviewed
+recordings; validated Duden audio; newly resolved exact Duden audio; exact
+Wikimedia Commons pronunciation; Wiktionary German pronunciation; then Gemini
+TTS. Reviewed direct Duden pages take precedence over sitemap fallback when
+their headword and spoken form are pinned. Only the `WordAudio` field is
+updated by this workflow.
+
+For a Duden refresh, audit first, prepare the sources, and snapshot the live
+deck. Then dry-run, apply with the confirmation token, and verify each scope.
+The standard pilot and full sequence is:
 
 ```powershell
 python tools/goethe_word_audio.py audit
@@ -140,29 +131,39 @@ python tools/goethe_word_audio.py apply --scope full --confirmation APPLY_GOETHE
 python tools/goethe_word_audio.py verify --scope full
 ```
 
-To migrate only live `WordAudio` fields that still reference historical Edge
-media, use the deck-discovered `edge` scope. The prepared manifest is locked to
-that exact scope:
+For a reviewed single-note repair, repeat the same `--note-id NOTE_ID` on
+`prepare`, `apply`, and `verify`; the manifest is restricted to that exact
+subset. Use `protect-current` to register an MP3 already selected in Anki:
 
 ```powershell
-python tools/goethe_word_audio.py audit
-python tools/goethe_word_audio.py prepare --scope edge --confirm-duden-usage --confirm-commons-license
+python tools/goethe_word_audio.py protect-current --note-id NOTE_ID --reason "why this recording was selected"
+```
+
+To audit all live Gemini fallbacks, prepare the `gemini-audit` scope. Only
+`wrong_certain` results can be applied; timeouts, source conflicts, and
+transcript mismatches stay in review. An interrupted scan can resume offline
+from its checkpoint. See [ADR 0002](docs/adr/0002-bounded-gemini-word-audio-audit.md)
+for the fail-closed rules.
+
+```powershell
+python tools/goethe_word_audio.py prepare --scope gemini-audit --confirm-duden-usage --confirm-commons-license
 python tools/goethe_word_audio.py snapshot
-python tools/goethe_word_audio.py apply --scope edge --dry-run
-python tools/goethe_word_audio.py apply --scope edge --confirmation APPLY_GOETHE_WORD_AUDIO
-python tools/goethe_word_audio.py verify --scope edge
+python tools/goethe_word_audio.py apply --scope gemini-audit --dry-run
+python tools/goethe_word_audio.py apply --scope gemini-audit --confirmation APPLY_GOETHE_WORD_AUDIO
+python tools/goethe_word_audio.py verify --scope gemini-audit
 ```
 
-To restore those `WordAudio` fields from the snapshot:
+Additional scopes include `protected` for registered recordings and `edge`
+for fields still pointing to historical Edge media. The exact scope is locked
+to the prepared manifest. The level-specific Duden downloaders prepare source
+audio; they are not separate deck-update pipelines.
 
-```powershell
-python tools/goethe_word_audio.py rollback --scope edge --confirmation ROLLBACK_GOETHE_WORD_AUDIO
-```
+## Example sentence audio
 
-The level-specific Duden downloaders remain source-audio preparation tools.
-They are not separate deck-update pipelines.
-
-Example sentence audio:
+`tools/goethe_example_audio.py` manages example recordings across A1, A2, and
+B1. Its transcript QA fails closed, and its live update preserves the Anki
+notes, cards, scheduling, and review history. See the [full example-audio
+guide](docs/GOETHE_EXAMPLE_AUDIO.md) for provider details and rollback policy.
 
 ```powershell
 python tools/goethe_example_audio.py audit
@@ -177,18 +178,26 @@ python tools/goethe_example_audio.py apply --scope full --confirmation APPLY_GOE
 python tools/goethe_example_audio.py verify --scope full
 ```
 
-This A1-B1 workflow uses deterministic Gemini Live voices, fail-closed output
-transcription QA, and preserves Anki scheduling and review history. See
-`docs/GOETHE_EXAMPLE_AUDIO.md`.
+To restore the snapshotted example-audio fields:
 
-Historical `_goethe_example_edge_...` and `_goethe_word_edge_...` media can
-remain in Anki unreferenced after migration. The workflows do not delete them,
-because another deck may still use the same filenames.
+```powershell
+python tools/goethe_example_audio.py rollback --confirmation ROLLBACK_GOETHE_EXAMPLE_AUDIO
+```
 
-English audit and completion:
+## Content, answers, and card templates
+
+The source example grammar uses `<br data-example-boundary>` between
+independent examples. A plain `<br>` continues the same example, such as a
+dialogue reply. Check the grammar and reviewed PDF-coordinate evidence before
+building completion data:
 
 ```powershell
 python tools/goethe_example_boundaries.py check
+```
+
+The English audit and completion workflow is:
+
+```powershell
 python tools/goethe_english_audit.py inspect
 python tools/goethe_english_audit.py check-batch --batch V5-01
 python tools/goethe_english_audit.py compile
@@ -199,25 +208,13 @@ python tools/goethe_completion.py verify
 python tools/export_goethe_notes_jsonl.py
 ```
 
-Goethe source cells use an explicit example grammar:
-`<br data-example-boundary>` separates independent examples, while plain
-`<br>` is reserved for a continuation inside one example (notably a dialogue
-reply). `goethe_example_boundaries.py check` validates the grammar and the
-reviewed PDF-coordinate evidence before a completion build can proceed.
+The v5 audit requires every canonical note and source example to be reviewed,
+and blocks unresolved answer collisions. Completion apply checks exact note
+and card IDs and creates a scheduled APKG backup before destructive changes.
+The historical v4 process is documented in
+[`GOETHE_ENGLISH_AUDIT_V4.md`](docs/GOETHE_ENGLISH_AUDIT_V4.md).
 
-The checked-in v5 American-English audit has one row per canonical A1-B1
-note: 3,420 notes and 6,840 cards in total, including 1,936 B1 notes. Every
-note now has at least one example. Live audit, completion apply, and the final
-JSONL snapshot fail closed until every row is reviewed, all source examples
-are covered, and collision checks pass. Completion apply validates exact
-note/card IDs and creates a scheduled APKG backup before any destructive
-change. The production collision gate compares `MeaningEN` globally across
-A1-B1 and requires distinct, answer-safe `ProductionHint` values whenever
-different German answers share the same English cue; CEFR, POS, gender, and
-examples do not bypass that gate. The historical v4 workflow remains documented in
-`docs/GOETHE_ENGLISH_AUDIT_V4.md`.
-
-September issue and card-contract refresh:
+For the September issue and card-contract refresh, the staged commands are:
 
 ```powershell
 python tools/goethe_issue_refresh.py content
@@ -229,17 +226,15 @@ python tools/build_goethe_dictionary_links.py
 python tools/reconcile_goethe_build.py
 ```
 
-The issue refresh preserves exact SourceID/SourceRefs provenance, creates an
-APKG backup before live changes, and keeps content, duplicate merges, and
-pronunciation variants as separate guarded operations. The dedicated
-`goethe_english_content_refresh.py`, `goethe_answer_contract_refresh.py`, and
-`goethe_template_refresh.py` commands use the same audit → backup → apply →
-verify → rollback protocol. `build_goethe_dictionary_links.py` is not a live Anki
-mutation: it writes the reviewed direct-entry map used by the card template.
-The checked-in JSONL can be regenerated only after the reviewed live-note
-batch has been reconciled.
+Content edits, duplicate merges, and pronunciation variants are separate
+guarded operations. The dedicated English-content, answer-contract, and
+template refresh tools (`goethe_english_content_refresh.py`,
+`goethe_answer_contract_refresh.py`, and `goethe_template_refresh.py`) also use
+audit → backup → apply → verify → rollback.
+The dictionary-link builder writes the reviewed direct-entry map and does not
+modify the live deck.
 
-Target-highlight refresh:
+To refresh reviewed example target highlights:
 
 ```powershell
 python tools/goethe_target_highlight_refresh.py audit
@@ -248,40 +243,38 @@ python tools/goethe_target_highlight_refresh.py apply --confirmation APPLY_GOETH
 python tools/goethe_target_highlight_refresh.py verify
 ```
 
-Run these commands in order with Anki Desktop available. The audit must match
-the reviewed 208-note/286-example v3 manifest exactly; backup creates a scheduled
-APKG and hash-checked local snapshot before apply can write. Apply is limited to
-reviewed `ExampleTargetSpansJSON` values and repository model templates. To
-restore the snapshotted spans and templates, use
-`python tools/goethe_target_highlight_refresh.py rollback --confirmation ROLLBACK_GOETHE_TARGET_HIGHLIGHT_REFRESH`.
-
-New example audio is independently strict-ASR checked; legacy repetition
-outliers can be audited with
-`python tools/goethe_example_audio.py audit-repetitions --percentile 95`.
-
-`tools/goethe_b1_media.py` is a non-mutating compatibility shim that points to
-the two all-level audio workflows.
-
-Duden dictionary audio:
+Run these commands with Anki Desktop available. The audit must match the
+reviewed 208-note/286-example v3 manifest; apply is limited to reviewed
+`ExampleTargetSpansJSON` values and repository model templates. Roll back with:
 
 ```powershell
-python tools/download_duden_a1_audio.py --help
-python tools/download_duden_a2_audio.py --help
-python tools/download_duden_b1_audio.py --help
+python tools/goethe_target_highlight_refresh.py rollback --confirmation ROLLBACK_GOETHE_TARGET_HIGHLIGHT_REFRESH
 ```
 
-Run German-resource tests explicitly:
+## Other tools
 
-```powershell
-python -m pytest
-```
+- Audit legacy example-audio repetition outliers with
+  `python tools/goethe_example_audio.py audit-repetitions --percentile 95`.
+- `tools/goethe_b1_media.py` is a non-mutating compatibility shim for the
+  all-level word- and example-audio workflows.
+- Matrix TTS scripts require a local
+  `mavis mcp call matrix matrix_synthesize_speech` setup and are local resource
+  tools.
 
-Validate the structured A1-B1 thematic inventories and their source provenance:
+## Policies and detailed guides
 
-```powershell
-python tools/validate_goethe_wortgruppen.py
-```
+- [Example-audio workflow and QA](docs/GOETHE_EXAMPLE_AUDIO.md)
+- [Bounded Gemini word-audio audit](docs/adr/0002-bounded-gemini-word-audio-audit.md)
+- [Copula-suppressed `sein` audio decision](docs/adr/0001-copula-suppressed-sein-audio.md)
+- [A1 Duden word-audio plan](docs/PLAN_A1_WORD_AUDIO.md)
+- [Goethe Werkstatt migration](docs/GOETHE_WERKSTATT_MIGRATION.md)
+- [Duplicate audit](docs/GOETHE_REDUNDANCY_AUDIT.md) and [cleanup procedure](docs/GOETHE_REDUNDANCY_CLEANUP.md)
+- [Meaning and gloss audit](docs/GOETHE_MEANING_GLOSS_AUDIT_V1.md)
+- Dated change notes live in `docs/updates/`. New notes use the `DD-MM-YYYY`
+  date prefix.
 
-## Notes
-
-The Matrix TTS scripts currently depend on a local `mavis mcp call matrix matrix_synthesize_speech` setup. Treat them as local resource tooling.
+When two notes are confirmed to represent the same lexeme and sense, keep the
+lowest-level survivor in the order A1 → A2 → B1 and merge useful provenance,
+meanings, examples, and audio into it. Delete every redundant note and its
+cards regardless of review history; do not archive or suspend a duplicate just
+to preserve its revlog. Create a scheduled APKG backup before the merge.
